@@ -1,49 +1,109 @@
-import paramiko
+import json
 import os
-import pyperclip
-import sys
-import easygui
+import random
+import time
+from string import printable
+from selenium import webdriver
+from selenium.webdriver import ChromeOptions
+from selenium.webdriver import Chrome
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.common.exceptions import *
+"""#######################################################################################"""
+# 机场官网
+ufo_SignUP = 'https://ufocloud.xyz/auth/register'
+ufo_SignIn = 'https://ufocloud.xyz/auth/login'
+# 账号信息
+username = ''.join([random.choice(printable[:printable.index('!')]) for i in range(9)])
+password = ''.join([random.choice(printable[:printable.index(' ')]) for j in range(15)])
+email = username + '@gmail.com'
+"""#######################################################################################"""
 
-title = '【goto】https://github.com/QIN2DIM/Alkaid'
-VMess = ''
-Ene_dir = 'C://V2RaySpider'
-Ene_name =  'V2Ray云采姬'
-outPATH = Ene_dir+'/V2Ray订阅链接.txt'
 
-def qinse_cloud():
-    global VMess
-    with paramiko.SSHClient() as ssh:
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+class UFO_Spider(object):
 
-        ssh.connect(
-            hostname='104.224.177.249',
-            port=29710,
-            username='root',
-            password='DlREm0I3WiE3'
+    def __init__(self,silence = True):
+        """
+        设定登陆选项，初始化登陆器
+        :param silence: （默认使用）为True时静默访问
+        """
 
-        )
-        # ssh.exec_command('python')
-        stdin, stdout, stderr = ssh.exec_command('python3 /qinse/first_proj/UFO_VMess云采集.py')
-        VMess = stdout.read().decode()
+        #初始化注册信息
+        self.user, self.psw, self.email = username,password,email
 
-def save_vmess():
-    if not os.path.exists(Ene_dir):
-        os.mkdir(Ene_dir)
-    with open(outPATH,'w',) as f:
-        f.write(VMess)
+        # 信息共享v2ray订阅链接
+        self.VMess = ''
 
-def GUI_PANEL():
-    choice = easygui.enterbox('开启V2Ray云采集',Ene_name,default=title)
-    print(choice)
-    if choice:
-        qinse_cloud()
-        save_vmess()
-        pyperclip.copy(VMess)
-        easygui.enterbox('VMess订阅连接',title=Ene_name,default='{}'.format(VMess))
-        os.startfile(outPATH)
-    else:
-        sys.exit(0)
+        #初始化浏览器
+        self.ufo_spider(silence)
+
+    @staticmethod
+    def ufo_spider( silence) :
+        global VMess
+
+        # 浏览器初始化
+        options = ChromeOptions()
+
+        # 设置启动项
+        if silence is True:
+            options.add_argument('--headless')  # 静默启动
+        options.add_argument('--no-sandbox')  # 最高权限运行
+        options.add_argument('-incognito')  # 隐身模式
+        options.add_argument('--disk-cache-')
+        chrome_prefs = {"profile.default_content_settings" : {"images" : 2,'javascript' : 2},
+                        "profile.managed_default_content_settings" : {"images" : 2}}
+        options.experimental_options['prefs'] = chrome_prefs
+        options.add_experimental_option('excludeSwitches', ['enable-automation'])
+        d_c = DesiredCapabilities.CHROME
+        d_c['pageLoadStrategy'] = 'none'
+
+        with webdriver.Chrome(
+                options=options,
+                desired_capabilities=d_c,
+        ) as api:
+            api.get(ufo_SignUP)
+
+            #register
+            time.sleep(1)
+            # print(">>>Registering an account...")
+            WebDriverWait(api,20)\
+                .until(EC.presence_of_element_located((By.ID,'name')))\
+                .send_keys(username)
+            api.find_element_by_id('email').send_keys(username)
+            api.find_element_by_id('passwd').send_keys(password)
+            api.find_element_by_id('repasswd').send_keys(password)
+
+            #click sign up bottom
+            time.sleep(1)
+            api.find_element_by_id('register-confirm').click()
+
+            # kill the Tos
+            time.sleep(1)
+            # print(">>>Confirming registration information...")
+            WebDriverWait(api,30)\
+                .until(EC.presence_of_element_located((
+                By.XPATH, "//button[@class='swal2-confirm swal2-styled']"
+            ))).click()
+
+            # print('>>>Registered successfully')
+
+
+            # try to get link
+            # print(">>>Looking for subscription link...")
+
+            VMess =  WebDriverWait(api, 60).until(EC.presence_of_element_located((
+                By.XPATH,
+                "//div[@class='buttons']/a[contains(@class,'v2ray')]"
+            ))).get_attribute('data-clipboard-text')
+
 
 if __name__ == '__main__':
+    VMess = ''
+    UFO_Spider(
+        silence=True,  #云端采集必须静默运行
+    )
 
-    GUI_PANEL()
+    print(VMess)
+
