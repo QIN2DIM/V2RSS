@@ -8,7 +8,7 @@ title = '【goto】https://github.com/QIN2DIM/Alkaid'
 VMess = ''
 Ene_dir = 'C://V2RaySpider'
 Ene_name =  'V2Ray云采姬'
-outPATH = Ene_dir+'V2Ray订阅链接.txt'
+outPATH = Ene_dir+'/V2Ray订阅链接.txt'
 
 def qinse_cloud():
     global VMess
