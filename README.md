@@ -5,4 +5,4 @@
 - `main.py`为单节点爬虫，垂直设计的selenium脚本，可供参考。
 
 ### Links
-- [如何使用V2Ray科学上网](https://github.com/Alvin9999/new-pac/wiki/v2ray%E5%90%84%E5%B9%B3%E5%8F%B0%E5%9B%BE%E6%96%87%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)
+- [如何使用V2RayNG看风景](https://github.com/Alvin9999/new-pac/wiki/v2ray%E5%90%84%E5%B9%B3%E5%8F%B0%E5%9B%BE%E6%96%87%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)
