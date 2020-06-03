@@ -6,6 +6,8 @@
 
 ### Quick start
 
+如果图片无法正常显示，[点击跳转](https://shimo.im/docs/68xjTGW8cdYV98Kk/ )附件仓库
+
 #### 快速使用VMess教程（以Windows为例）
 
 - 下载项目
