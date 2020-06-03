@@ -32,7 +32,7 @@
 
 - 使用**V2rayN-Core**[->点击下载](https://shimo.im/docs/68xjTGW8cdYV98Kk/ )
 - 解压后，打开`.exe客户端`
-  - ![ ](C:\Users\47159\AppData\Roaming\Typora\typora-user-images\image-20200603084745322.png)
+  - ![123 ](C:\Users\47159\AppData\Roaming\Typora\typora-user-images\image-20200603084745322.png)
 - 在图形界面菜单栏，点击`订阅`、`订阅设置`。在弹出的`订阅设置面板`中，将`VMess订阅连接`填入**地址 (url)**中
   - ​        ![img](https://uploader.shimo.im/f/WJBHwn9V7mkQtMvY.png!thumbnail)              ![img](https://uploader.shimo.im/f/KtegDQ4avdQMVC0P.png!thumbnail)      
 - 保存设置后，点击第3步的`更新订阅`,等待节点刷新。刷新成功后可能会显示以下节点
@@ -56,4 +56,8 @@
 
 
 #### [其他系统使用V2Ray](https://github.com/Alvin9999/new-pac/wiki/v2ray%E5%90%84%E5%B9%B3%E5%8F%B0%E5%9B%BE%E6%96%87%E4%BD%BF%E7%94%A8%E6%95%99%E7%A8%8B)
+
+
+
+![image-20200603092245938](C:%5CUsers%5C47159%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20200603092245938.png)
 
