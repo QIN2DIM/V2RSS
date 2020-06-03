@@ -41,7 +41,7 @@
   - ![image-20200603085637063](C:\Users\47159\AppData\Roaming\Typora\typora-user-images\image-20200603085637063.png)
     - **全局代理(自动配置系统代理)**：所有网络统一使用混淆指令（确信）
     - **PAC代理(自动配置系统代理)**：只有在访问zh大陆无法访问的网站时才使用代理。（可能）
-- 如果到此一切顺利，即可顺利访问 Google Scholar
+- 如果到此一切顺利，**即可顺利访问 Google Scholar**
   - ![image-20200603090008269](C:\Users\47159\AppData\Roaming\Typora\typora-user-images\image-20200603090008269.png)
 
 #### 问题总结
