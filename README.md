@@ -11,7 +11,7 @@
 #### 快速使用VMess教程（以Windows为例）
 
 - 下载项目
-  - ![image-20200603082931751](C:\Users\47159\AppData\Roaming\Typora\typora-user-images\image-20200603082931751.png)
+  - ![image-20200603091649416](C:%5CUsers%5C47159%5CDesktop%5Cimage-20200603082931751.png)
 - 解压文件
   - ![image-20200603083200572](C:\Users\47159\AppData\Roaming\Typora\typora-user-images\image-20200603083332469.png)
 - 如果开启了**防火墙**，会弹出提示
