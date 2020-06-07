@@ -31,7 +31,7 @@
 - 点击<kbd>OK</kbd> 运行脚本，抓取过程约3s，因本地网络状况有所波动。
   - 如果运行正常，脚本会**弹出提示框**，显示VMess订阅连接。
 
-    [![tU8b0U.png](https://s1.ax1x.com/2020/06/03/tU8b0U.png)](https://imgchr.com/i/tU8b0U)
+    [![t2sKP0.png](https://s1.ax1x.com/2020/06/07/t2sKP0.png)](https://imgchr.com/i/t2sKP0)
   - 如果运行正常，脚本会**自动向剪贴板中写入VMess订阅连接**，<kbd>Ctrl</kbd> + <kbd>V</kbd> 即可粘贴文本。
   - 如果运行正常，脚本会自动在`C://V2Rray云采姬//`文件夹中**生成记事本文件**。
 
