@@ -70,7 +70,7 @@
 
   [![tUGP0O.md.png](https://s1.ax1x.com/2020/06/03/tUGP0O.md.png)](https://imgchr.com/i/tUGP0O)
 - 选择节点代理后**无法访问网站**，选其他的节点试试。
-- 退出程序时记得**关闭Http代理**，否则重启后不打开这个软件就没法上网了。
+- 退出程序时记得**关闭Http代理**。
 
 
 
