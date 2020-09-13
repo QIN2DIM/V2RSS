@@ -1,4 +1,3 @@
-import os
 import csv
 
 import easygui
@@ -6,26 +5,19 @@ import requests
 import webbrowser
 from bs4 import BeautifulSoup
 
-from Panel.reball import __retrace__
+from config import *
 
-"""###########################################################"""
-# 我就是机场白嫖怪
-title = '机场白嫖怪'
-
-# 默认导出路径
-out_fp = 'C:/V2RaySpider'
-out_vp = out_fp + '/AirportURL.csv'
-
+"""*************************菜单设置*************************"""
 # 菜单设置
 home_list = ['[1]白嫖机场', '[2]高端机场', '[3]机场汇总', '[4]返回', '[5]退出']
 func_list = ['[1]查看', '[2]保存', '[3]返回']
-"""###########################################################"""
+"""*************************INIT*************************"""
 
 
 # 初始化文档树
 def INIT_docTree():
-    if not os.path.exists(out_fp):
-        os.mkdir(out_fp)
+    if not os.path.exists(SYS_LOCAL_fPATH):
+        os.mkdir(SYS_LOCAL_fPATH)
 
 
 INIT_docTree()
@@ -35,9 +27,13 @@ INIT_docTree()
 
 # 保存数据至本地
 def out_flow(dataFlow, reFP=''):
-    with open(out_vp, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows(dataFlow)
+    try:
+        with open(SYS_LOCAL_aPATH, 'w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
+            for x in dataFlow:
+                writer.writerow(x)
+    except PermissionError:
+        easygui.exceptionbox('系统监测到您正在占用核心文件，请解除该文件的资源占用:{}'.format(SYS_LOCAL_aPATH))
 
 
 # 通过前端panel展示数据
@@ -49,16 +45,16 @@ def show_response():
 
     :return:
     """
-    usr_c = easygui.choicebox(msg='选中即可跳转目标网址,部分机场需要代理才能访问', title=title, choices=dataList)
+    usr_c = easygui.choicebox(msg='选中即可跳转目标网址,部分机场需要代理才能访问', title=TITLE, choices=dataList)
     if usr_c:
         if 'http' in usr_c:
             url = usr_c.split(' ')[-1][1:-1]
             webbrowser.open(url)
         else:
-            easygui.msgbox('机场网址失效或操作有误', title=title, ok_button='返回')
+            easygui.msgbox('机场网址失效或操作有误', title=TITLE, ok_button='返回')
             show_response()
     elif usr_c is None:
-        sAirportSpider()
+        return 'present'
 
 
 """###########################################################"""
@@ -71,31 +67,36 @@ class sAirportSpider(object):
         self.airHome = 'https://52bp.org'
 
         # 自启
-        self.Home()
+        # self.Home()
 
     def Home(self):
         """GUI导航"""
-        usr_c = easygui.choicebox('功能列表', title, home_list, preselect=0)
+        usr_c = easygui.choicebox('功能列表', TITLE, home_list, preselect=0)
+        resp = True
         try:
             if '[1]' in usr_c:
-                self.slaver(self.airHome + '/free-airport.html', )
+                resp = self.slaver(self.airHome + '/free-airport.html', )
             elif '[2]' in usr_c:
-                self.slaver(self.airHome + '/vip-airport.html', )
+                resp = self.slaver(self.airHome + '/vip-airport.html', )
             elif '[3]' in usr_c:
-                self.slaver(self.airHome + '/airport.html', )
+                resp = self.slaver(self.airHome + '/airport.html', )
             elif '[4]' in usr_c:
-                __retrace__('返回')
-                # with open('cash.txt' , 'w', encoding='utf-8') as f:
-                #     f.write('返回')
+                # __retrace__('返回')
+                return resp
             else:
-                __retrace__('退出')
-                # with open('cash.txt', 'w', encoding='utf-8') as f:
-                #     f.write('退出')
+                # __retrace__('退出')
+                resp = False
 
         except TypeError:
-            pass
+            return False
+        finally:
+            if resp == 'present':
+                return self.Home()
+            else:
+                return resp
 
-    def slaver(self, url, ):
+    @staticmethod
+    def slaver(url, ):
 
         # 审查网络状况
         def layer():
@@ -111,7 +112,7 @@ class sAirportSpider(object):
 
         # 获取导航语
         def h3Log(target):
-            own = target.find_all('span', class_='fake-title')
+            own = target.find_all('span', class_='fake-TITLE')
             souls = []
             for soul in own:
                 try:
@@ -136,39 +137,32 @@ class sAirportSpider(object):
             elif isinstance(hrefTarget, str):
                 return hrefTarget.split('?')[0]
 
-        # 数据回流
-        def regDataFlow(barSize=1):
-            Out_flow = [['序号', '项目名', '备注', '官网链接']]
-            if barSize == 1:
-                for i, x in enumerate(zip(names, hrefs)):
-                    Out_item = [i + 1, list(x)[0], barInfo[0], list(x)[-1]]
-                    Out_flow.append(Out_item)
-                return Out_flow
-            else:
-                return Out_flow
-
-        def show_data():
+        def show_data(show=True):
+            # 使用全局变量输出前端信息
             global dataList
             Out_flow = ['序号    机场名    官网链接']
-            for i, x in enumerate(zip(names, hrefs)):
-                Out_item = '【{}】 【{}】 【{}】'.format(i + 1, list(x)[0], list(x)[-1])
-                Out_flow.append(Out_item)
 
-            dataList = Out_flow
-            show_response()
+            if show:
+                dataList = Out_flow + ['【{}】 【{}】 【{}】'.format(i + 1, list(x)[0], list(x)[-1]) for i, x in
+                                       enumerate(zip(names, hrefs)) if 'http' in list(x)[-1]]
+                # 前端展示API
+                return show_response()
+            else:
+                return [['序号', '机场名', '官网连接'], ] + \
+                       [[i + 1, list(x)[0], list(x)[-1]] for i, x in
+                        enumerate(zip(names, hrefs)) if 'http' in list(x)[-1]]
 
         # func_list = ['[1]查看', '[2]保存', '[3]返回']
-        usr_d = easygui.choicebox(title=title, choices=func_list)
+        usr_d = easygui.choicebox(title=TITLE, choices=func_list)
         if '返回' in usr_d:
-            self.Home()
-            return True
+            return 'present'
 
         response = layer()
         if response:
             soup = BeautifulSoup(response, 'html.parser')
 
             # 定位导航语
-            barInfo = h3Log(soup)
+            # barInfo = h3Log(soup)
 
             # 定位项目
             items = soup.find_all('li', class_='link-item')
@@ -180,17 +174,14 @@ class sAirportSpider(object):
             hrefs = [item.find('a')['href'] for item in items]
             hrefs = href_cleaner(hrefs)
 
-            # 数据回流
-            DataFlow = regDataFlow(barInfo.__len__())
-
             if '保存' in usr_d:
                 # 保存至本地
-                out_flow(DataFlow)
+                out_flow(show_data(show=False))
                 # 自动打开
-                os.startfile(out_vp)
+                os.startfile(SYS_LOCAL_aPATH)
             elif '查看' in usr_d:
                 # 前端打印
-                show_data()
+                return show_data()
 
 
 """###########################################################"""

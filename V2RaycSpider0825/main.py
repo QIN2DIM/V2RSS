@@ -5,5 +5,5 @@ if __name__ == '__main__':
     hp = HomePanel()
     try:
         hp.start()
-    finally:
-        hp.kill()
+    except Exception as e:
+        hp.kill(e)

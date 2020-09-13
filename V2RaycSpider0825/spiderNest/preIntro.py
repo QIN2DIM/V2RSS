@@ -22,6 +22,7 @@ try:
     from selenium.webdriver.common.keys import Keys
     from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
     from selenium.common.exceptions import *
+    from config import CHROMEDRIVER_PATH
 except ModuleNotFoundError:
     pass
 
@@ -44,7 +45,8 @@ class FakeAccount(object):
     def get_fake_account(self):
         return self.__create__()
 
-    def air_target(self, class_):
+    @staticmethod
+    def air_target(class_):
         path_ = os.path.dirname(os.path.dirname(__file__)) + '/dataBase/{}机场.txt'.format(class_)
         with open(path_, 'r', encoding='utf-8') as f:
             return f.read().split('\n')
@@ -339,17 +341,17 @@ def set_spiderOption(silence: bool, anti: bool):
         d_c = DesiredCapabilities.CHROME
         d_c['pageLoadStrategy'] = 'none'
 
-        browser = webdriver.Chrome(
+        return webdriver.Chrome(
             options=options,
-            desired_capabilities=d_c,
+            executable_path=CHROMEDRIVER_PATH,
+            desired_capabilities=d_c
         )
-        return browser
 
     if anti is False:
         return NonAnti()
     else:
         # 有反爬虫/默认：一般模式启动
-        return webdriver.Chrome(options=options)
+        return webdriver.Chrome(options=options, executable_path=CHROMEDRIVER_PATH)
 
 
 # 获取STAFF机场关键信息：可用时长、可用流量
@@ -411,3 +413,9 @@ def TOS_STAFF(api, timeout: float):
         ))).click()
     except NoSuchElementException:
         pass
+
+
+# 获取随即FAKE USERAGENT
+def get_header() -> str:
+    from fake_useragent import UserAgent
+    return UserAgent().random

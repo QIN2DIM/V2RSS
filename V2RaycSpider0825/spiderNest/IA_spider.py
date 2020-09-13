@@ -4,10 +4,7 @@
 from lxml import etree
 from spiderNest.preIntro import *
 
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                  'Chrome/84.0.4147.135 Safari/537.36 ',
-}
+headers = {'User-Agent': get_header()}
 
 cookies = {
     'cookie': '__cfduid=da42e5b95b38e48848d0da42ff31ce09c1598338127; uid=1984; email=qinse%40gmail.com; '
@@ -25,7 +22,8 @@ class IASpider(object):
     def __int__(self):
         self.cookies = ''
 
-    def handle_html(self, url, proxy=None):
+    @staticmethod
+    def handle_html(url, proxy=None):
         response = requests.get(url, headers=headers, cookies=cookies, )
         # response.encoding = response.apparent_encoding
         if response.status_code == 200:

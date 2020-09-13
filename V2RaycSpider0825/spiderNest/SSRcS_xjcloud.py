@@ -54,6 +54,7 @@ class UFO_Spider(object):
     def ufo_spider(self, api):
 
         api.get(ufo_SignUP)
+        time.sleep(1)
 
         WebDriverWait(api, 15) \
             .until(EC.presence_of_element_located((By.ID, 'email'))) \
@@ -63,13 +64,14 @@ class UFO_Spider(object):
 
         # click sign up bottom
         try:
+            time.sleep(0.5)
             api.find_element_by_id('reg').click()
         except NoSuchElementException:
             pass
 
         try:
             self.sign_in(api, email, password)
-            time.sleep(1)
+            time.sleep(2)
         except NoSuchElementException or WebDriverException:
             pass
 
@@ -82,8 +84,9 @@ class UFO_Spider(object):
             VMes_IO.save_login_info(VMess, 'ssr')
         except Exception or TimeoutException:
             pass
+        finally:
 
-        api.quit()
+            api.quit()
 
 
 if __name__ == '__main__':

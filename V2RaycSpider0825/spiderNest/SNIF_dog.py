@@ -1,4 +1,4 @@
-"""垂直挖掘STAFF机场"""
+# TODO:垂直挖掘STAFF机场
 from gevent import monkey
 
 monkey.patch_all()
@@ -45,8 +45,7 @@ class sAirportSpider(object):
         # 审查网络状况
         def layer():
             try:
-                headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                                         'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36'}
+                headers = {'User-Agent': get_header()}
                 res = requests.get(url, headers=headers)
                 res.raise_for_status()
                 return res.text
@@ -56,7 +55,7 @@ class sAirportSpider(object):
 
         # 获取导航语
         def h3Log(target):
-            own = target.find_all('span', class_='fake-title')
+            own = target.find_all('span', class_='fake-TITLE')
             souls = []
             for soul in own:
                 try:

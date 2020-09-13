@@ -1,13 +1,13 @@
 import easygui
 import socket
-
+from config import TITLE
 report = ''
 
 
 def getReport():
     global report
     report = checker()
-    easygui.msgbox(report, 'V2Ray云彩姬', )
+    easygui.msgbox(report, TITLE, )
 
 
 def isNetChainOK(test_server):
