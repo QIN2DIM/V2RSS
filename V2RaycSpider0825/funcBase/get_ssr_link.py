@@ -10,7 +10,7 @@ from spiderNest.SSRcS_xjcloud import UFO_Spider
 if __name__ == '__main__':
     vio = vmess_IO('ssr')
     if '无' in vio:
-        UFO_Spider()
+        UFO_Spider().start()
         ssr = vmess_IO('ssr')
         print(ssr)
         with open(NGINX_SSR_PATH, 'w', encoding='utf-8') as f:

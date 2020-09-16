@@ -31,11 +31,11 @@ class UFO_Spider(object):
         # 初始化浏览器
         self.silence = silence
         self.anti = anti
-        self.api = set_spiderOption(self.silence, self.anti)
-        self.wait = WebDriverWait(self.api, 5)
+        # self.api = set_spiderOption(self.silence, self.anti)
+        # self.wait = WebDriverWait(self.api, 5)
 
         # 自启
-        self.ufo_spider(self.api)
+        # self.ufo_spider(self.api)
 
     @staticmethod
     def sign_in(api, user, psw):
@@ -51,7 +51,9 @@ class UFO_Spider(object):
                 time.sleep(.5)
                 continue
 
-    def ufo_spider(self, api):
+    def ufo_spider(self):
+
+        api = set_spiderOption(self.silence, self.anti)
 
         api.get(ufo_SignUP)
         time.sleep(1)
@@ -81,13 +83,38 @@ class UFO_Spider(object):
                 By.XPATH,
                 "//div[@class='cur-input-group-btn']/button[contains(@class,'sub-ssr')]"
             ))).get_attribute('data-clipboard-text')
+            self.VMess = VMess
             VMes_IO.save_login_info(VMess, 'ssr')
         except Exception or TimeoutException:
             pass
         finally:
-
             api.quit()
+
+    def start(self):
+        self.ufo_spider()
+
+
+class LocalResp(UFO_Spider):
+
+    def __init__(self, silence=True, anti=False):
+        super(LocalResp, self).__init__(silence=silence, anti=anti)
+
+    def quick_get(self):
+        ssr_link = requests.get('http://yao.qinse.top/ssr.txt').text
+        self.VMess = ssr_link if 'http' in ssr_link else ''
+
+    def start(self):
+        self.quick_get()
+        if self.VMess:
+            return self.VMess
+        else:
+            try:
+                self.ufo_spider()
+                return self.VMess
+            except WebDriverException:
+                return 'DRIVER驱动设置有误'
+
 
 
 if __name__ == '__main__':
-    UFO_Spider()
+    LocalResp().start()

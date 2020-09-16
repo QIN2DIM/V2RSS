@@ -20,8 +20,6 @@ if 'win' in sys.platform:
     CHROMEDRIVER_PATH = os.path.dirname(__file__) + '/MiddleKey/chromedriver.exe'
 elif 'linux' in sys.platform:
     CHROMEDRIVER_PATH = os.path.dirname(__file__) + '/MiddleKey/chromedriver'
-elif 'darwin' in sys.platform:
-    pass
 
 # CHROMEDRIVER_PATH_for_LINUX = os.path.dirname(__file__) + '/MiddleKey/chromedriver'
 # CHROMEDRIVER_PATH_for_WIN32 = os.path.dirname(__file__) + '/MiddleKey/chromedriver.exe'
@@ -39,8 +37,8 @@ ROOT_DATABASE = os.path.join(os.path.dirname(__file__), 'dataBase')
 # Cloud server configuration(SSH)
 # ---------------------------------------------------
 ECS_HOSTNAME: str = ''
-ECS_PORT: int = 0
-ECS_USERNAME: str = ''
+ECS_PORT: int = 27023
+ECS_USERNAME: str = 'root'
 ECS_PASSWORD: str = ''
 
 # 文件路径:查询可用订阅连接
@@ -57,9 +55,15 @@ NGINX_V2RAY_PATH = os.path.join(NGINX_RES_PATH, 'v2ray.txt')
 
 """********************************* Action set/PATH->Local ********************************"""
 # TODO: 当前版本不提供安装导航，不支持diy安装目录，若想更改缓存路径，请改动源代码
+# 工程目录
+ROOT_PROJECT_PATH = os.path.dirname(__file__)
 # 软件本地根目录
 SYS_LOCAL_fPATH = 'C:/V2RaySpider'
+if 'darwin' in sys.platform:
+    SYS_LOCAL_fPATH = os.path.join(ROOT_PROJECT_PATH, 'V2RaySpider')
 # 访问记录(系统核心文件，请勿删改)
 SYS_LOCAL_vPATH = SYS_LOCAL_fPATH + '/log_VMess.txt'
 # 机场生态的本地缓存
 SYS_LOCAL_aPATH = SYS_LOCAL_fPATH + '/AirportURL.csv'
+# 采集模式，若服务器设置有误，干脆本机启动
+START_MODE = 'local' if ECS_PASSWORD == '' else 'cloud'

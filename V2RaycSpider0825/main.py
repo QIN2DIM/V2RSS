@@ -4,6 +4,6 @@ from Panel.main_panel import *
 if __name__ == '__main__':
     hp = HomePanel()
     try:
-        hp.start()
+        hp.start(init=True)
     except Exception as e:
         hp.kill(e)

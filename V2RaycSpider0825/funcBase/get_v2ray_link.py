@@ -10,7 +10,7 @@ from spiderNest.V2Ray_vms import UFO_Spider
 if __name__ == '__main__':
     vio = vmess_IO('v2ray')
     if '无' in vio:
-        UFO_Spider()
+        UFO_Spider().start()
         v2ray = vmess_IO('v2ray')
         print(v2ray)
         with open(NGINX_V2RAY_PATH, 'w', encoding='utf-8') as f:

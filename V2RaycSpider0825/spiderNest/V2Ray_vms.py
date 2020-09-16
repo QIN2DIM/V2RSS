@@ -2,6 +2,7 @@ from spiderNest.preIntro import *
 from MiddleKey import VMes_IO
 
 import threading
+
 """#######################################################################################"""
 # 机场官网
 fa = FakeAccount()
@@ -37,17 +38,18 @@ class UFO_Spider(object):
         self.anti = Anti_mode
 
         # 获取Chrome操作权限
-        self.api = set_spiderOption(self.silence, self.anti)
+        # self.api = set_spiderOption(self.silence, self.anti)
 
         # 设定全局静默市场
-        self.wait = WebDriverWait(self.api, 5)
+        # self.wait = WebDriverWait(self.api, 5)
 
         # 启动爬虫
-        self.ufo_spider(self.api)
+        # self.ufo_spider(self.api)
 
-    def sign_in(self, api, user, psw):
+    @staticmethod
+    def sign_in(api, user, psw):
         api.switch_to.window(api.current_window_handle)
-        self.wait.until(EC.presence_of_all_elements_located)
+        WebDriverWait(api, 5).until(EC.presence_of_all_elements_located)
         api.find_element_by_id('email').send_keys(user)
         api.find_element_by_id('password').send_keys(psw)
         api.find_element_by_id('login').click()
@@ -67,12 +69,12 @@ class UFO_Spider(object):
             global VMess
             VMess = self.VMess
 
-    def ufo_spider(self, api):
+    def ufo_spider(self):
 
         # 加载 Geetest 验证码 滑动验证
         def __assert__():
             # 加载 Geetest 验证码 滑动验证
-            self.wait.until(EC.presence_of_all_elements_located)
+            WebDriverWait(api, 5).until(EC.presence_of_all_elements_located)
             # 滑块验证模块
             anti_slider(api)
 
@@ -83,9 +85,11 @@ class UFO_Spider(object):
             except NoSuchElementException or WebDriverException:
                 pass
 
+        api = set_spiderOption(self.silence, self.anti)
+
         # 进入注册页面
         api.get(ufo_SignUP)
-
+        print(ufo_SignUP)
         # 断言反爬虫机制
         __assert__()
 
@@ -110,14 +114,38 @@ class UFO_Spider(object):
         # 安全退出
         api.quit()
 
+    def start(self):
+        self.ufo_spider()
+
+
+class LocalResp(UFO_Spider):
+    def __init__(self, silence=True, Anti_mode=False):
+        super(LocalResp, self).__init__(silence=silence, Anti_mode=Anti_mode)
+
+    def quick_get(self):
+        v2ray_link = requests.get('http://yao.qinse.top/v2ray.txt').text
+        self.VMess = v2ray_link if 'http' in v2ray_link else ''
+
+    def start(self):
+        self.quick_get()
+        if self.VMess:
+            return self.VMess
+        else:
+            # self.ufo_spider()
+            return 'v2ray爬虫暂不支持本地环境运行'
+
+
+class DemoSpider(object):
+
+    def start(self):
+        from selenium.webdriver import Chrome, ChromeOptions, Ie, IeOptions
+        options = IeOptions()
+        api = Ie(options=options)
+
+
 
 """#######################################################################################"""
 
 if __name__ == '__main__':
-    VMess = ''
-    # 静默启动,Linux无头驱动，降低驱动性能，提升运行稳定性
-    UFO_Spider(silence=True, Anti_mode=False)
-
-    # 显式启动，本地调试
-    # UFO_Spider(silence=False, Anti_mode=True)
-    print(VMess)
+    # LocalResp(silence=False).start()
+    DemoSpider().start()

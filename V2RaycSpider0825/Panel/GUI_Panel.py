@@ -18,6 +18,7 @@ hotOpt = 0
 # V2RAY预设信息
 v_msg = 'SNI:V_{}'.format(str(datetime.now()).split(' ')[0])
 v_success = '获取成功，点击确定自动复制链接'
+
 """##########################################"""
 
 
@@ -141,27 +142,37 @@ class SSRcS_panel(object):
     def __init__(self):
         # 启动GUI
         # self.Home()
+        self.ssr_attention_link = ''
+        self.v2ray_attention_link = ''
         pass
 
-    def Home(self):
+    def Home(self, ):
         """
         一级菜单
+        :mode: True:本地采集，False 服务器采集
         :return:
         """
         global resp
+
+        # 初始化进程冻结锁
         Freeze()
-        choice_list = ['[1]V2Ray订阅链接', '[2]SSR订阅链接', '[3]打开本地文件', '[4]查询可用链接', '[5]返回', '[6]退出']
+
+        # 根据配置信息自动选择采集模式
+        choice_list = ['[1]V2Ray订阅链接', '[2]SSR订阅链接', '[3]打开本地文件', '[4]查询可用链接', '[5]返回',
+                       '[6]退出'] if START_MODE == 'cloud' else \
+            ['[1]V2Ray订阅链接', '[2]SSR订阅链接', '[3]打开本地文件', '[4]返回', '[5]退出']
+        # UI功能选择
         usr_c = easygui.choicebox('功能列表', TITLE, choice_list, preselect=1)
         try:
-            if '[1]' in usr_c:
+            if 'V2Ray' in usr_c:
                 self.do_v2rayEne()
-            elif '[2]' in usr_c:
+            elif 'SSR' in usr_c:
                 self.do_ssrEne()
-            elif '[3]' in usr_c:
+            elif '打开本地文件' in usr_c:
                 os.startfile(SYS_LOCAL_vPATH)
-            elif '[4]' in usr_c:
+            elif '查询可用链接' in usr_c:
                 self.find_aviLink()
-            elif '[5]' in usr_c:
+            elif '返回' in usr_c:
                 # __retrace__('返回')
                 return resp
             else:
@@ -192,20 +203,28 @@ class SSRcS_panel(object):
         启动 ssr 爬虫
         :return:
         """
-
-        # 先看有没有库存，若有直接拿,若无则启动脚本抓取ssr订阅链接
-        ssr_attention_link = service_con('python3 {}'.format(SSR_ENE_FILE_PATH))
-
-        # 分发结果
-        self.resTip(ssr_attention_link, 'ssr')
+        from spiderNest.SSRcS_xjcloud import LocalResp
+        try:
+            if START_MODE == 'cloud':
+                # 先看有没有库存，若有直接拿,若无则启动脚本抓取ssr订阅链接
+                self.ssr_attention_link = service_con('python3 {}'.format(SSR_ENE_FILE_PATH))
+            elif START_MODE == 'local':
+                self.ssr_attention_link = LocalResp().start()
+        finally:
+            # 分发结果
+            self.resTip(self.ssr_attention_link, 'ssr')
 
     def do_v2rayEne(self):
-
-        # 获取v2ray订阅链接
-        v2ray_attention_link = service_con('python3 {}'.format(V2RAY_ENE_FILE_PATH))
-
-        # 公示分发结果
-        self.resTip(v2ray_attention_link, 'v2ray')
+        from spiderNest.V2Ray_vms import LocalResp
+        try:
+            if START_MODE == 'cloud':
+                # 获取v2ray订阅链接
+                self.v2ray_attention_link = service_con('python3 {}'.format(V2RAY_ENE_FILE_PATH))
+            elif START_MODE == 'local':
+                self.v2ray_attention_link = LocalResp().start()
+        finally:
+            # 公示分发结果
+            self.resTip(self.v2ray_attention_link, 'v2ray')
 
     def resTip(self, AttentionLink: str, task_name):
         """
