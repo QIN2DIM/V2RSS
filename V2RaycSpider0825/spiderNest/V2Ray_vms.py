@@ -1,7 +1,5 @@
-from spiderNest.preIntro import *
 from MiddleKey import VMes_IO
-
-import threading
+from spiderNest.preIntro import *
 
 """#######################################################################################"""
 # 机场官网
@@ -138,7 +136,7 @@ class LocalResp(UFO_Spider):
 class DemoSpider(object):
 
     def start(self):
-        from selenium.webdriver import Chrome, ChromeOptions, Ie, IeOptions
+        from selenium.webdriver import Ie, IeOptions
         options = IeOptions()
         api = Ie(options=options)
 

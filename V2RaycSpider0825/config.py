@@ -6,7 +6,7 @@ import sys
 verNum = '0825'
 
 # 我就是云彩姬!
-TITLE = 'V2Ray云彩姬'
+TITLE = 'V2Ray云彩姬_v' + verNum
 
 # PC(链接获取)进程锁死的冷却时间
 # 进程锁死时长(min)，建议type：float∈(0,1]
@@ -37,7 +37,7 @@ ROOT_DATABASE = os.path.join(os.path.dirname(__file__), 'dataBase')
 # Cloud server configuration(SSH)
 # ---------------------------------------------------
 ECS_HOSTNAME: str = ''
-ECS_PORT: int = 27023
+ECS_PORT: int = 27203
 ECS_USERNAME: str = 'root'
 ECS_PASSWORD: str = ''
 
@@ -58,12 +58,10 @@ NGINX_V2RAY_PATH = os.path.join(NGINX_RES_PATH, 'v2ray.txt')
 # 工程目录
 ROOT_PROJECT_PATH = os.path.dirname(__file__)
 # 软件本地根目录
-SYS_LOCAL_fPATH = 'C:/V2RaySpider'
-if 'darwin' in sys.platform:
-    SYS_LOCAL_fPATH = os.path.join(ROOT_PROJECT_PATH, 'V2RaySpider')
+SYS_LOCAL_fPATH = os.path.join(ROOT_PROJECT_PATH, 'V2RaySpider')
 # 访问记录(系统核心文件，请勿删改)
 SYS_LOCAL_vPATH = SYS_LOCAL_fPATH + '/log_VMess.txt'
 # 机场生态的本地缓存
 SYS_LOCAL_aPATH = SYS_LOCAL_fPATH + '/AirportURL.csv'
 # 采集模式，若服务器设置有误，干脆本机启动
-START_MODE = 'local' if ECS_PASSWORD == '' else 'cloud'
+START_MODE = 'local' if ECS_HOSTNAME == '' else 'cloud'
