@@ -58,7 +58,7 @@ NGINX_V2RAY_PATH = os.path.join(NGINX_RES_PATH, 'v2ray.txt')
 # 工程目录
 ROOT_PROJECT_PATH = os.path.dirname(__file__)
 # 软件本地根目录
-SYS_LOCAL_fPATH = os.path.join(ROOT_PROJECT_PATH, 'V2RaySpider')
+SYS_LOCAL_fPATH = os.path.join(ROOT_PROJECT_PATH, 'dataBase')
 # 访问记录(系统核心文件，请勿删改)
 SYS_LOCAL_vPATH = SYS_LOCAL_fPATH + '/log_VMess.txt'
 # 机场生态的本地缓存
