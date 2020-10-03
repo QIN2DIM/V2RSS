@@ -1,2 +1,3 @@
 Time,AttentionLink,类型
 2020-10-03 17:24:42,https://subss.xjycloud.xyz/link/2DNw3i50g2Fj2ZRV?sub=1,ssr
+2020-10-03 17:38:15,https://subss.xjycloud.xyz/link/TNhN7IN0OGUOxQko?sub=1,ssr
