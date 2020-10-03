@@ -192,43 +192,57 @@ class SSRcS_panel(object):
         # 返回上一页
         return True
 
-    @staticmethod
-    def do_ssrEne():
+    def do_ssrEne(self, ):
         """
         启动 ssr 爬虫
         :return:
         """
-        global ssr_attention_link
-        from spiderNest.SSRcS_xjcloud import LocalResp
-        try:
-            if START_MODE == 'cloud':
-                # 先看有没有库存，若有直接拿,若无则启动脚本抓取ssr订阅链接
-                ssr_attention_link = service_con('python3 {}'.format(SSR_ENE_FILE_PATH))
-            elif START_MODE == 'local':
-                ssr_attention_link = LocalResp().start()
-        finally:
-            # 分发结果
-            SSRcS_panel.resTip(ssr_attention_link, 'ssr')
-            return True
+        # TODO
+        # FIXME:pyinstaller 打包bug；调用修改global value 会使本函数无法被main function transfer
+        # FIXME:pyinstaller 打包正确运行情况：
 
-        # ssr_attention_link = service_con('python3 {}'.format(SSR_ENE_FILE_PATH))
-        # easygui.enterbox(msg=v_success, title=TITLE, default=ssr_attention_link)
-        # print(ssr_attention_link)
 
-    @staticmethod
-    def do_v2rayEne():
-        global v2ray_attention_link
-        from spiderNest.V2Ray_vms import LocalResp
+        """调试版代码"""
+        # from spiderNest.SSRcS_xjcloud import LocalResp
+        # try:
+        #     if START_MODE == 'cloud':
+        #         # 先看有没有库存，若有直接拿,若无则启动脚本抓取ssr订阅链接
+        #         self.ssr_attention_link = service_con('python3 {}'.format(SSR_ENE_FILE_PATH))
+        #     elif START_MODE == 'local':
+        #         self.ssr_attention_link = LocalResp().start()
+        # finally:
+        #     # 分发结果
+        #     self.resTip(self.ssr_attention_link, 'ssr')
+        #     return True
+
+        """软件打包代码"""
         try:
-            if START_MODE == 'cloud':
-                # 获取v2ray订阅链接
-                v2ray_attention_link = service_con('python3 {}'.format(V2RAY_ENE_FILE_PATH))
-            elif START_MODE == 'local':
-                v2ray_attention_link = LocalResp().start()
+            self.ssr_attention_link = service_con('python3 {}'.format(SSR_ENE_FILE_PATH))
         finally:
-            # 公示分发结果
-            SSRcS_panel.resTip(v2ray_attention_link, 'v2ray')
-            return True
+            return self.resTip(self.ssr_attention_link, 'ssr')
+            # easygui.enterbox(msg=v_success, title=TITLE, default=self.ssr_attention_link)
+
+    def do_v2rayEne(self,):
+
+        """调试版代码"""
+        # from spiderNest.V2Ray_vms import LocalResp
+        # try:
+        #     if START_MODE == 'cloud':
+        #         # 获取v2ray订阅链接
+        #         self.v2ray_attention_link = service_con('python3 {}'.format(V2RAY_ENE_FILE_PATH))
+        #     elif START_MODE == 'local':
+        #         self.v2ray_attention_link = LocalResp().start()
+        # finally:
+        #     # 公示分发结果
+        #     return self.resTip(self.v2ray_attention_link, 'v2ray')
+
+        """软件打包代码"""
+        try:
+            self.v2ray_attention_link = service_con('python3 {}'.format(V2RAY_ENE_FILE_PATH))
+        finally:
+            return self.resTip(self.v2ray_attention_link, 'v2ray')
+            # easygui.enterbox(msg=v_success, title=TITLE, default=self.v2ray_attention_link)
+
 
     @staticmethod
     def resTip(AttentionLink: str, task_name):
@@ -238,11 +252,9 @@ class SSRcS_panel(object):
         :param AttentionLink: 订阅链接
         :return:
         """
-        global hotOpt
         # 公示分发结果
         if AttentionLink.strip() != '':
             easygui.enterbox(msg=v_success, title=TITLE, default=AttentionLink)
-            hotOpt += 1
         try:
             # 获取成功
             if 'http' in AttentionLink:
@@ -626,14 +638,15 @@ class V2RaycSpider_Master_Panel(object):
         # UI功能选择
         usr_c = easygui.choicebox('功能列表', TITLE, self.SSR_HOME_MENU, preselect=1)
         try:
+            sp = SSRcS_panel()
             if '[1]V2Ray订阅链接' in usr_c:
-                resp = SSRcS_panel.do_v2rayEne()
+                resp = sp.do_v2rayEne()
             elif '[2]SSR订阅链接' in usr_c:
-                resp = SSRcS_panel.do_ssrEne()
+                resp = sp.do_ssrEne()
             elif '[3]打开本地文件' in usr_c:
                 os.startfile(SYS_LOCAL_vPATH)
             elif '[4]查询可用链接' in usr_c:
-                resp = SSRcS_panel.find_aviLink()
+                resp = sp.find_aviLink()
             elif '[5]返回' in usr_c:
                 resp = True
             else:
