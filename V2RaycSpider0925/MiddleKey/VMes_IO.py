@@ -48,15 +48,17 @@ def avi_num():
     with open(path_, 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
 
-        vm_list = [i for i in reader]
+        vm_list = [i for i in reader if i != []]
         # ['2020-08-06 04:27:59', 'link','class_', '1']
 
         vm_q = [vm for vm in vm_list if vm[-1] == '0']
+        vm_q = sorted(vm_q, key=lambda x: x[0], reverse=True)
 
         tag_items = ''
-        for vm in vm_list:
-            if vm[-1] == '0':
-                bei_ing_time = datetime.fromisoformat(vm[0]) + timedelta(hours=12)
-                tag_items += '\n【√可选】【{}】#{}'.format(bei_ing_time, vm[-2])
+        for vm in vm_q:
+            # NewYork-Beijing Time zone calibration
+            Beijing_time_zone = datetime.fromisoformat(vm[0]) + timedelta(hours=12)
+            tag_items += '\n【√可选】【{}】#{}'.format(Beijing_time_zone, vm[-2])
 
-        return tag_items
+        return tag_items.strip()
+

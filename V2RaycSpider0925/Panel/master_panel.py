@@ -201,7 +201,6 @@ class SSRcS_panel(object):
         # FIXME:pyinstaller 打包bug；调用修改global value 会使本函数无法被main function transfer
         # FIXME:pyinstaller 打包正确运行情况：
 
-
         """调试版代码"""
         # from spiderNest.SSRcS_xjcloud import LocalResp
         # try:
@@ -222,7 +221,7 @@ class SSRcS_panel(object):
             return self.resTip(self.ssr_attention_link, 'ssr')
             # easygui.enterbox(msg=v_success, title=TITLE, default=self.ssr_attention_link)
 
-    def do_v2rayEne(self,):
+    def do_v2rayEne(self, ):
 
         """调试版代码"""
         # from spiderNest.V2Ray_vms import LocalResp
@@ -242,7 +241,6 @@ class SSRcS_panel(object):
         finally:
             return self.resTip(self.v2ray_attention_link, 'v2ray')
             # easygui.enterbox(msg=v_success, title=TITLE, default=self.v2ray_attention_link)
-
 
     @staticmethod
     def resTip(AttentionLink: str, task_name):
@@ -336,54 +334,45 @@ def checker():
 
 """#####################机场生态查询模块####################"""
 
-# 机场生态文件输出地址
-SYS_LOCAL_aPATH = ''
-
-
-# 初始化文档树
-def INIT_airport_docTree():
-    if not os.path.exists(SYS_LOCAL_fPATH):
-        os.mkdir(SYS_LOCAL_fPATH)
-
-
-# 保存数据至本地
-def out_flow(dataFlow, reFP=''):
-    global SYS_LOCAL_aPATH
-    SYS_LOCAL_aPATH = os.path.join(easygui.diropenbox('选择保存地址', TITLE), 'AirportURL.csv')
-    try:
-        with open(SYS_LOCAL_aPATH, 'w', encoding='utf-8', newline='') as f:
-            writer = csv.writer(f)
-            for x in dataFlow:
-                writer.writerow(x)
-    except PermissionError:
-        easygui.exceptionbox('系统监测到您正在占用核心文件，请解除该文件的资源占用:{}'.format(SYS_LOCAL_aPATH))
-
-
-# 通过前端panel展示数据
-dataList = []
-
-
-def show_response():
-    """
-
-    :return:
-    """
-    usr_c = easygui.choicebox(msg='选中即可跳转目标网址,部分机场需要代理才能访问', title=TITLE, choices=dataList)
-    if usr_c:
-        if 'http' in usr_c:
-            url = usr_c.split(' ')[-1][1:-1]
-            webbrowser.open(url)
-        else:
-            easygui.msgbox('机场网址失效或操作有误', title=TITLE, ok_button='返回')
-            show_response()
-    elif usr_c is None:
-        return 'present'
-
 
 class sAirportSpider(object):
+    """机场生态查询模块"""
+
+    def __init__(self):
+        self.dataList = []
+        self.save_path = ''
 
     @staticmethod
-    def slaver(url, ):
+    def INIT_airport_docTree():
+        """初始化文档树"""
+        if not os.path.exists(SYS_LOCAL_fPATH):
+            os.mkdir(SYS_LOCAL_fPATH)
+
+    def show_response(self):
+        """展示采集结果"""
+        usr_c = easygui.choicebox(msg='选中即可跳转目标网址,部分机场需要代理才能访问', title=TITLE, choices=self.dataList, preselect=1)
+        if usr_c:
+            if 'http' in usr_c:
+                url = usr_c.split(' ')[-1][1:-1]
+                webbrowser.open(url)
+            else:
+                easygui.msgbox('机场网址失效或操作有误', title=TITLE, ok_button='返回')
+                self.show_response()
+        elif usr_c is None:
+            # fixme :检查返回值是否可让该页面返回上一层
+            return True
+
+    def out_flow(self, dataFlow, reFP=''):
+        self.save_path = os.path.join(easygui.diropenbox('选择保存地址', TITLE), 'AirportURL.csv')
+        try:
+            with open(self.save_path, 'w', encoding='utf-8', newline='') as f:
+                writer = csv.writer(f)
+                for x in dataFlow:
+                    writer.writerow(x)
+        except PermissionError:
+            easygui.exceptionbox('系统监测到您正在占用核心文件，请解除该文件的资源占用:{}'.format(self.save_path))
+
+    def slaver(self, url, ):
 
         # 审查网络状况
         def layer():
@@ -425,15 +414,14 @@ class sAirportSpider(object):
                 return hrefTarget.split('?')[0]
 
         def show_data(show=True):
-            # 使用全局变量输出前端信息
-            global dataList
+            """输出前端信息"""
             Out_flow = ['序号    机场名    官网链接']
 
             if show:
-                dataList = Out_flow + ['【{}】 【{}】 【{}】'.format(i + 1, list(x)[0], list(x)[-1]) for i, x in
-                                       enumerate(zip(names, hrefs)) if 'http' in list(x)[-1]]
+                self.dataList = Out_flow + ['【{}】 【{}】 【{}】'.format(i + 1, list(x)[0], list(x)[-1]) for i, x in
+                                            enumerate(zip(names, hrefs)) if 'http' in list(x)[-1]]
                 # 前端展示API
-                return show_response()
+                return self.show_response()
             else:
                 return [['序号', '机场名', '官网连接'], ] + \
                        [[i + 1, list(x)[0], list(x)[-1]] for i, x in
@@ -463,9 +451,9 @@ class sAirportSpider(object):
 
             if '保存' in usr_d:
                 # 保存至本地
-                out_flow(show_data(show=False))
+                self.out_flow(show_data(show=False))
                 # 自动打开
-                os.startfile(SYS_LOCAL_aPATH)
+                os.startfile(self.save_path)
             elif '查看' in usr_d:
                 # 前端打印
                 return show_data()
@@ -543,7 +531,7 @@ class PrepareENV(object):
             INIT_process_docTree()
 
             # 初始化机场狗文档树
-            INIT_airport_docTree()
+            sAirportSpider.INIT_airport_docTree()
 
 
 class V2RaycSpider_Master_Panel(object):
@@ -609,18 +597,17 @@ class V2RaycSpider_Master_Panel(object):
         usr_c = easygui.choicebox('功能列表', TITLE, self.AIRPORT_HOME_MENU, preselect=0)
         resp = True
         try:
+            sas = sAirportSpider()
             if '[1]白嫖机场' in usr_c:
-                resp = sAirportSpider.slaver(self.airHome + '/free-airport.html', )
+                resp = sas.slaver(self.airHome + '/free-airport.html', )
             elif '[2]高端机场' in usr_c:
-                resp = sAirportSpider.slaver(self.airHome + '/vip-airport.html', )
+                resp = sas.slaver(self.airHome + '/vip-airport.html', )
             elif '[3]机场汇总' in usr_c:
-                resp = sAirportSpider.slaver(self.airHome + '/airport.html', )
-            elif '[4]返回' in usr_c:
+                resp = sas.slaver(self.airHome + '/airport.html', )
+            elif '[4]返回' in usr_c or usr_c is None:
                 resp = True
             else:
                 resp = False
-        except TypeError:
-            resp = False
         finally:
             # 返回
             return resp
@@ -647,11 +634,9 @@ class V2RaycSpider_Master_Panel(object):
                 os.startfile(SYS_LOCAL_vPATH)
             elif '[4]查询可用链接' in usr_c:
                 resp = sp.find_aviLink()
-            elif '[5]返回' in usr_c:
+            elif '[5]返回' in usr_c or usr_c is None:
                 resp = True
             else:
                 resp = False
-        except TypeError:
-            resp = False
         finally:
             return resp
