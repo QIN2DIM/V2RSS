@@ -126,4 +126,8 @@ venv.bak/
 dmypy.json
 
 # Pyre type checker
-.pyre/
+*.xml
+*.iml
+
+/V2RaycSpider1125/tests/
+/V2RaycSpider1125/README.md
