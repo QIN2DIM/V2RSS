@@ -22,49 +22,47 @@
 
 - #### 2020.12.01 v_1.0.3.12162350.11.beta
 
-  > **重要更新**
+    > **Major Update**
 
-  1. （beta）我们为`iOS`用户提供了一种基于`捷径指令` + `URL Scheme`  的订阅链接瞬时获取解决方案
+    1. （*beta）We have provided a instant access solution of subscribes for `iOS `users based on `shortcut command` + `URL scheme`
+        - [x] `Shadowrocket` + `shortcut command` 
+        - [ ] `Quantumult` + `shortcut command`
 
-      - 该方案API接口暂未开放，待功能完善后会暴露在技术文档中
-
-      - [x] `Shadowrocket` + `shortcut command` 
-      - [ ] `Quantumult` + `shortcut command`
-
-  2. 采集架构优化，引入基于`exec` + `with`的节点动态嗅探加载策略
+    2. Fine-tuning the architecture.
 
 - #### 2020.11.24 v_1.0.2.11162350.11.beta
 
-  > **重要更新**
+    > **Major Update**
 
-  1. 强化工程鲁棒性并进一步优化采集工作流
-  2. 优化工程逻辑，降低部署难度
-  3. 引入用户鉴权
+    1. Further optimize the project engineering structure.
+    2. Further optimize the program logic to reduce the difficulty of project deployment.
+    3. Modify user permissions.
 
-  > **功能迭代**
+    > **Function Iteration**
 
-  1. 重载模块并暂时停用`TrojanCollectionModule(TCM)`
-  2. 拓展队列容量至 `200pieces`.
-  3. 编写 `ACM-CentralEngine`学习拟人行为
+    1. Overload the `TrojanCollectionModule(TCM)`.
+    2. Expand the work queue to `150pieces/day`.
+    3. Program the `ACM-CentralEngine` to counter the anti-crawler mechanism.
 
-  > **性能调优**
+    > **Performance Tuning**
 
-  1. 引入  `Type-SuperClass Elastic Scaling Solution(T-SC ESS)`.
-  2. 引入 `Goroutine-APSchedule Mode(G-APSM)`.
+    1. Introduce the  `Type-SuperClass Elastic Scaling Solution(T-SC ESS)`.
+    2. Introduce the `Goroutine-APSchedule Mode(G-APSM)`.
 
 - #### **2020.10.20 v_4.5.2** 
 
-  > **重要更新**
+    > **Major Update**
 
-  1. 支持当前热门类型（ `Trojan`、`v2ray`、`ssr`）订阅链接的多任务并发采集
-  2. 重写文档树，旧版软件已弃用，请将PC客户端升级至最新版本
-  3. 添加自动更新功能
+    1. These types of subscription links（ `Trojan`、`v2ray`、`ssr` ）are supported by multi-threaded federated collections.
+    2. The document tree has been rewritten, and the old version of the software cannot run normally.
+        -  :old_key: Update the `v2raycs Client` to the latest version.
+    3. Add auto update function.
 
-  > **功能迭代** 
+    > **Function Iteration** 
 
-  1. 使用`Redis`接管链接分发业务以提高程序整体的运行效率
-  2. 暴露部分链接请求接口，详细食用方法请看技术文档
-  3. `ConfinementTime` 增加至 `30s/e`.
+    1. Using `Redis` to take over the access business to improve distribution efficiency.
+    2. Open get interface. Please refer to the manual for usage.
+    3. `ConfinementTime` increased to `30s/e`.
 
 ## :eagle: 快速上手
 
@@ -74,7 +72,7 @@
 
     - 软件使用：运行`V2Ray云彩姬.exe` 既可启动本体
 
-         [V2Ray云彩姬使用说明](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/V2Ray云彩姬使用说明.md)
+        [V2Ray云彩姬使用说明](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/V2Ray云彩姬使用说明.md)
 
 - **【方案二】开发者**
 
@@ -167,7 +165,7 @@ print("subs_ssr: {}\nsubs_: {}\nsubs_v2ray: {}\n".format(subs_ssr,subs_trojan,su
 
 - **防火墙警告**
 
-  ​	首次运行可能会弹出提示
+    ​	首次运行可能会弹出提示
 
 
 
@@ -180,14 +178,14 @@ print("subs_ssr: {}\nsubs_: {}\nsubs_v2ray: {}\n".format(subs_ssr,subs_trojan,su
 - [ ] 为`iOS`用户提供一种基于`捷径指令` + `URL Scheme`  的订阅链接瞬时获取解决方案
     - [ ] `云彩姬` + `Shadowrocket`
     - [ ] `云彩姬` + `Quantumult`
-- [ ]  兼容所有`Subclass`订阅
+- [ ] 兼容所有`Subclass`订阅
     - [x] `Trojan-go`、`Trojan-gfw`
     - [x] `V2ray`、`ShadowSocksR`
     - [ ] `Surge 3` 、`Quantumult`、`Kitsunebi`
 - [x] 合并订阅链接消息队列，PC端可查看目前在库的`Subscribe Link`并择一获取
-  - [x] 合并队列
-  - [x] 查看链接
-  - [x] 择一获取
+    - [x] 合并队列
+    - [x] 查看链接
+    - [x] 择一获取
 - [ ] 前后端分离，使用Flask包装中间件
     - [ ] 逐渐停用`easygui`前端模块，开发跨平台视图交互模块
     - [ ] 引入`呼吸节拍`中间件，让任务行为拟人化
