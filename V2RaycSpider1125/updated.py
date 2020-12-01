@@ -4,4 +4,3 @@ from BusinessViewLayer.panel.update import InstallGuider as app
 if __name__ == '__main__':
     # Installation guide
     app().run()
-

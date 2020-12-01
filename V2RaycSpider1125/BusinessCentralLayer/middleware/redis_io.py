@@ -1,6 +1,7 @@
 __all__ = ['RedisClient', 'RedisDataDisasterTolerance']
 
 import redis
+
 from config import REDIS_MASTER, REDIS_SECRET_KEY, TIME_ZONE_CN, CRAWLER_SEQUENCE, logger
 
 REDIS_CLIENT_VERSION = redis.__version__
@@ -22,7 +23,7 @@ class RedisClient(object):
         self.subscribe = ''
         self.crawler_seq = CRAWLER_SEQUENCE
 
-    def add(self, key_name, subscribe, life_cycle: str):
+    def add(self, key_name=None, subscribe=None, life_cycle: str = None):
         """
 
         @param key_name: hash_name
@@ -35,10 +36,11 @@ class RedisClient(object):
         finally:
             self.kill()
 
-    def get(self, key_name) -> str or bool:
+    def get(self, key_name, pop_=0) -> str or bool:
         """
         分发订阅链接
         每次get请求都会强制关闭连接
+        @param pop_:
         @param key_name: 任务类型，用于定位 redis hash name
         @return:
         """
@@ -48,7 +50,7 @@ class RedisClient(object):
                 target_raw: dict = self.db.hgetall(key_name)
                 try:
                     # 弹出并捕获 <离当前时间> <最远一次入库>的订阅连接 既订阅链接并未按end_life排序
-                    self.subscribe, end_life = list(target_raw.items()).pop(0)
+                    self.subscribe, end_life = list(target_raw.items()).pop(pop_)
 
                     # end_life: requests_time(采集时间点) + vip_crontab(机场会员时长(账号试用时长))
 
@@ -58,7 +60,6 @@ class RedisClient(object):
 
                     # 若之后版本的项目支持end_life动态更新时(既加入某种技术能够实时反馈机场主对会员规则的修改)
                     # 此分发逻辑将会加入排序功能
-                    # TODO 当前版本使用<可视-选择-获取>的方案给予使用者挑选链接的权限
 
                     # 若链接过期 -> loop next -> finally :db-del stale subscribe
                     if self.is_stale(end_life):
@@ -83,8 +84,10 @@ class RedisClient(object):
         @param key_name:secret_key
         @return:
         """
+        docker: dict = self.db.hgetall(key_name)
+        # 管理员指令获取的链接
         if self.db.hlen(key_name) != 0:
-            for subscribe, end_life in self.db.hgetall(key_name).items():
+            for subscribe, end_life in docker.items():
                 if self.is_stale(end_life):
                     logger.debug(f'del-({key_name})--{subscribe}')
                     self.db.hdel(key_name, subscribe)
@@ -131,7 +134,7 @@ class RedisDataDisasterTolerance(RedisClient):
 
         from config import REDIS_SLAVER_DDT
         if not REDIS_SLAVER_DDT.get('host'):
-            logger.warning(f'未设置数据容灾服务器，该职能将由{self.__class__.__name__}执行')
+            logger.warning('未设置数据容灾服务器，该职能将由Master执行')
             REDIS_SLAVER_DDT = REDIS_MASTER
             REDIS_SLAVER_DDT.update({'db': REDIS_SLAVER_DDT['db'] + 1})
             logger.debug("备份重定向 --> {}".format(REDIS_SLAVER_DDT))

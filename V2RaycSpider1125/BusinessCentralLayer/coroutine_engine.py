@@ -2,16 +2,17 @@
 #  若您为项目开发者 请不要在生产环境中启用进度条功能 <- 未知bug
 
 
-__all__ = ['V2rayCloudSpiderSpeedUp', 'PuppetCore']
+__all__ = ['vsu', 'PuppetCore']
 
 import gevent
-from gevent.queue import Queue
+
+from BusinessCentralLayer.middleware.work_io import *
 
 
 class CoroutineEngine(object):
     """协程加速控件"""
 
-    def __init__(self, core, power: int = 8, **kwargs) -> None:
+    def __init__(self, core, power: int = None, **kwargs) -> None:
         """
 
         :param core: 驱动核心
@@ -21,34 +22,41 @@ class CoroutineEngine(object):
         # 初始化参数
         self.max_queue_size = 0
         self.power = power
-        self.work_Q = Queue()
+        # self.work_Q = Queue()
 
         # 驱动器
         self.core = core
 
         # 额外参数
         self.config_path = kwargs.get("config_path")  # 配置文件
-        self.user_cluster = kwargs.get("user_cluster")  # 业务列表
+        self.docker = kwargs.get("docker")  # 业务列表
         self.progress_name = kwargs.get('progress_name')  # 进度条注释
         self.silence = kwargs.get('silence')  # selenium 静默启动
+        self.work_Q = Queue()
 
-    def load_tasks(self, tasks=None) -> None:
+    def load_tasks(self, tasks: list) -> None:
         if isinstance(tasks, list):
             for task in tasks:
                 self.work_Q.put_nowait(task)
-        elif not tasks:
-            pass
 
-        self.max_queue_size = self.work_Q.qsize()
-        # 弹性协程
-        self.power = 72 if self.max_queue_size >= 72 else self.max_queue_size
+    def flexible_power(self):
+        """
+        @todo 优化弹性协程算法
+        @return:
+        """
+        import psutil
+        # 若未指定self.power 则使用弹性协程方案调度资源
+        if not self.power:
+            self.max_queue_size = self.work_Q.qsize()
+            # limit = round((psutil.cpu_count() / CRAWLER_SEQUENCE.__len__()))
+            limit = psutil.cpu_count()
+            self.power = limit if self.max_queue_size >= limit else self.max_queue_size
 
     def launch(self, ) -> None:
         while not self.work_Q.empty():
             task = self.work_Q.get_nowait()
             self.control_driver(task)
 
-    # 移交外部控制权
     def control_driver(self, task) -> None:
         """
         重写此模块
@@ -56,7 +64,6 @@ class CoroutineEngine(object):
         :return:
         """
 
-    # 进度条
     def progress_manager(self, total, desc='Example', leave=True, ncols=100, unit='B', unit_scale=True) -> None:
         """
         进度监测
@@ -81,7 +88,6 @@ class CoroutineEngine(object):
                 now_2 = self.work_Q.qsize() - now_1
                 progress_bar.update(abs(now_2))
 
-    # 入口
     def run(self, speed_up=True, use_bar=False) -> None:
         """
         协程任务接口
@@ -89,8 +95,12 @@ class CoroutineEngine(object):
         """
         task_list = []
 
-        # 刷新任务队列
-        self.load_tasks(tasks=self.user_cluster)
+        if isinstance(self.docker, list):
+            # 刷新任务队列
+            self.load_tasks(tasks=self.docker)
+        else:
+            # 业务交接
+            self.work_Q = self.docker
 
         # 启动进度条
         if use_bar:
@@ -101,6 +111,9 @@ class CoroutineEngine(object):
         # 弹性协程
         if not speed_up:
             self.power = 1
+        else:
+            self.flexible_power()
+        logger.debug('flexible_power:{}'.format(self.power))
 
         for x in range(self.power):
             task = gevent.spawn(self.launch)
@@ -108,12 +121,12 @@ class CoroutineEngine(object):
         gevent.joinall(task_list)
 
 
-class V2rayCloudSpiderSpeedUp(CoroutineEngine):
+class V2raycSpiderSpeedUp(CoroutineEngine):
     """协程控件继承"""
 
-    def __init__(self, core, user_cluster=None, interface='run', power: int = None) -> None:
-        super(V2rayCloudSpiderSpeedUp, self).__init__(core=core, power=power, user_cluster=user_cluster,
-                                                      progress_name=f'{self.__class__.__name__}')
+    def __init__(self, core, docker: Middleware.poseidon or list = None, interface='run', power: int = None) -> None:
+        super(V2raycSpiderSpeedUp, self).__init__(core=core, power=power, docker=docker,
+                                                  progress_name=f'{self.__class__.__name__}')
         self.interface = interface
 
     def control_driver(self, task) -> None:
@@ -127,3 +140,4 @@ class PuppetCore(object):
 
 
 QuickDumps = type("QuickDumps", (object,), {"run": lambda expr: exec(expr)})
+vsu = V2raycSpiderSpeedUp

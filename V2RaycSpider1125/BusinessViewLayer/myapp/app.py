@@ -1,8 +1,8 @@
 __all__ = ['app']
 
 from flask import request, Flask, jsonify, redirect
+
 from BusinessViewLayer.myapp.apis import *
-from config import ROUTE_API, SERVER_PATH_DEPOT_VCS
 
 app = Flask(__name__)
 
@@ -34,11 +34,17 @@ def version_manager():
         return jsonify(apis_version_manager(SERVER_PATH_DEPOT_VCS, dict(request.form).get('local_version', False)))
 
 
-@app.route('/spider', methods=['GET'])
-def parse_header():
-    return jsonify({'ip': request.environ.get('HTTP_X_REAL_IP', request.remote_addr)}), 200
-
-
 @app.route("/", methods=['GET'])
 def redirect_to_my_blog():
     return redirect("https://www.qinse.top/v2raycs/")
+
+
+@app.route("/", methods=['GET'])
+def admin(command_):
+    return jsonify(apis_admin_pop(command_))
+
+
+if __name__ == '__main__':
+    from config import API_PORT, API_DEBUG
+
+    app.run(host='127.0.0.1', port=API_PORT + 1, debug=True)

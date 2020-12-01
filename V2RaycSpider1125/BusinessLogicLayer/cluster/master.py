@@ -1,27 +1,22 @@
-# TODO:
-#  1.继续微调加载参数
-#  2.采集不求快，求稳！
-
-
 __all__ = ['ActionMasterGeneral']
 
-import time
 import random
+import time
 from datetime import datetime, timedelta
-from string import printable
 from os.path import join
+from string import printable
 
 from redis.exceptions import RedisError
-from selenium.webdriver.common.by import By
-from selenium.webdriver import Chrome, ChromeOptions
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.common.exceptions import *
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 
-from config import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_DATABASE_CACHE, logger
 from BusinessCentralLayer.middleware.subscribe_io import *
-from BusinessLogicLayer.cluster.plugins import get_header, get_proxy
+from BusinessLogicLayer.plugins import get_header, get_proxy
+from config import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_DATABASE_CACHE, logger
 
 
 class BaseAction(object):
@@ -154,7 +149,7 @@ class BaseAction(object):
         @todo 使用 retrying 模块替代retry参数实现的功能（引入断网重连，断言重试，行为回滚...）
         @return:
         """
-        self.subscribe = WebDriverWait(api, 100).until(EC.presence_of_element_located((
+        self.subscribe = WebDriverWait(api, 30).until(EC.presence_of_element_located((
             By.XPATH,
             element_xpath_str
         ))).get_attribute(href_xpath_str)
@@ -206,34 +201,38 @@ class ActionMasterGeneral(BaseAction):
     观察了一波发现，大多数机场主前端功底薄弱，基于STAFF原生的代码基本一致，故生此类+协程大幅度减少代码量
     """
 
-    def __init__(self, register_url: str, silence: bool = True, anti: bool = True, email: str = '@gmail.com',
+    def __init__(self, register_url: str, silence: bool = True, anti_slider: bool = False, email: str = '@gmail.com',
                  life_cycle: int = 1, hyper_params: dict = None):
         """
 
         @param register_url: 机场注册网址，STAFF原生register接口
         @param silence: 静默启动；为True时静默访问<linux 必须启用>
-        @param anti: 目标是否有反爬虫措施；默认为True BaseAction将根据目标是否具备反爬虫措施做出不同的行为
+        @param anti_slider: 目标是否有反爬虫措施；默认为True BaseAction将根据目标是否具备反爬虫措施做出不同的行为
         @param email: register页面显示的默认邮箱；常见为 @qq.com or @gmail.com
         @param life_cycle: 会员试用时长 trail time；
         @param hyper_params: 模型超级参数
         """
-        super(ActionMasterGeneral, self).__init__(silence, anti, email, life_cycle)
+        super(ActionMasterGeneral, self).__init__(silence, True, email, life_cycle)
 
         # 机场注册网址
         self.register_url = register_url
+
+        self.anti_slider = anti_slider
 
         # 模型超级参数
         self.hyper_params = {
             'v2ray': True,
             'ssr': True,
             'trojan': False,
-            'anti_slider': False,
+            'rocket': False,  # Shadowrocket
+            'qtl': False,  # Quantumult
+            'kit': False,  # Kitsunebi
         }
         if hyper_params:
             self.hyper_params.update(hyper_params)
 
     # TODO -> 断网重连 -> 引入retrying 第三方库替代原生代码
-    def sign_up(self, api, anti_slider=False, retry_=0, max_retry_num_=3):
+    def sign_up(self, api, anti_slider=False, retry_=0, max_retry_num_=5):
         """
 
         @param api:
@@ -243,8 +242,9 @@ class ActionMasterGeneral(BaseAction):
         @return:
         """
         if retry_ > max_retry_num_:
-            raise WebDriverException
-        from BusinessLogicLayer.cluster.plugins import anti_module
+            return False
+
+        from BusinessLogicLayer.plugins import anti_module
         WebDriverWait(api, 15) \
             .until(EC.presence_of_element_located((By.ID, 'name'))) \
             .send_keys(self.username)
@@ -268,7 +268,7 @@ class ActionMasterGeneral(BaseAction):
                 retry += 1
                 spider_module(retry)
 
-        if self.hyper_params['anti_slider']:
+        if self.anti_slider:
             if not spider_module():
                 api.refresh()
                 return self.sign_up(api)
