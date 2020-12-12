@@ -109,7 +109,6 @@ SMTP_ACCOUNT = {
     "email": "",  # SMTP邮箱
     "sid": "",  # SMTP授权码
 }
-
 # ---------------------------------------------------
 # TODO > 使用<SERVER酱>推送，请在SERVER_CHAN_SCKEY填写自己的Key
 # http://sc.ftqq.com/3.version

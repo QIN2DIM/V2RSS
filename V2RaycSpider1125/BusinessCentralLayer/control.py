@@ -23,13 +23,13 @@ class ConfigQuarantine(object):
     def __init__(self):
 
         self.root = [
-            SERVER_DIR_DATABASE,
             SERVER_DIR_CLIENT_DEPORT, SERVER_PATH_DEPOT_VCS,
             SERVER_DIR_DATABASE_LOG,
             SERVER_DIR_DATABASE_CACHE,
         ]
+        self.flag = False
 
-    def set_up_file_tree(self):
+    def set_up_file_tree(self, root):
         """
         --/qinse/V2RaycSpider{verNum}
             --BCL
@@ -48,40 +48,54 @@ class ConfigQuarantine(object):
             --*tests
         """
 
-        def start_repair(root):
-            # 检查默认下载地址是否残缺 深度优先初始化系统文件
-            for child_ in root:
-                if not os.path.exists(child_):
-                    logger.error(f"系统文件缺失 {child_}")
-                    try:
-                        logger.debug(f"尝试链接系统文件 {child_}")
-                        # 初始化文件夹
-                        if os.path.isdir(child_) or not os.path.splitext(child_)[-1]:
-                            os.mkdir(child_)
-                            logger.success(f"系统文件链接成功->{child_}")
-                        # 初始化文件
-                        else:
-                            if child_ == SERVER_PATH_DEPOT_VCS:
-                                try:
-                                    with open(child_, 'w', encoding='utf-8', newline='') as f:
-                                        csv.writer(f).writerow(['version', 'title'])
-                                    logger.success(f"系统文件链接成功->{child_}")
-                                except Exception as e:
-                                    logger.exception(f"Exception{child_}{e}")
-                    except Exception as e:
-                        logger.exception(e)
+        # 检查默认下载地址是否残缺 深度优先初始化系统文件
+        for child_ in root:
+            if not os.path.exists(child_):
+                self.flag = True
+                # logger.error(f"系统文件缺失 {child_}")
+                try:
+                    # logger.debug(f"尝试链接系统文件 {child_}")
+                    # 初始化文件夹
+                    if os.path.isdir(child_) or not os.path.splitext(child_)[-1]:
+                        os.mkdir(child_)
+                        logger.success(f"系统文件链接成功->{child_}")
+                    # 初始化文件
+                    else:
+                        if child_ == SERVER_PATH_DEPOT_VCS:
+                            try:
+                                with open(child_, 'w', encoding='utf-8', newline='') as f:
+                                    csv.writer(f).writerow(['version', 'title'])
+                                logger.success(f"系统文件链接成功->{child_}")
+                            except Exception as e:
+                                logger.exception(f"Exception{child_}{e}")
+                except Exception as e:
+                    logger.exception(e)
 
-        try:
-            logger.debug("启动<环境检测>模块...")
-
-            if [cq for cq in reversed(self.root) if not os.path.exists(cq)]:
-                logger.error('系统数据库残缺！')
-                start_repair(self.root)
-        finally:
-            logger.success("运行环境链接完毕")
+    @staticmethod
+    def check_config():
+        if not all(SMTP_ACCOUNT.values()):
+            logger.warning('您未正确配置<通信邮箱>信息(SMTP_ACCOUNT)')
+        if not SERVER_CHAN_SCKEY:
+            logger.warning("您未正确配置<Server酱>的SCKEY")
+        if not all([REDIS_SLAVER_DDT.get("host"), REDIS_SLAVER_DDT.get("password")]):
+            logger.warning('您未正确配置<Redis-Slaver> 本项目的部分功能将毫无意义')
+        if not all([REDIS_MASTER.get("host"), REDIS_MASTER.get("password")]):
+            logger.error("您未正确配置<Redis-Master> 此配置为“云彩姬”的核心组件，请配置后重启项目！")
+            exit()
 
     def run(self):
-        threading.Thread(target=self.set_up_file_tree, name='set_up_file_tree').start()
+        try:
+            if [cq for cq in reversed(self.root) if not os.path.exists(cq)]:
+                logger.error('系统文件残缺！')
+                logger.debug("启动<工程重构>模块...")
+                self.set_up_file_tree(self.root)
+            self.check_config()
+
+        finally:
+            if self.flag:
+                logger.success(">>> 运行环境链接完成，请重启项目")
+                logger.info(">>> 提醒您正确配置Chrome及对应版本的ChromeDriver")
+                exec("if self.flag:\n\texit()")
 
 
 ConfigQuarantine().run()
