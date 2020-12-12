@@ -18,54 +18,6 @@
 - 理论上支持所有类型订阅的采集；
 - 更多项目细节请访问[李芬特小窝Blog](https://www.qinse.top/v2raycs/) :smirk:
 
-## :loudspeaker: 更新日志
-
-- #### 2020.12.01 v_1.0.3.12162350.11.beta
-
-  > **重要更新**
-
-  1. （beta）我们为`iOS`用户提供了一种基于`捷径指令` + `URL Scheme`  的订阅链接瞬时获取解决方案
-
-      - 该方案API接口暂未开放，待功能完善后会暴露在技术文档中
-
-      - [x] `Shadowrocket` + `shortcut command` 
-      - [ ] `Quantumult` + `shortcut command`
-
-  2. 采集架构优化，引入基于`exec` + `with`的节点动态嗅探加载策略
-
-- #### 2020.11.24 v_1.0.2.11162350.11.beta
-
-  > **重要更新**
-
-  1. 强化工程鲁棒性并进一步优化采集工作流
-  2. 优化工程逻辑，降低部署难度
-  3. 引入用户鉴权
-
-  > **功能迭代**
-
-  1. 重载模块并暂时停用`TrojanCollectionModule(TCM)`
-  2. 拓展队列容量至 `200pieces`.
-  3. 编写 `ACM-CentralEngine`学习拟人行为
-
-  > **性能调优**
-
-  1. 引入  `Type-SuperClass Elastic Scaling Solution(T-SC ESS)`.
-  2. 引入 `Goroutine-APSchedule Mode(G-APSM)`.
-
-- #### **2020.10.20 v_4.5.2** 
-
-  > **重要更新**
-
-  1. 支持当前热门类型（ `Trojan`、`v2ray`、`ssr`）订阅链接的多任务并发采集
-  2. 重写文档树，旧版软件已弃用，请将PC客户端升级至最新版本
-  3. 添加自动更新功能
-
-  > **功能迭代** 
-
-  1. 使用`Redis`接管链接分发业务以提高程序整体的运行效率
-  2. 暴露部分链接请求接口，详细食用方法请看技术文档
-  3. `ConfinementTime` 增加至 `30s/e`.
-
 ## :eagle: 快速上手
 
 - **【方案一】用户**
@@ -78,12 +30,10 @@
 
 - **【方案二】开发者**
 
-    - 下载源码
+    1. Clone项目；
+    2. 根据提示信息合理配置`config.py`后运行`main.py` 既可部署项目。
 
 ![Snipaste_2020-11-25_12-19-45](https://i.loli.net/2020/11/25/P9Kyr1ZEG43obnD.png)
-
-- 根据提示信息合理配置`config.py`后运行`main.py` 既可部署项目
-
 
 ## :video_game: 进阶玩法
 
@@ -174,6 +124,54 @@ print("subs_ssr: {}\nsubs_: {}\nsubs_v2ray: {}\n".format(subs_ssr,subs_trojan,su
 ![MhwiZfOz3VdDPU5](https://i.loli.net/2020/11/25/ImlKL3x68YfHQJi.png)
 
 ![2](https://i.loli.net/2020/11/25/nGk1XiaYVc2zAZp.png)
+
+## :loudspeaker: 更新日志
+
+- #### 2020.12.01 v_1.0.3.12162350.11.beta
+
+    > **重要更新**
+
+    1. （beta）我们为`iOS`用户提供了一种基于`捷径指令` + `URL Scheme`  的订阅链接瞬时获取解决方案
+
+        - 该方案API接口暂未开放，待功能完善后会暴露在技术文档中
+
+        - [x] `Shadowrocket` + `shortcut command` 
+        - [ ] `Quantumult` + `shortcut command`
+
+    2. 采集架构优化，引入基于`exec` + `with`的节点动态嗅探加载策略
+
+- #### 2020.11.24 v_1.0.2.11162350.11.beta
+
+    > **重要更新**
+
+    1. 强化工程鲁棒性并进一步优化采集工作流
+    2. 优化工程逻辑，降低部署难度
+    3. 引入用户鉴权
+
+    > **功能迭代**
+
+    1. 重载模块并暂时停用`TrojanCollectionModule(TCM)`
+    2. 拓展队列容量至 `200pieces`.
+    3. 编写 `ACM-CentralEngine`学习拟人行为
+
+    > **性能调优**
+
+    1. 引入  `Type-SuperClass Elastic Scaling Solution(T-SC ESS)`.
+    2. 引入 `Goroutine-APSchedule Mode(G-APSM)`.
+
+- #### **2020.10.20 v_4.5.2** 
+
+    > **重要更新**
+
+    1. 支持当前热门类型（ `Trojan`、`v2ray`、`ssr`）订阅链接的多任务并发采集
+    2. 重写文档树，旧版软件已弃用，请将PC客户端升级至最新版本
+    3. 添加自动更新功能
+
+    > **功能迭代** 
+
+    1. 使用`Redis`接管链接分发业务以提高程序整体的运行效率
+    2. 暴露部分链接请求接口，详细食用方法请看技术文档
+    3. `ConfinementTime` 增加至 `30s/e`.
 
 ## :world_map: 开源计划
 
