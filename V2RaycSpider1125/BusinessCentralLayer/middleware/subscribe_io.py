@@ -1,52 +1,62 @@
-__all__ = ['flexible_distribute', 'FlexibleDistribute', 'to_admin']
+__all__ = ['flexible_distribute', 'FlexibleDistribute', 'to_admin', 'detach']
 
 import csv
-import os
 import threading
+from uuid import uuid4
 
+from BusinessCentralLayer.middleware.flow_io import FlowTransferStation
 from BusinessCentralLayer.middleware.work_io import *
-from BusinessLogicLayer.dog import subs2node
+from BusinessCentralLayer.middleware.redis_io import RedisClient
 
 
-@logger.catch()
 class FlexibleDistribute(object):
     """数据交换 弹性分发"""
 
-    def __init__(self, docker: tuple = None) -> None:
+    def __init__(self, docker: list = None, at_once=False):
         """
 
-        @param docker: (class_, {subscribe: end_life})
+        @param docker:['domain', 'subs', 'class_', 'end_life', 'res_time', 'passable',
+                        'username', 'password', 'email']
+        @param at_once:立即启动数据存储功能，当单只爬虫调试时弃用，若为集群运动，数据存储功能将有其他模块单独负责
         """
         # 若容器激活，迅速入队
-        if all(docker):
-            Middleware.zeus.put_nowait(docker)
-
-            self.key_name = REDIS_SECRET_KEY.format(docker[0])
-
-    def to_mysql(self) -> None:
-        ...
-
-    def to_mongo(self) -> None:
-        ...
+        try:
+            if all(docker) and isinstance(docker, list):
+                Middleware.zeus.put_nowait(dict(zip(SQLITE3_CONFIG['header'].split(','), docker + [str(uuid4()), ])))
+            if at_once:
+                self.at_once = at_once
+                self.start()
+        except TypeError:
+            pass
 
     @staticmethod
-    def to_redis() -> None:
+    def to_sqlite3(docker: dict):
         """
 
+        @param docker: {uuid1:{key1:value1, key2:value2, ...}, uuid2:{key1:value1, key2:value2, ...}, ...} len >= 1
         @return:
         """
-        # 初始化容器
-        docker = dict(zip(CRAWLER_SEQUENCE, [{}] * 2))
+        try:
+            if docker.keys().__len__() >= 1:
+                docker = [tuple(data.values()) for data in docker.values()]
+                # logger.success(f'>> STORING -> Sqlite3')
+        except Exception as e:
+            logger.exception(e)
+        finally:
+            FlowTransferStation(docker=docker).add()
 
-        # 任务出列 更新容器
-        while not Middleware.zeus.empty():
-            alice = Middleware.zeus.get_nowait()
-            docker[alice[0]].update((alice[-1]))
+    @staticmethod
+    def to_redis():
+        r = RedisClient().get_driver()
+        for docker in Middleware.cache_redis_queue.items():
+            key_name = REDIS_SECRET_KEY.format(docker[0])
+            if docker[-1]:
+                r.hset(key_name, mapping=docker[-1])
+        # logger.success(f">> PUSH -> Redis")
 
-        # 刷新Redis
-        bob = RedisClient(db=4).get_driver()
-        for xps in docker.items():
-            bob.hset(name=xps[0], mapping=xps[-1])
+        for k in Middleware.cache_redis_queue.keys():
+            Middleware.cache_redis_queue[k] = {}
+        # logger.debug(f'>> RESET <Middleware.cache_redis_queue>')
 
     @staticmethod
     def to_nginx(class_, subscribe) -> None:
@@ -60,24 +70,43 @@ class FlexibleDistribute(object):
         with open(NGINX_SUBSCRIBE.format(class_), 'w', encoding='utf-8') as f:
             f.write(subscribe)
 
+    def start(self):
+        docker = {}
+
+        # 任务出列 更新容器
+        while not Middleware.zeus.empty():
+            item = Middleware.zeus.get_nowait()
+
+            # 临时拷贝
+            docker.update({item['uuid PRIMARY KEY']: item})
+
+            # 将数据压入redis缓存
+            Middleware.cache_redis_queue[f"{item['class_']}"].update({item['subs']: item['end_life']})
+
+        # 将数据推送至redis
+        self.to_redis()
+
+        # 将数据推送至sqlite3
+        self.to_sqlite3(docker)
+
 
 # TODO:该模块将被弃用 后续版本将引入多路IO模块，代码使用class封装
-def flexible_distribute(subscribe, class_, life_cycle: str, driver_name=None):
+def flexible_distribute(subscribe, class_, end_life: str, driver_name=None):
     """
 
     @param subscribe:
     @param class_:
-    @param life_cycle:
+    @param end_life:
     @param driver_name:
     @return:
     """
-
+    from datetime import datetime
     # data --> Database(Mysql)
 
     # data --> Database(MongoDB)
 
     # data --> Redis
-    threading.Thread(target=RedisClient().add, args=(REDIS_SECRET_KEY.format(class_), subscribe, life_cycle)).start()
+    threading.Thread(target=RedisClient().add, args=(REDIS_SECRET_KEY.format(class_), subscribe, end_life)).start()
 
     # data --> csv
     with open(SERVER_PATH_DATABASE_FETCH, 'a', encoding='utf-8', newline='') as f:
@@ -94,24 +123,64 @@ def flexible_distribute(subscribe, class_, life_cycle: str, driver_name=None):
         print(e)
 
 
+def detach(subscribe, at_once=False):
+    """
+
+    @param subscribe:
+    @param at_once: 是否立即删除， True：立即删除，False:节拍同步，随ddt删除
+    @return:
+    """
+    from faker import Faker
+    from urllib.parse import urlparse
+
+    detach_subs = [[REDIS_SECRET_KEY.format(ft[2]), ft[1], str(Faker().past_datetime())] for ft in
+                   FlowTransferStation().fetch_all() if urlparse(subscribe).path in ft[1]]
+    r = RedisClient().get_driver()
+    for sub in detach_subs:
+        if at_once:
+            r.hdel(sub[0], sub[1])
+        else:
+            r.hset(sub[0], sub[1], sub[-1])
+    logger.debug(f'>> Detach -> {detach_subs}')
+
+
 def to_admin(class_):
-    response = {'msg': 'failed'}
+    subs = ''
     # 获取链接
     if class_ in CRAWLER_SEQUENCE:
         try:
             logger.debug("管理员模式--点取链接")
-            subs = markup_admin_element(class_)
-            if subs:
-                node_info: dict = subs2node(os.path.join(SERVER_DIR_DATABASE_CACHE, 'subs2node.txt'), subs)
-                logger.success('管理员模式--链接分发成功')
-                response.update(
-                    {'msg': 'success', 'subscribe': node_info.get('subs'), 'nodeInfo': node_info.get('node'),
-                     'subsType': class_})
 
-                logger.info('管理员模式--尝试补充链接池')
-                threading.Thread(target=step_admin_element, kwargs={"class_": class_}).start()
-                logger.success('管理员模式--补充成功')
+            key_name = REDIS_SECRET_KEY.format(class_)
+
+            me = [i for i in RedisClient().get_driver().hgetall(key_name).items()]
+
+            if me.__len__() >= 1:
+                # 从池中获取(最新)链接(不删除)
+                subs, end_life = me.pop()
+
+                # 将s-e加入缓冲队列，该队列将被ddt的refresh工作流同过期链接一同删除
+                # 使用缓冲队列的方案保证节拍同步，防止过热操作/失误操作贯穿Redis
+
+                # 既当管理员使用此权限获取链接时，刷出的链接并不会直接从池中删去
+                # 而是被加入缓冲队列，当ddt发动时，refresh机制会一次性删除池中所有过期链接
+                # 而apollo队列内的元素会被标记为过时信息，此时refresh将从apollo中弹出元素
+                # 与池中链接进行查找比对，若找到，则一同删去
+
+                if subs:
+                    # from BusinessLogicLayer.dog import subs2node
+                    # node_info: dict = subs2node(os.path.join(SERVER_DIR_DATABASE_CACHE, 'subs2node.txt'), subs)
+                    # cache = {'subscribe': node_info.get('subs'), 'nodeInfo': node_info.get('node')}
+                    logger.success('管理员模式--链接分发成功')
+                    threading.Thread(target=step_admin_element, kwargs={"class_": class_}).start()
+
+                    # at_once =True立即刷新，False延迟刷新（节拍同步）
+                    logger.info(f'>> try to detach subs -- {subs}')
+                    threading.Thread(target=detach, kwargs={"subscribe": subs, 'at_once': True}).start()
+
+                    return {'msg': 'success', 'subscribe': subs, 'subsType': class_}
+                else:
+                    return {'msg': 'failed'}
         except Exception as e:
             logger.exception(e)
-        finally:
-            return response
+            return {'msg': 'failed'}

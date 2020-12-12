@@ -2,6 +2,7 @@ __all__ = [
     'anti_module',  # 反爬虫组件调用入口
     'get_header',  # 获取FAKE USERAGENT
     'get_proxy',  # 获取GlobalProxyIP
+    'subs2node',  # 将订阅链接解析为节点数据
 ]
 
 import base64
@@ -18,9 +19,29 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-# -------------------------------------------
-# v4.3.X version plugin: !anti-crawler
-# -------------------------------------------
+# --------------------------------------------------
+# v4.3.X version plugin: anti-anti-spider-mechanism
+# --------------------------------------------------
+
+def subs2node(cache_path: str, subs: str) -> dict:
+    """
+    将订阅连接转换成节点数据
+    @param cache_path: .txt 缓存文件路径
+    @param subs: any class_ subscribe 需要解析的订阅链接
+    @return:{'subs': subs, "node": info}
+    """
+    if not cache_path.endswith('.txt'):
+        return {}
+
+    headers = {'user-agent': get_header()}
+    res = requests.get(subs, headers=headers)
+    if res.status_code == 200:
+        with open(cache_path, 'wb') as f:
+            f.write(base64.decodebytes(res.content))
+        with open(cache_path, 'r') as f:
+            data = [i.strip() for i in f.readlines()]
+    return {'subs': subs, "node": data[2:]}
+
 
 # 邮箱验证
 class FakerEmailMechanism(object):

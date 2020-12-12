@@ -1,6 +1,6 @@
-__all__ = ['send_email']
+__all__ = ['send_email', 'sever_chan']
 
-from config import SMTP_ACCOUNT, logger
+from config import SMTP_ACCOUNT, SERVER_CHAN_SCKEY, SERVER_DIR_DATABASE_LOG, logger
 
 
 # 邮件发送模块
@@ -41,3 +41,35 @@ def send_email(text_body, to, headers='<V2Ray云彩姬>运维日志'):
             return False
         finally:
             server.quit()
+
+
+def sever_chan(title: str = None, message: str = None) -> bool:
+    """
+    调用SERVER酱微信提示
+    @param title: 标题最大256
+    @param message: 正文，支持markdown，最大64kb
+    @return:
+    """
+    if not isinstance(title, str) or not isinstance(message, str):
+        return False
+
+    import requests
+
+    url = f"http://sc.ftqq.com/{SERVER_CHAN_SCKEY}.send"
+    params = {
+        'text': title,
+        'desp': message
+    }
+    try:
+        res = requests.get(url, params=params)
+        res.raise_for_status()
+        if res.status_code == 200 and res.json().get("errmsg") == 'success':
+            logger.success("Server酱设备通知已发送~")
+            return True
+    except requests.exceptions.HTTPError:
+        logger.error("Server酱404！！！可能原因为您的SCKEY未填写或已重置，请访问 http://sc.ftqq.com/3.version 查看解决方案")
+        logger.debug('工作流将保存此漏洞数据至error.log 并继续运行，希望您常来看看……')
+
+
+if __name__ == '__main__':
+    sever_chan("主人服务器又挂掉啦", '以下是保留的日志数据\n')

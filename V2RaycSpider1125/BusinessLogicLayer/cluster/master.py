@@ -5,6 +5,7 @@ import time
 from datetime import datetime, timedelta
 from os.path import join
 from string import printable
+from urllib.parse import urlparse
 
 from redis.exceptions import RedisError
 from selenium.common.exceptions import *
@@ -22,7 +23,7 @@ from config import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_DATABASE_CACHE, l
 class BaseAction(object):
     """针对STAFF机场的基准行为"""
 
-    def __init__(self, silence=True, anti=True, email_class='@qq.com', life_cycle=1) -> None:
+    def __init__(self, silence=True, anti=True, email_class='@qq.com', life_cycle=1, at_once=True) -> None:
         """
         设定登陆选项，初始化登陆器
         @param silence: 静默启动；为True时静默访问<linux 必须启用>
@@ -42,7 +43,10 @@ class BaseAction(object):
 
         self.register_url = ''
 
-        self.life_cycle = self.generate_life_cycle(life_cycle)
+        self.end_life = self.generate_life_cycle(life_cycle)
+
+        # 是否为单爬虫调试模式
+        self.at_once = at_once
 
     @staticmethod
     def generate_account(email_class: str = '@qq.com') -> tuple:
@@ -155,9 +159,16 @@ class BaseAction(object):
         ))).get_attribute(href_xpath_str)
         if self.subscribe:
             for x in range(3):
+                # ['domain', 'subs', 'class_', 'end_life', 'res_time', 'passable','username', 'password', 'email']
                 try:
-                    flexible_distribute(self.subscribe, class_, self.life_cycle, driver_name=self.__class__.__name__)
-                    logger.info(">> GET <{}> -- {}:{}".format(self.__class__.__name__, class_, self.subscribe))
+                    domain = urlparse(self.register_url).netloc
+                    res_time = str(datetime.now(TIME_ZONE_CN)).split('.')[0]
+                    passable = 'true'
+                    docker = [domain, self.subscribe, class_, self.end_life, res_time, passable, self.username,
+                              self.password, self.email]
+                    FlexibleDistribute(docker=docker, at_once=self.at_once)
+                    # flexible_distribute(self.subscribe, class_, self.end_life, driver_name=self.__class__.__name__)
+                    logger.success(">> GET <{}> -> {}:{}".format(self.__class__.__name__, class_, self.subscribe))
                     break
                 except RedisError:
                     time.sleep(1)
@@ -202,7 +213,7 @@ class ActionMasterGeneral(BaseAction):
     """
 
     def __init__(self, register_url: str, silence: bool = True, anti_slider: bool = False, email: str = '@gmail.com',
-                 life_cycle: int = 1, hyper_params: dict = None):
+                 life_cycle: int = 1, hyper_params: dict = None, at_once=True):
         """
 
         @param register_url: 机场注册网址，STAFF原生register接口
@@ -212,7 +223,7 @@ class ActionMasterGeneral(BaseAction):
         @param life_cycle: 会员试用时长 trail time；
         @param hyper_params: 模型超级参数
         """
-        super(ActionMasterGeneral, self).__init__(silence, True, email, life_cycle)
+        super(ActionMasterGeneral, self).__init__(silence, True, email, life_cycle, at_once)
 
         # 机场注册网址
         self.register_url = register_url
@@ -282,12 +293,11 @@ class ActionMasterGeneral(BaseAction):
                 break
             except NoSuchElementException as e:
                 # logger.exception('{} || {}'.format(self.__class__, e))
-                logger.error('{}验证超时，3s 后重试'.format(self.__class__.__name__))
+                logger.debug('{}验证超时，3s 后重试'.format(self.__class__.__name__))
                 time.sleep(3)
 
-    @logger.catch()
     def run(self):
-        logger.info("DO -- <{}>".format(self.__class__.__name__))
+        logger.info("DO -- <{}>:at_once:{}".format(self.__class__.__name__, self.at_once))
 
         api = self.set_spider_option()
         api.get(self.register_url)
@@ -314,7 +324,12 @@ class ActionMasterGeneral(BaseAction):
                     'data-clipboard-text',
                     'ssr'
                 )
+            # if self.hyper_params['trojan']: ...
+            # if self.hyper_params['kit']: ...
+            # if self.hyper_params['qtl']: ...
+        except TimeoutException:
+            logger.error(f'>>> TimeoutException <{self.__class__.__name__}> -- {self.register_url}')
         except WebDriverException as e:
-            logger.exception(">>> Exception <{}> -- {}".format(self.__class__.__name__, e))
+            logger.exception(f">>> Exception <{self.__class__.__name__}> -- {e}")
         finally:
             api.quit()

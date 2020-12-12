@@ -62,17 +62,18 @@ from BusinessCentralLayer.coroutine_engine import vsu, PuppetCore
 from BusinessCentralLayer.middleware.work_io import *
 
 
-def read_actions():
+def read_actions(class_: str):
     from BusinessLogicLayer.cluster.slavers import actions
-    for class_ in CRAWLER_SEQUENCE:
-        for slaver_ in actions.__all__:
-            exec(f"if actions.{slaver_}().hyper_params[class_]:\n\t"
-                 f"task_{class_}.append(slaver_)")
+    for slaver_ in actions.__all__:
+        exec(f"if actions.{slaver_}().hyper_params[class_]:\n\t"
+             f"task_{class_}.append(slaver_)")
 
 
-def loads_task(class_: str = '', use_plugin: bool = False, one_step=False, startup=True, loads_=True) -> bool:
+def loads_task(class_: str = '', use_plugin: bool = False, one_step=False, startup=True, loads_=True,
+               at_once=True) -> bool:
     """
     加载任务
+    @param at_once:
     @param loads_:
     @param startup:
     @param one_step:
@@ -89,12 +90,13 @@ def loads_task(class_: str = '', use_plugin: bool = False, one_step=False, start
     if loads_:
 
         # 刷新节点
-        read_actions()
+        read_actions(class_)
 
         # 乱序入队
         exec("import random\nrandom.shuffle(eval('task_' + class_))")
         for task_name in eval("task_" + class_):
-            expr = f'from BusinessLogicLayer.cluster.slavers.actions import {task_name}\n{task_name}().run()'
+            expr = f'from BusinessLogicLayer.cluster.slavers.actions import {task_name}\n' \
+                   f'{task_name}(at_once={at_once}).run()'
             Middleware.poseidon.put_nowait(expr)
             if one_step:
                 break
@@ -121,3 +123,7 @@ def step(class_: str = '') -> bool:
         Middleware.poseidon.put_nowait(expr)
 
         return True
+
+
+if __name__ == '__main__':
+    loads_task('ssr', one_step=True)

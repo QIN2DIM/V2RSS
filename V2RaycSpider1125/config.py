@@ -1,6 +1,5 @@
 from os.path import join, dirname
 from sys import platform
-
 import pytz
 from environs import Env
 from loguru import logger
@@ -98,14 +97,25 @@ API_THREADED = env.bool("API_THREADED", True)
 API_PORT = env.int("API_PORT", 6500)
 OPEN_HOST = "127.0.0.1" if API_DEBUG or "win" in platform else "0.0.0.0"
 # ---------------------------------------------------
-# TODO (*)SMTP_ACCOUNT -- 用于发送panic信息警报，默认发送给自己
-# 推荐使用QQ邮箱，开启邮箱SMTP服务教程如下
+# TODO (*)Noticer -- 用于发送panic信息警报，默认发送给自己
+# 1. 当只需要发送给自己时推荐使用SERVER酱，两种通讯方式SERVER酱优先级更高
+# 2. 此项非必要填写，若为空则不会发送警告信息
+# ---------------------------------------------------
+# ---------------------------------------------------
+# TODO > 使用Email推送-推荐使用QQ邮箱，开启邮箱SMTP服务教程如下
 # https://service.mail.qq.com/cgi-bin/help?subtype=1&&id=28&&no=1001256
 # ---------------------------------------------------
 SMTP_ACCOUNT = {
     "email": "",  # SMTP邮箱
     "sid": "",  # SMTP授权码
 }
+
+# ---------------------------------------------------
+# TODO > 使用<SERVER酱>推送，请在SERVER_CHAN_SCKEY填写自己的Key
+# http://sc.ftqq.com/3.version
+# ---------------------------------------------------
+SERVER_CHAN_SCKEY = ''
+
 # ---------------------------------------------------
 # TODO (√)CHROMEDRIVER_PATH -- ChromeDriver的路径
 # 1.本项目内置的ChromeDriver可能与您的Chrome版本不适配。若您发现内置的ChromeDriver不能驱动项目，请根据下方提供的链接下载对应版本的文件
@@ -184,6 +194,14 @@ else:
 SERVER_DIR_DATABASE = env.str(
     "SERVER_DIR_DATABASE", join(SERVER_DIR_PROJECT, "Database")
 )
+
+# TODO (√)SQLITE3 -- 文件数据库配置
+SQLITE3_CONFIG = {
+    'db': join(SERVER_DIR_DATABASE, 'v2raycs.db'),
+    'table': 'v2raycs',
+    'header': ','.join(['domain', 'subs', 'class_', 'end_life', 'res_time', 'passable',
+                        'username', 'password', 'email', 'uuid PRIMARY KEY']),
+}
 
 # 历史客户端仓库
 SERVER_DIR_CLIENT_DEPORT = env.str(

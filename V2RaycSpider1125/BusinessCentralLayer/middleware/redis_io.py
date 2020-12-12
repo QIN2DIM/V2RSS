@@ -71,9 +71,12 @@ class RedisClient(object):
                 except IndexError:
                     logger.critical("{}.get() IndexError".format(self.__class__.__name__))
                     return False
-                # 烫手:见光死
+                # 关联解除
                 finally:
                     self.db.hdel(key_name, self.subscribe)
+
+                    from BusinessCentralLayer.middleware.subscribe_io import detach
+                    detach(self.subscribe, at_once=True)
         finally:
             # 关闭连接
             self.kill()
@@ -84,6 +87,7 @@ class RedisClient(object):
         @param key_name:secret_key
         @return:
         """
+
         docker: dict = self.db.hgetall(key_name)
         # 管理员指令获取的链接
         if self.db.hlen(key_name) != 0:
@@ -153,6 +157,7 @@ class RedisDataDisasterTolerance(RedisClient):
         @param class_: subscribe type  `ssr` or `v2ray` or `trojan` ...
         @return:
         """
+
         key_name = REDIS_SECRET_KEY.format(class_)
         self.refresh(key_name)
 

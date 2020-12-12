@@ -102,18 +102,17 @@ class CoroutineEngine(object):
             # 业务交接
             self.work_Q = self.docker
 
-        # 启动进度条
-        if use_bar:
-            import threading
-            threading.Thread(target=self.progress_manager,
-                             args=(self.max_queue_size, self.progress_name + '[{}]'.format(self.power))).start()
-
         # 弹性协程
         if not speed_up:
             self.power = 1
         else:
             self.flexible_power()
         logger.debug('flexible_power:{}'.format(self.power))
+
+        # 启动进度条
+        import threading
+        threading.Thread(target=self.progress_manager,
+                         args=(self.max_queue_size, self.progress_name + '[{}]'.format(self.power))).start()
 
         for x in range(self.power):
             task = gevent.spawn(self.launch)

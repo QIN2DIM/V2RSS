@@ -1,10 +1,9 @@
 __all__ = ['GeventSchedule']
 
-import threading
 import time
+import threading
 
 import schedule
-
 from BusinessCentralLayer.middleware.redis_io import *
 from BusinessCentralLayer.sentinel import noticer
 from BusinessLogicLayer.cluster import __task__

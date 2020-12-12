@@ -1,6 +1,4 @@
-from datetime import datetime
 from gevent.queue import Queue
-from BusinessCentralLayer.middleware.redis_io import RedisClient
 from config import *
 
 
@@ -17,34 +15,11 @@ class Middleware:
     # work
     poseidon = Queue()
 
-
-def markup_admin_element(class_: str) -> str:
-    """
-
-    @param class_: seq str
-    @return:
-    """
-    key_name = REDIS_SECRET_KEY.format(class_)
-
-    r = RedisClient().get_driver()
-
-    me = [i for i in r.hgetall(key_name).items()]
-
-    if me.__len__() >= 1:
-        # 从池中获取(最新)链接(不删除)
-        subs, end_life = [i for i in r.hgetall(key_name).items()].pop()
-        flag = str(datetime.now(TIME_ZONE_CN)).split('.')[0]
-        # 将s-e加入缓冲队列，该队列将被ddt的refresh工作流同过期链接一同删除
-        # 使用缓冲队列的方案保证节拍同步，防止过热操作/失误操作贯穿Redis
-
-        r.hset(key_name, key=subs, value=flag)
-        # 既当管理员使用此权限获取链接时，刷出的链接并不会直接从池中删去
-        # 而是被加入缓冲队列，当ddt发动时，refresh机制会一次性删除池中所有过期链接
-        # 而apollo队列内的元素会被标记为过时信息，此时refresh将从apollo中弹出元素
-        # 与池中链接进行查找比对，若找到，则一同删去
-        return subs
-    else:
-        return ''
+    # FIXME
+    #  不明原因bug 使用dict（zip（））方案生成的同样的变量，
+    #  在经过同一个函数方案后输出竟然不一样
+    cache_redis_queue = {'ssr': {}, 'v2ray': {}}
+    # cache_redis_queue = dict(zip(CRAWLER_SEQUENCE, [{}] * CRAWLER_SEQUENCE.__len__()))
 
 
 def step_admin_element(class_: str = None) -> None:

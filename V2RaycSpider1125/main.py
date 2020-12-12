@@ -1,7 +1,7 @@
+from BusinessCentralLayer.control import Interface as app
+
 # TODO 请在运行程序前确保已正确config.py运行参数
 
-
-from BusinessCentralLayer.control import Interface as app
 
 """欢迎使用V2Ray云彩姬"""
 if __name__ == "__main__":
@@ -16,11 +16,11 @@ if __name__ == "__main__":
     #  >>> 例如：python3 main.py //表示使用内置默认值
     #       --默认:deploy = True if 'linux' in platform else False
     #       --默认:coroutine_speed_up = False
-    # app.run(sys.argv)
+    # exec("from sys import argv\napp.run(argv)")
 
-    # TODO 也可以手动传参
+    # TODO 手动传参
+    app.run(deploy_=True, coroutine_speed_up=True)
 
-    app.run(deploy_=False, coroutine_speed_up=True)
     # TODO 以开发者方式打开前端（~也许~仅Windows可用）
     # app.__window__()
 
