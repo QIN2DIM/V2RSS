@@ -1,12 +1,12 @@
 from BusinessLogicLayer.cluster.master import ActionMasterGeneral
 
 __all__ = [
-    'ActionMxCloud',  # protection of DDos
+    'ActionMxCloud',
     # 'ActionZuiSuCloud', #元素不同
-    # 'ActionUfoCloud',# 可能跑路
+    'ActionUfoCloud',
 
     'ActionWgCloud',
-    # 'ActionJfCloud',
+    # 'ActionJfCloud', # DDOS防御
     'ActionN95Cloud',
     'ActionTheSSR',
     'ActionReCloud',
@@ -16,7 +16,7 @@ __all__ = [
 
 class ActionOhrCloud(ActionMasterGeneral):
     def __init__(self, silence=True, at_once=True):
-        super(ActionOhrCloud, self).__init__(register_url='https://ohssr.red/auth/register',
+        super(ActionOhrCloud, self).__init__(register_url='https://www.ssr99.xyz/auth/register',
                                              silence=silence, life_cycle=2, anti_slider=False, at_once=at_once)
 
 
@@ -78,4 +78,4 @@ class ActionZuiSuCloud(ActionMasterGeneral):
 
 
 if __name__ == '__main__':
-    ActionOhrCloud(silence=False).run()
+    ActionUfoCloud(silence=False).run()
