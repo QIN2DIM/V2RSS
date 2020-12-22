@@ -177,9 +177,10 @@ class SystemEngine(object):
         # 任务启动 并发执行
         vsu(core=PuppetCore(), docker=Middleware.poseidon).run(self.speed_up)
 
+        print('Easter eggs')
         # fixme 数据存储 节拍同步
-        # if not at_once:
-        #     FlexibleDistribute().start()
+        if not at_once:
+            FlexibleDistribute().start()
 
         # 任务结束
         logger.success('<Gevent>任务结束')

@@ -89,6 +89,8 @@ class FlexibleDistribute(object):
         # 将数据推送至sqlite3
         self.to_sqlite3(docker)
 
+        # Middleware.hera.put('push')
+
 
 # TODO:该模块将被弃用 后续版本将引入多路IO模块，代码使用class封装
 def flexible_distribute(subscribe, class_, end_life: str, driver_name=None):
@@ -181,6 +183,10 @@ def to_admin(class_):
                     return {'msg': 'success', 'subscribe': subs, 'subsType': class_}
                 else:
                     return {'msg': 'failed'}
+            # else:
+            #     logger.error('链接池为空，正在紧急补充链接池')
+            #     threading.Thread(target=step_admin_element, kwargs={"class_": class_}).start()
+            #     return to_admin(class_)
         except Exception as e:
             logger.exception(e)
             return {'msg': 'failed'}

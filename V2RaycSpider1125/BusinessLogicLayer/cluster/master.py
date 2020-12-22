@@ -16,6 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 from BusinessCentralLayer.middleware.subscribe_io import *
+from BusinessCentralLayer.middleware.work_io import Middleware
 from BusinessLogicLayer.plugins import get_header, get_proxy
 from config import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_DATABASE_CACHE, logger
 
@@ -332,4 +333,5 @@ class ActionMasterGeneral(BaseAction):
         except WebDriverException as e:
             logger.exception(f">>> Exception <{self.__class__.__name__}> -- {e}")
         finally:
+            # Middleware.hera.put_nowait("push")
             api.quit()
