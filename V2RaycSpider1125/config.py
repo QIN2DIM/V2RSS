@@ -45,7 +45,7 @@ BAND_BATCH = 0.75
 # <Performance limit of 1xCPU 1GRAM VPS KVM>
 # Defaults type:int = 75
 # ---------------------------------------------------
-SINGLE_TASK_CAP: int = 200
+SINGLE_TASK_CAP: int = 75
 
 # ---------------------------------------------------
 # TODO (√)DEPLOY_INTERVAL -- schedule任务间隔
@@ -149,8 +149,8 @@ REDIS_SECRET_KEY = env.str("REDIS_SECRET_KEY", "v2rayc_spider:{}")
 # (x) API -- 用于部署弹性伸缩中间件的引流接口
 # (若没有集群服务器不建议设置)
 # ---------------------------------------------------
-ESS_API_HOST: str
-ESS_API_PORT: int
+ESS_API_HOST: str = "None"
+ESS_API_PORT: int = 0
 
 # ---------------------------------------------------
 # 云彩姬版本号,版本号必须与工程版本(文件名)号一致 请勿改动!
