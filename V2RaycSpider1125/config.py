@@ -379,3 +379,6 @@ TITLE = env.str("TITLE", "V2Ray云彩姬")
 # 时区
 TIME_ZONE_CN = pytz.timezone("Asia/Shanghai")
 TIME_ZONE_NY = pytz.timezone("America/New_York")
+
+# 临时邮箱
+temp_email_url = 'https://www.linshiyouxiang.net/'

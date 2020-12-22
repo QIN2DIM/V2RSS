@@ -1,16 +1,33 @@
 from BusinessLogicLayer.cluster.master import ActionMasterGeneral
 
 __all__ = [
-    'ActionMxCloud',
-    # 'ActionZuiSuCloud', #元素不同
+    # ---------------------
+    # 无障碍
+    # ---------------------
     'ActionUfoCloud',
-
-    'ActionWgCloud',
-    # 'ActionJfCloud', # DDOS防御
     'ActionN95Cloud',
     'ActionTheSSR',
-    'ActionReCloud',
     'ActionOhrCloud',
+
+    # ---------------------
+    # 需要滑动验证
+    # ---------------------
+    'ActionReCloud',
+    'ActionJdSuCloud',
+    'ActionWgCloud',
+    'ActionHuoJianCloud',
+    'ActionMxCloud',
+    "ActionKaiKaiCloud",
+
+    # ---------------------
+    # DDOS防御
+    # ---------------------
+    # 'ActionJfCloud',
+    # ---------------------
+    # 弃用：元素不同
+    # ---------------------
+    # 'ActionZuiSuCloud',
+
 ]
 
 
@@ -36,7 +53,7 @@ class ActionJfCloud(ActionMasterGeneral):
 
 class ActionMxCloud(ActionMasterGeneral):
     def __init__(self, silence=True, at_once=True):
-        super(ActionMxCloud, self).__init__(register_url='https://www.mxyssr.me/auth/register',
+        super(ActionMxCloud, self).__init__(register_url='https://www.mxyssr.fun/auth/register',
                                             silence=silence, life_cycle=2, anti_slider=True, at_once=at_once)
 
 
@@ -77,5 +94,26 @@ class ActionZuiSuCloud(ActionMasterGeneral):
                                                silence=silence, anti_slider=True, at_once=at_once, )
 
 
+class ActionJdSuCloud(ActionMasterGeneral):
+    def __init__(self, silence=True, at_once=True):
+        super(ActionJdSuCloud, self).__init__(register_url='https://jdycloud.xyz/auth/register',
+                                              silence=silence, life_cycle=30, anti_slider=True, at_once=at_once,
+                                              hyper_params={'usr_email': True})
+
+
+class ActionHuoJianCloud(ActionMasterGeneral):
+    def __init__(self, silence=True, at_once=True):
+        super(ActionHuoJianCloud, self).__init__(register_url='https://huojian987.com/auth/register',
+                                                 silence=silence, life_cycle=30, anti_slider=True, at_once=at_once,
+                                                 hyper_params={'v2ray': False})
+
+
+class ActionKaiKaiCloud(ActionMasterGeneral):
+    def __init__(self, silence=True, at_once=True):
+        super(ActionKaiKaiCloud, self).__init__(register_url='https://www.kaikaiyun.cyou/auth/register',
+                                                silence=silence, life_cycle=2, anti_slider=True, at_once=at_once,
+                                                hyper_params={'ssr': False})
+
+
 if __name__ == '__main__':
-    ActionUfoCloud(silence=False).run()
+    ActionKaiKaiCloud(silence=False).run()

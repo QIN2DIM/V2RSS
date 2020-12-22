@@ -239,9 +239,14 @@ class ActionMasterGeneral(BaseAction):
             'rocket': False,  # Shadowrocket
             'qtl': False,  # Quantumult
             'kit': False,  # Kitsunebi
+
+            'usr_email': False,  # True: 需要自己输入邮箱后缀(默认为qq) False:邮箱后缀为选择形式只需填写主段
         }
         if hyper_params:
             self.hyper_params.update(hyper_params)
+
+        if not self.hyper_params['usr_email']:
+            self.email = self.username
 
     # TODO -> 断网重连 -> 引入retrying 第三方库替代原生代码
     def sign_up(self, api, anti_slider=False, retry_=0, max_retry_num_=5):
@@ -261,7 +266,7 @@ class ActionMasterGeneral(BaseAction):
             .until(EC.presence_of_element_located((By.ID, 'name'))) \
             .send_keys(self.username)
 
-        api.find_element_by_id('email').send_keys(self.username)
+        api.find_element_by_id('email').send_keys(self.email)
 
         api.find_element_by_id('passwd').send_keys(self.password)
 
@@ -301,6 +306,7 @@ class ActionMasterGeneral(BaseAction):
         logger.info("DO -- <{}>:at_once:{}".format(self.__class__.__name__, self.at_once))
 
         api = self.set_spider_option()
+
         api.get(self.register_url)
 
         try:

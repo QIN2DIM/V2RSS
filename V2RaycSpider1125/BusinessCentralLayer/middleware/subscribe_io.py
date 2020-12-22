@@ -147,7 +147,6 @@ def detach(subscribe, at_once=False):
 
 
 def to_admin(class_):
-    subs = ''
     # 获取链接
     if class_ in CRAWLER_SEQUENCE:
         try:
