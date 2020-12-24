@@ -25,6 +25,6 @@ if __name__ == "__main__":
     # app.__window__()
 
     # # TODO 开启一次数据迁移
-    app.ddt()
+    # app.ddt()
 
     # FIXME 更多启动方案有待暴露

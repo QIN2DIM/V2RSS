@@ -6,7 +6,7 @@ __all__ = [
     # ---------------------
     'ActionUfoCloud',
     'ActionN95Cloud',
-    'ActionTheSSR',
+    # 'ActionTheSSR',
     'ActionOhrCloud',
 
     # ---------------------
@@ -116,4 +116,4 @@ class ActionKaiKaiCloud(ActionMasterGeneral):
 
 
 if __name__ == '__main__':
-    ActionKaiKaiCloud(silence=False).run()
+    ActionMxCloud(silence=False).run()

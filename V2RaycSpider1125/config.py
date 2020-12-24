@@ -29,10 +29,25 @@ env.read_env()
 # ---------------------------------------------------
 # TODO (√) Function Authority -- 功能权限
 # ---------------------------------------------------
-ENABLE_DEPLOY = env.bool("ENABLE_DEPLOY", True)  # 定时采集
-ENABLE_SERVER = env.bool("ENABLE_SERVER", True)  # 部署API
-ENABLE_COROUTINE = env.bool("ENABLE_COROUTINE", True)  # 协程加速
-ENABLE_DEBUG = env.bool("ENABLE_DEBUG", not ENABLE_DEPLOY)  # Flask DEBUG
+# ENABLE_DEPLOY: 定时采集
+ENABLE_DEPLOY = env.bool("ENABLE_DEPLOY", True)
+
+# ENABLE_SERVER：部署API
+ENABLE_SERVER = env.bool("ENABLE_SERVER", True)
+
+# SlaverRedis请关闭此功能
+ENABLE_DDT = env.bool("ENABLE_DDT", True)
+
+# ENABLE_COROUTINE：协程加速插件
+ENABLE_COROUTINE = env.bool("ENABLE_COROUTINE", True)
+
+# ENABLE_DEBUG: Flask DEBUG
+ENABLE_DEBUG = env.bool("ENABLE_DEBUG", not ENABLE_DEPLOY)
+
+# ENABLE_REBOUND：数据弹回，默认关闭
+# 当MasterRedis宕机后，将DDT-SlaverRedis中的数据清洗后传回
+# 该选项会反转主从关系，仅在紧急情况下手动开启
+ENABLE_REBOUND = False
 # ---------------------------------------------------
 # TODO (√)BAND_BATCH -- 自闭时间：PC(链接获取)进程锁死的冷却时间
 # Defaults type:float = 0.75 minute
@@ -66,28 +81,24 @@ REDIS_GENERAL_DR = env.bool("REDIS_GENERAL_DR", True)
 REDIS_GENERAL_DB = env.int("REDIS_GENERAL_DB", 0)
 
 # TODO (√)Settings of the Master-Redis responsible for leading the workflow
-REDIS_MASTER = env.dict(
-    "REDIS_MASTER",
-    {
-        "host": "",
-        "password": "",
-        "port": 6379,
-        "db": 0,
-    },
-)
+REDIS_MASTER = {
+    "host": "",
+    "password": "",
+    "port": 6379,
+    "db": 0,
+}
 # TODO (*)Setting of the Slave-Redis responsible for data disaster tolerance（DDT）
-REDIS_SLAVER_DDT = env.dict(
-    "REDIS_SLAVER_DDT",
-    {
-        # If you do not have extra servers, please use stand-alone backup
-        # 'host': REDIS_MASTER['host'],
-        # 'db': REDIS_MASTER['db'] + 1,
-        "host": "",
-        "password": "",
-        "port": 6379,
-        "db": 0,
-    },
-)
+REDIS_SLAVER_DDT = {
+    # If you do not have extra servers, please use stand-alone backup
+    # 'host': REDIS_MASTER['host'],
+    # 'db': REDIS_MASTER['db'] + 1,
+    "host": "",
+    "password": "",
+    "port": 6379,
+    "db": 0,
+}
+if ENABLE_REBOUND:
+    REDIS_MASTER, REDIS_SLAVER_DDT = REDIS_SLAVER_DDT, REDIS_MASTER
 # ---------------------------------------------------
 # TODO (√)API for Flask(SSH-BASE)
 # ---------------------------------------------------
@@ -109,6 +120,7 @@ SMTP_ACCOUNT = {
     "email": "",  # SMTP邮箱
     "sid": "",  # SMTP授权码
 }
+
 # ---------------------------------------------------
 # TODO > 使用<SERVER酱>推送，请在SERVER_CHAN_SCKEY填写自己的Key
 # http://sc.ftqq.com/3.version

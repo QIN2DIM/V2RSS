@@ -7,9 +7,14 @@ import schedule
 from BusinessCentralLayer.middleware.redis_io import *
 from BusinessCentralLayer.sentinel import noticer
 from BusinessLogicLayer.cluster import __task__
-from config import REDIS_SECRET_KEY, SINGLE_TASK_CAP, CRAWLER_SEQUENCE, ENABLE_COROUTINE, LAUNCH_INTERVAL, logger
+from config import REDIS_SECRET_KEY, SINGLE_TASK_CAP, CRAWLER_SEQUENCE, ENABLE_COROUTINE, LAUNCH_INTERVAL, logger, \
+    ENABLE_DDT
 
 
+# FIXME
+#  本方案刻意限制了部署性能，请服务器资源阔绰的玩家自行使用APSchedule模块兼容协程部署任务
+#  资源阔绰定义：4xCPU，4G RAM
+#  加速版本的调度器将在未来版本开源
 class GeventSchedule(object):
     def __init__(self, go: bool = ENABLE_COROUTINE, deploy_cluster=CRAWLER_SEQUENCE, cap=SINGLE_TASK_CAP,
                  crontab=LAUNCH_INTERVAL):
@@ -112,9 +117,13 @@ class GeventSchedule(object):
             for task_name in self.deploy_cluster:
                 try:
                     schedule.every(self.crontab['action']).minutes.do(self.push_task, task_name=task_name)
-                    schedule.every(self.crontab['refresh']).minutes.do(self.rc.refresh,
-                                                                       key_name=REDIS_SECRET_KEY.format(task_name))
-                    logger.info(f"start {task_name}/crontab:{self.crontab['action']} minutes")
+                    if ENABLE_DDT:
+                        schedule.every(self.crontab['refresh']).minutes.do(self.rc.refresh,
+                                                                           key_name=REDIS_SECRET_KEY.format(task_name))
+                        logger.success(f"START DDT -- {task_name}")
+                    else:
+                        logger.warning(f'Not Authorized -- DDT({task_name})')
+                    logger.success(f"START TASK -- {task_name}/crontab:{self.crontab['action']} minutes")
 
                 except schedule.IntervalError:
                     logger.error('interval set error')
