@@ -169,5 +169,7 @@ class RedisDataDisasterTolerance(RedisClient):
         # 映射迁移  acm <- ...
         try:
             self.acm.get_driver().hset(key_name, mapping=self.docker)
+        except redis.exceptions.DataError:
+            logger.warning(f'({class_}):缓存可能被击穿或缓存为空，请管理员同学及时维护链接池！')
         except Exception as e:
             logger.exception(e)

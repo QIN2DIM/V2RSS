@@ -7,7 +7,6 @@ __all__ = [
     'ActionUfoCloud',
     'ActionN95Cloud',
     # 'ActionTheSSR',
-    'ActionOhrCloud',
 
     # ---------------------
     # 需要滑动验证
@@ -22,11 +21,12 @@ __all__ = [
     # ---------------------
     # DDOS防御
     # ---------------------
-    # 'ActionJfCloud',
+    'ActionJfCloud',
     # ---------------------
-    # 弃用：元素不同
+    # fixme:滑动验证元素方案不通用
     # ---------------------
     # 'ActionZuiSuCloud',
+    # 'ActionOhrCloud',
 
 ]
 
@@ -47,7 +47,7 @@ class ActionKakCloud(ActionMasterGeneral):
 class ActionJfCloud(ActionMasterGeneral):
     def __init__(self, silence=True, at_once=True):
         super(ActionJfCloud, self).__init__(register_url='https://www.jafiyun.cc/auth/register',
-                                            silence=silence, anti_slider=True, at_once=at_once,
+                                            silence=silence, anti_slider=False, at_once=at_once,
                                             hyper_params={'ssr': False})
 
 
@@ -110,10 +110,10 @@ class ActionHuoJianCloud(ActionMasterGeneral):
 
 class ActionKaiKaiCloud(ActionMasterGeneral):
     def __init__(self, silence=True, at_once=True):
-        super(ActionKaiKaiCloud, self).__init__(register_url='https://www.kaikaiyun.cyou/auth/register',
+        super(ActionKaiKaiCloud, self).__init__(register_url='https://www.kakayun.cyou/auth/register',
                                                 silence=silence, life_cycle=2, anti_slider=True, at_once=at_once,
                                                 hyper_params={'ssr': False})
 
 
 if __name__ == '__main__':
-    ActionMxCloud(silence=False).run()
+    ActionJfCloud(silence=False).run()
