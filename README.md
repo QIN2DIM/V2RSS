@@ -133,6 +133,7 @@ print("subs_ssr: {}\nsubs_: {}\nsubs_v2ray: {}\n".format(subs_ssr,subs_trojan,su
 
     1. 尝试调整订阅过期的时间校验规则
     2. 尝试修复链接池节拍同步的漏洞
+    3. 尝试改进滑动验证算法
 
     > **更新说明**
 
