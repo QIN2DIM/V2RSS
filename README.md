@@ -1,4 +1,4 @@
-[中文](https://github.com/QIN2DIM/V2RayCloudSpider) **||** [English](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/README_us.md)
+[中文](https://github.com/QIN2DIM/V2RayCloudSpider) **||** [English](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/README_us.md)
 
 # V2Ray云彩姬
 
@@ -26,7 +26,7 @@
 
     - 软件使用：运行`V2Ray云彩姬.exe` 既可启动本体
 
-         [V2Ray云彩姬使用说明](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/V2Ray云彩姬使用说明.md)
+         [V2Ray云彩姬使用说明](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/V2Ray%E4%BA%91%E5%BD%A9%E5%A7%AC%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
 
 - **【方案二】开发者**
 
