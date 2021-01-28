@@ -1,5 +1,6 @@
+__all__ = ['Middleware', 'step_admin_element']
+
 from gevent.queue import Queue
-from config import *
 
 
 # 工作栈

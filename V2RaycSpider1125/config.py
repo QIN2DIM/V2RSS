@@ -1,5 +1,6 @@
 from os.path import join, dirname
 from sys import platform
+
 import pytz
 from environs import Env
 from loguru import logger
@@ -60,7 +61,7 @@ BAND_BATCH = 0.75
 # <Performance limit of 1xCPU 1GRAM VPS KVM>
 # Defaults type:int = 75
 # ---------------------------------------------------
-SINGLE_TASK_CAP: int = 75
+SINGLE_TASK_CAP: int = 40
 
 # ---------------------------------------------------
 # TODO (√)DEPLOY_INTERVAL -- schedule任务间隔
@@ -70,7 +71,7 @@ SINGLE_TASK_CAP: int = 75
 # 定时任务中数据备份频次： 1轮/INTERVAL_REFRESH
 # Defaults type:int = 10 minutes
 # ---------------------------------------------------
-LAUNCH_INTERVAL = {"action": 60, "refresh": 1}
+LAUNCH_INTERVAL = {"action": 25, "refresh": 3}
 
 # ---------------------------------------------------
 # TODO (√)Redis Cluster Configuration(SSH-BASE)
@@ -99,6 +100,13 @@ REDIS_SLAVER_DDT = {
 }
 if ENABLE_REBOUND:
     REDIS_MASTER, REDIS_SLAVER_DDT = REDIS_SLAVER_DDT, REDIS_MASTER
+
+MySQL_CONFIG = {
+    'user': '',
+    'host': '',
+    'password': '',
+    'db': 'v2raycs_db'
+}
 # ---------------------------------------------------
 # TODO (√)API for Flask(SSH-BASE)
 # ---------------------------------------------------
@@ -120,7 +128,6 @@ SMTP_ACCOUNT = {
     "email": "",  # SMTP邮箱
     "sid": "",  # SMTP授权码
 }
-
 # ---------------------------------------------------
 # TODO > 使用<SERVER酱>推送，请在SERVER_CHAN_SCKEY填写自己的Key
 # http://sc.ftqq.com/3.version
@@ -168,7 +175,7 @@ ESS_API_PORT: int = 0
 # 云彩姬版本号,版本号必须与工程版本(文件名)号一致 请勿改动!
 # ---------------------------------------------------
 verNum = "1125"
-version = "1.0.2.11162350.11"
+version = "5.1.0"
 """********************************* 服务器后端配置 *********************************"""
 
 # ---------------------------------------------------
@@ -246,6 +253,9 @@ logger.add(
 SERVER_DIR_DATABASE_CACHE = env.str(
     "SERVER_DIR_DATABASE_CACHE", join(SERVER_DIR_DATABASE, "temp_cache")
 )
+# 滑动验证缓存
+SERVER_DIR_CACHE_BGPIC = join(SERVER_DIR_DATABASE_CACHE, 'bg_cache')
+
 # 链接获取历史
 SERVER_PATH_DATABASE_FETCH = env.str(
     "SERVER_PATH_DATABASE_FETCH", join(SERVER_DIR_DATABASE, "CrawlFetchHistory.txt")
@@ -285,6 +295,7 @@ ROUTE_API = env.dict(
     {
         "capture_subscribe": "/v2raycs/api/capture_subscribe",
         "version_manager": "/v2raycs/api/version_manager",
+        "get_subs_num": "/v2raycs/api/get_sbus_num"
     },
 )
 # ---------------------------------------------------
@@ -298,7 +309,6 @@ SEQ_TEST = env.dict(
         "trojan": False,
     },
 )
-
 CRAWLER_SEQUENCE = env.list(
     "CRAWLER_SEQUENCE", [i[0] for i in SEQ_TEST.items() if i[-1]]
 )

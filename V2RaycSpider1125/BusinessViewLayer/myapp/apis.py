@@ -43,11 +43,12 @@ def apis_version_manager(vcs_path: str, usr_version: str = None, encoding='utf8'
     @param header: 是否有表头
     @return: 返回最新软件的版本号以及下载地址
     """
+
     response = {'msg': 'success', 'version-server': '',
                 'version-usr': usr_version, 'url': '', 'need_update': False}
     try:
         # TODO 1.打开回溯文件
-        with open(vcs_path, 'r', encoding=encoding, ) as f:
+        with open(vcs_path, 'r', encoding=encoding) as f:
             data = [i for i in csv.reader(f) if i]
 
         # TODO 2.获取服务器文件版本号以及下载地址
@@ -58,11 +59,19 @@ def apis_version_manager(vcs_path: str, usr_version: str = None, encoding='utf8'
             response.update(
                 {'version-server': data[-1][0], 'url': data[-1][1]})
 
-        # TODO 3.比对版本号 -> if need to update
-        if usr_version and response['version-server'] != usr_version:
-            response.update({'need_update': True})
-        elif not usr_version:
-            response = {'latestVersion': response['version-server']}
+        # TODO 3. response params of Get methods
+        if not usr_version:
+            return {'latestVersion': response['version-server']}
+
+        # TODO 4.比对版本号 -> if need to update
+        usr_version_cmp = usr_version.split('.')
+        server_version_cmp = response['version-server'].split('.')
+        for i in range(len(usr_version_cmp)):
+            if int(server_version_cmp[i]) > int(usr_version_cmp[i]):
+                response.update({'need_update': True})
+                break
+        else:
+            response.update({'need_update': False})
     # FIXME 回溯文件缺失 or 传参错误
     except FileNotFoundError:
         response = {'msg': 'failed'}
@@ -90,3 +99,15 @@ def apis_refresh_broadcast(show_path: str = NGINX_SUBSCRIBE, hyper_params: dict 
 def apis_admin_pop(command_: str):
     if command_ in CRAWLER_SEQUENCE:
         return to_admin(command_)
+
+
+def apis_get_subs_num():
+    from BusinessCentralLayer.middleware.redis_io import RedisClient
+    rc = RedisClient()
+    response = {"v2ray": rc.__len__(REDIS_SECRET_KEY.format('v2ray')),
+                "ssr": rc.__len__(REDIS_SECRET_KEY.format('ssr'))}
+    return response
+
+
+if __name__ == '__main__':
+    print(apis_get_subs_num())

@@ -4,16 +4,15 @@ __all__ = ['Interface']
 exec("from gevent import monkey\nmonkey.patch_all()")
 
 import csv
-import os
-import threading
 import multiprocessing
+import os
 
 from BusinessCentralLayer.coroutine_engine import vsu, PuppetCore
 from BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
 from BusinessCentralLayer.middleware.work_io import Middleware
 from BusinessCentralLayer.sentinel.noticer import send_email
-from BusinessLogicLayer.cluster.slavers import actions
 from BusinessLogicLayer.cluster.__task__ import loads_task
+from BusinessLogicLayer.cluster.slavers import actions
 from BusinessLogicLayer.deploy import GeventSchedule
 from BusinessViewLayer.myapp.app import app
 from config import *
@@ -24,8 +23,7 @@ class ConfigQuarantine(object):
 
         self.root = [
             SERVER_DIR_CLIENT_DEPORT, SERVER_PATH_DEPOT_VCS,
-            SERVER_DIR_DATABASE_LOG,
-            SERVER_DIR_DATABASE_CACHE,
+            SERVER_DIR_DATABASE_CACHE, SERVER_DIR_CACHE_BGPIC
         ]
         self.flag = False
 
@@ -86,7 +84,7 @@ class ConfigQuarantine(object):
     def run(self):
         try:
             if [cq for cq in reversed(self.root) if not os.path.exists(cq)]:
-                logger.error('系统文件残缺！')
+                logger.warning('系统文件残缺！')
                 logger.debug("启动<工程重构>模块...")
                 self.set_up_file_tree(self.root)
             self.check_config()
@@ -94,7 +92,7 @@ class ConfigQuarantine(object):
         finally:
             if self.flag:
                 logger.success(">>> 运行环境链接完成，请重启项目")
-                logger.info(">>> 提醒您正确配置Chrome及对应版本的ChromeDriver")
+                logger.warning(">>> 提醒您正确配置Chrome及对应版本的ChromeDriver")
                 exec("if self.flag:\n\texit()")
 
 
@@ -177,7 +175,7 @@ class SystemEngine(object):
         # 任务启动 并发执行
         vsu(core=PuppetCore(), docker=Middleware.poseidon).run(self.speed_up)
 
-        print('Easter eggs')
+        # print('Easter eggs')
         # fixme 数据存储 节拍同步
         if not at_once:
             FlexibleDistribute().start()
@@ -206,7 +204,7 @@ class SystemEngine(object):
             self.server_process.join()
         except TypeError or AttributeError as e:
             logger.exception(e)
-            send_email("[程序异常终止]{}".format(str(e)), to='self')
+            send_email("[程序异常终止]{}".format(str(e)), to_='self')
         except KeyboardInterrupt:
             logger.debug('received keyboard interrupt signal')
             self.server_process.terminate()
@@ -231,13 +229,13 @@ class Interface(object):
         @return:
         """
         from BusinessViewLayer.panel.panel import V2RaycSpiderMasterPanel
-        V2Rayc = V2RaycSpiderMasterPanel()
+        v2raycs = V2RaycSpiderMasterPanel()
         try:
-            V2Rayc.home_menu()
+            v2raycs.home_menu()
         except Exception as e:
-            V2Rayc.debug(e)
+            v2raycs.debug(e)
         finally:
-            V2Rayc.kill()
+            v2raycs.kill()
 
     @staticmethod
     def run(sys_command=None, deploy_: bool = None, coroutine_speed_up: bool = False, at_once=True) -> None:

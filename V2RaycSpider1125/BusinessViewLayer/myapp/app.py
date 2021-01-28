@@ -29,7 +29,7 @@ def version_manager():
             --response.keys=[msg:str, version-server:str, version-usr:str, url:str, need_update:bool]
     """
     if request.method == 'GET':
-        return "{}".format(apis_version_manager(SERVER_PATH_DEPOT_VCS)).encode("utf8")
+        return jsonify(apis_version_manager(SERVER_PATH_DEPOT_VCS))
     elif request.method == 'POST':
         return jsonify(apis_version_manager(SERVER_PATH_DEPOT_VCS, dict(request.form).get('local_version', False)))
 
@@ -39,12 +39,17 @@ def redirect_to_my_blog():
     return redirect("https://www.qinse.top/v2raycs/")
 
 
+# 该接口用于<iOS捷径>订阅瞬时获取服务，暂不对Windows客户端开放
+# 该接口用于<团队管理员>自取链接，不对外开放使用
 @app.route("/", methods=['GET'])
 def admin(command_):
     return jsonify(apis_admin_pop(command_))
 
 
-if __name__ == '__main__':
-    from config import API_PORT, API_DEBUG
+@app.route(ROUTE_API['get_subs_num'], methods=['GET'])
+def get_subs_num():
+    return jsonify(apis_get_subs_num())
 
-    app.run(host='127.0.0.1', port=API_PORT + 1, debug=True)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=6500, debug=True)

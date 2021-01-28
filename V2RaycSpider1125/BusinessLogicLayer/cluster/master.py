@@ -7,7 +7,6 @@ from os.path import join
 from string import printable
 from urllib.parse import urlparse
 
-from redis.exceptions import RedisError
 from selenium.common.exceptions import *
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
@@ -16,9 +15,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 
 from BusinessCentralLayer.middleware.subscribe_io import *
-from BusinessCentralLayer.middleware.work_io import Middleware
-from BusinessLogicLayer.plugins import get_header, get_proxy
-from config import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_DATABASE_CACHE, logger
+from BusinessLogicLayer.plugin_x import get_header, get_proxy
+from config import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
 
 
 class BaseAction(object):
@@ -90,6 +88,8 @@ class BaseAction(object):
 
         # 设置中文
         options.add_argument('lang=zh_CN.UTF-8')
+
+        options.add_experimental_option('excludeSwitches', ['enable-automation'])
 
         # 更换头部
         options.add_argument(f'user-agent={get_header()}')
@@ -171,14 +171,15 @@ class BaseAction(object):
                     # flexible_distribute(self.subscribe, class_, self.end_life, driver_name=self.__class__.__name__)
                     logger.success(">> GET <{}> -> {}:{}".format(self.__class__.__name__, class_, self.subscribe))
                     break
-                except RedisError:
+                except Exception as e:
+                    logger.debug(">> FAILED <{}> -> {}:{}".format(self.__class__.__name__, class_, e))
                     time.sleep(1)
                     continue
             else:
                 return None
         else:
             if retry >= 3:
-                return None
+                raise TimeoutException
             retry += 1
             self.load_any_subscribe(api, element_xpath_str, href_xpath_str, class_, retry)
 
@@ -226,6 +227,8 @@ class ActionMasterGeneral(BaseAction):
         """
         super(ActionMasterGeneral, self).__init__(silence, True, email, life_cycle, at_once)
 
+        self.action_name = self.__class__.__name__
+
         # 机场注册网址
         self.register_url = register_url
 
@@ -249,11 +252,10 @@ class ActionMasterGeneral(BaseAction):
             self.email = self.username
 
     # TODO -> 断网重连 -> 引入retrying 第三方库替代原生代码
-    def sign_up(self, api, anti_slider=False, retry_=0, max_retry_num_=5):
+    def sign_up(self, api, retry_=0, max_retry_num_=5):
         """
 
         @param api:
-        @param anti_slider:
         @param retry_:
         @param max_retry_num_:
         @return:
@@ -261,7 +263,7 @@ class ActionMasterGeneral(BaseAction):
         if retry_ > max_retry_num_:
             return False
 
-        from BusinessLogicLayer.plugins import anti_module
+        from BusinessLogicLayer.plugin_x import anti_module
         WebDriverWait(api, 15) \
             .until(EC.presence_of_element_located((By.ID, 'name'))) \
             .send_keys(self.username)
@@ -277,8 +279,8 @@ class ActionMasterGeneral(BaseAction):
             if retry > max_retry_num:
                 return False
             try:
-                full_bg_path = join(SERVER_DIR_DATABASE_CACHE, 'fbg.png')
-                bg_path = join(SERVER_DIR_DATABASE_CACHE, 'bg.png')
+                full_bg_path = join(SERVER_DIR_CACHE_BGPIC, f'fbg_{self.action_name}.png')
+                bg_path = join(SERVER_DIR_CACHE_BGPIC, f'bg_{self.action_name}.png')
                 response = anti_module(api, methods='slider', full_bg_path=full_bg_path, bg_path=bg_path)
                 return response
             except NoSuchElementException:
@@ -297,8 +299,7 @@ class ActionMasterGeneral(BaseAction):
                 time.sleep(1.5)
                 api.find_element_by_xpath("//button[contains(@class,'confirm')]").click()
                 break
-            except NoSuchElementException as e:
-                # logger.exception('{} || {}'.format(self.__class__, e))
+            except NoSuchElementException:
                 logger.debug('{}验证超时，3s 后重试'.format(self.__class__.__name__))
                 time.sleep(3)
 

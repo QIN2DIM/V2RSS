@@ -5,8 +5,9 @@ import threading
 from uuid import uuid4
 
 from BusinessCentralLayer.middleware.flow_io import FlowTransferStation
-from BusinessCentralLayer.middleware.work_io import *
 from BusinessCentralLayer.middleware.redis_io import RedisClient
+from BusinessCentralLayer.middleware.work_io import Middleware, step_admin_element
+from config import *
 
 
 class FlexibleDistribute(object):
@@ -134,16 +135,21 @@ def detach(subscribe, at_once=False):
     """
     from faker import Faker
     from urllib.parse import urlparse
+    from config import CRAWLER_SEQUENCE
 
-    detach_subs = [[REDIS_SECRET_KEY.format(ft[2]), ft[1], str(Faker().past_datetime())] for ft in
-                   FlowTransferStation().fetch_all() if urlparse(subscribe).path in ft[1]]
+    token = urlparse(subscribe).path
+
     r = RedisClient().get_driver()
-    for sub in detach_subs:
-        if at_once:
-            r.hdel(sub[0], sub[1])
-        else:
-            r.hset(sub[0], sub[1], sub[-1])
-    logger.debug(f'>> Detach -> {detach_subs}')
+
+    for task in CRAWLER_SEQUENCE:
+        for sub in r.hgetall(REDIS_SECRET_KEY.format(task)).items():
+            if token == urlparse(sub[0]).path:
+                if at_once:
+                    r.hdel(REDIS_SECRET_KEY.format(task), sub[0])
+                else:
+                    r.hset(REDIS_SECRET_KEY.format(task), sub[0], str(Faker().past_datetime()))
+                logger.debug(f'>> Detach -> {sub[0]}')
+                break
 
 
 def to_admin(class_):
@@ -176,7 +182,7 @@ def to_admin(class_):
                     threading.Thread(target=step_admin_element, kwargs={"class_": class_}).start()
 
                     # at_once =True立即刷新，False延迟刷新（节拍同步）
-                    logger.info(f'>> try to detach subs -- {subs}')
+                    logger.info(f'>> Try to detach subs')
                     threading.Thread(target=detach, kwargs={"subscribe": subs, 'at_once': True}).start()
 
                     return {'msg': 'success', 'subscribe': subs, 'subsType': class_}
@@ -189,3 +195,8 @@ def to_admin(class_):
         except Exception as e:
             logger.exception(e)
             return {'msg': 'failed'}
+
+
+if __name__ == '__main__':
+    url = 'https://www.jssv2raytoday.xyz/link/lRpFe0B8rvamG5IL?sub=3'
+    detach(url, True)

@@ -59,7 +59,8 @@ task_v2ray = [
 ]
 
 from BusinessCentralLayer.coroutine_engine import vsu, PuppetCore
-from BusinessCentralLayer.middleware.work_io import *
+from BusinessCentralLayer.middleware.work_io import Middleware
+from config import CRAWLER_SEQUENCE
 
 
 def read_actions(class_: str):

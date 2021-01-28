@@ -2,11 +2,12 @@
 #  若您为项目开发者 请不要在生产环境中启用进度条功能 <- 未知bug
 
 
-__all__ = ['vsu', 'PuppetCore']
+__all__ = ['vsu', 'lsu', 'PuppetCore']
 
 import gevent
-
-from BusinessCentralLayer.middleware.work_io import *
+from gevent.queue import Queue
+from BusinessCentralLayer.middleware.work_io import Middleware
+from config import logger
 
 
 class CoroutineEngine(object):
@@ -82,6 +83,9 @@ class CoroutineEngine(object):
         with tqdm(total=total, desc=desc, leave=leave, ncols=ncols,
                   unit=unit, unit_scale=unit_scale) as progress_bar:
             progress_bar.update(self.power)
+            # while self.max_queue_size != Middleware.hera.qsize():
+            #     progress_bar.update(Middleware.hera.qsize())
+            #     time.sleep(1)
             while not self.work_Q.empty():
                 now_1 = self.work_Q.qsize()
                 time.sleep(0.1)
@@ -107,12 +111,14 @@ class CoroutineEngine(object):
             self.power = 1
         else:
             self.flexible_power()
-        logger.debug('flexible_power:{}'.format(self.power))
+        logger.info('Flexible Power:{}'.format(self.power))
+        logger.info('Queue Capacity:{}'.format(self.max_queue_size))
 
         # 启动进度条
-        import threading
-        threading.Thread(target=self.progress_manager,
-                         args=(self.max_queue_size, self.progress_name + '[{}]'.format(self.power))).start()
+        if use_bar:
+            import threading
+            threading.Thread(target=self.progress_manager,
+                             args=(self.max_queue_size, self.progress_name + '[{}]'.format(self.power))).start()
 
         for x in range(self.power):
             task = gevent.spawn(self.launch)
@@ -132,6 +138,55 @@ class V2raycSpiderSpeedUp(CoroutineEngine):
         exec(f'self.core.{self.interface}(task)')
 
 
+class LightweightSpeedup(object):
+    """轻量化的协程控件"""
+
+    def __init__(self, work_q: Queue = Queue(), task_docker=None, power: int = None):
+        self.work_q = work_q
+        self.task_docker = task_docker
+        self.power = power
+
+    def launch(self):
+        while not self.work_q.empty():
+            task = self.work_q.get_nowait()
+            self.control_driver(task)
+
+    def control_driver(self, task):
+        """
+        rewrite this method
+        @param task:
+        @return:
+        """
+
+    def offload_task(self):
+        """
+
+        @return:
+        """
+
+    def interface(self, power: int = 8) -> None:
+        """
+
+        @param power: 协程功率
+        @return:
+        """
+
+        # 任务重载
+        self.offload_task()
+
+        # 任务启动
+        task_list = []
+        power_ = self.power if self.power else power
+        for x in range(power_):
+            task = gevent.spawn(self.launch)
+            task_list.append(task)
+        gevent.joinall(task_list)
+        logger.success(f'<Gevent> mission completed -- [{self.__class__.__name__}]')
+
+        def run():
+            self.interface()
+
+
 class PuppetCore(object):
     @staticmethod
     def run(expr: str):
@@ -140,3 +195,4 @@ class PuppetCore(object):
 
 QuickDumps = type("QuickDumps", (object,), {"run": lambda expr: exec(expr)})
 vsu = V2raycSpiderSpeedUp
+lsu = LightweightSpeedup

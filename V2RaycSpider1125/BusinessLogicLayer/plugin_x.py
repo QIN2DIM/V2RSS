@@ -163,19 +163,20 @@ class SliderMechanism(object):
         """
         track = []
         current = 0
-        mid = distance * 3 / 4
-        t = 0.4
+        mid = distance * 3.824481 / 4
+        t = 1.4414
         v = 0
         while current < distance:
             if current < mid:
-                a = random.randint(3, 4)
+                a = random.uniform(0.6012, 0.712)
             else:
-                a = -random.randint(7, 8)
+                a = -random.uniform(0.11, 0.13)
             v0 = v
             v = v0 + a * t
             move = v0 * t + 1 / 2 * a * t * t
             current += move
-            track.append(round(move))
+            track.append(round(move, 3))
+
         return track
 
     def get_slider(self, driver, slider_class='geetest_slider_button'):
@@ -202,16 +203,18 @@ class SliderMechanism(object):
         """
         slider = self.get_slider(driver)
         ActionChains(driver).click_and_hold(slider).perform()
-        while track:
-            x = random.choice(track)
-            ActionChains(driver).move_by_offset(xoffset=x, yoffset=0).perform()
-            track.remove(x)
+        for step in track:
+            ActionChains(driver).move_by_offset(xoffset=step, yoffset=0).perform()
+        # while track:
+        #     x = random.choice(track)
+        #     ActionChains(driver).move_by_offset(xoffset=x, yoffset=0).perform()
+        #     track.remove(x)
         time.sleep(0.1)
         # 模拟人往回滑动
         imitate = ActionChains(driver).move_by_offset(xoffset=-2, yoffset=0)
         time.sleep(0.015)
         imitate.perform()
-        time.sleep(random.randint(6, 10) / 10)
+        time.sleep(random.uniform(0.6, 1))
         imitate.perform()
         time.sleep(0.04)
         imitate.perform()
@@ -222,7 +225,7 @@ class SliderMechanism(object):
         time.sleep(0.033)
         ActionChains(driver).move_by_offset(xoffset=1, yoffset=0).perform()
         # 放开圆球
-        ActionChains(driver).pause(random.randint(6, 14) / 10).release(slider).perform()
+        ActionChains(driver).release(slider).perform()
 
     def is_try_again(self):
         """[summary]
@@ -247,37 +250,45 @@ class SliderMechanism(object):
             return True
         return False
 
-    def run(self, hyper_params=None):
+    def run(self, full_bg_path: str = None, bg_path: str = None):
+
+        if not full_bg_path:
+            full_bg_path = 'fbg.png'
+        if not bg_path:
+            bg_path = 'bg.png'
 
         # 唤醒极验
+        # print("唤醒极验")
         self.api.find_element_by_class_name('geetest_radar_tip').click()
         time.sleep(1)
 
         # 加载 Geetest 验证码
+        # print("加载 Geetest 验证码")
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'geetest_canvas_slice')))
         self.wait.until(EC.presence_of_element_located((By.CLASS_NAME, 'geetest_canvas_fullbg')))
 
-        for x in range(10):
-            # get full image
-            full_bg_path = self.save_full_bg(self.api, full_bg_path=hyper_params.get('full_bg_path', 'fbg.png'))
+        # get full image
+        # print("get full image")
+        full_bg_path = self.save_full_bg(self.api, full_bg_path)
 
-            # get defective image
-            bg_path = self.save_bg(self.api, bg_path=hyper_params.get('bg_path', 'bg.png'))
+        # get defective image
+        bg_path = self.save_bg(self.api, bg_path)
 
-            # 移动距离
-            distance = self.get_offset(full_bg_path, bg_path, offset=25)
+        # 移动距离
+        distance = self.get_offset(full_bg_path, bg_path, offset=60)
 
-            # 获取移动轨迹
-            track = self.get_track(distance)
+        # 获取移动轨迹
+        track = self.get_track(distance)
 
-            # 滑动圆球至缺口处
-            self.drag_the_ball(self.api, track)
+        # 滑动圆球至缺口处
+        # print(track.__len__(), track)
+        self.drag_the_ball(self.api, track)
 
-            time.sleep(1.5)
-            if self.is_success():
-                return True
-            else:
-                return False
+        time.sleep(1.5)
+        if self.is_success():
+            return True
+        else:
+            return False
 
 
 def anti_module(api, methods='slider', **kwargs):
@@ -288,7 +299,7 @@ def anti_module(api, methods='slider', **kwargs):
     """
     # 加载 Geetest 滑动验证
     if methods == 'slider':
-        return SliderMechanism(api).run(kwargs)
+        return SliderMechanism(api).run(full_bg_path=kwargs.get("full_bg_path"), bg_path=kwargs.get("bg_path"))
     # TODO:加载Email邮箱验证模块<开发中>
     if methods == 'email':
         return FakerEmailMechanism(api).run(kwargs)
@@ -359,3 +370,7 @@ def get_STAFF_info(api):
 
     except NoSuchElementException:
         return '找不到元素,或本机场未基于STAFF开发前端'
+
+
+if __name__ == '__main__':
+    subs2node('plugins/1.txt', 'https://www.recear.xyz/link/jOQfjDcGnXO8iOcf?sub=1')

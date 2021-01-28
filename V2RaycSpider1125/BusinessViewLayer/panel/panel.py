@@ -120,12 +120,12 @@ class SubscribeRequester(object):
         self.v2ray_attention_link = ""
 
     @staticmethod
-    def save_flow(dataFlow="N/A", class_=""):
+    def save_flow(data_flow="N/A", class_=""):
         with open(LOCAL_PATH_DATABASE_FH, "a", encoding="utf-8") as f:
             now_ = str(datetime.now()).split(".")[0]
-            f.writelines([now_, ",", dataFlow.strip(), ",", class_, "\n"])
+            f.writelines([now_, ",", data_flow.strip(), ",", class_, "\n"])
 
-    def find_aviLink(self):
+    def find_available_subscribe(self):
         """
         查询池状态
         :return:
@@ -166,17 +166,17 @@ class SubscribeRequester(object):
                 usr_choice.split("  ")[1],
                 avi2id[usr_choice.split("  ")[-1]].split("  ")[-1],
             )
-            self.resTip(subscribe, task_name)
+            self.resp_tip(subscribe, task_name)
             rc.get_driver().hdel(REDIS_SECRET_KEY.format(task_name), subscribe)
         elif "过期时间" in usr_choice:
             logger_local.warning("链接选择错误")
             easygui.msgbox("请选择有效链接", TITLE)
-            self.find_aviLink()
+            self.find_available_subscribe()
 
         # 返回上一页
         return True
 
-    def resTip(self, subscribe: str, task_name):
+    def resp_tip(self, subscribe: str, task_name):
         """
 
         :param task_name: 任务类型：ssr ； v2ray;trojan
@@ -238,7 +238,7 @@ class SubscribeRequester(object):
                     ).json().get("info")
                 )
         finally:
-            return self.resTip(self.subscribe, mode)
+            return self.resp_tip(self.subscribe, mode)
 
 
 class AirEcologySpider(object):
@@ -321,7 +321,7 @@ class AirEcologySpider(object):
         items = soup.find_all("li", class_="link-item")
 
         # 机场名
-        names = [item.find("span", class_="sitename").text.strip() for item in items]
+        # names = [item.find("span", class_="sitename").text.strip() for item in items]
 
         # 获取去除邀请码的机场链接
         hrefs = [item.find("a")["href"] for item in items]
@@ -352,31 +352,16 @@ class AirEcologySpider(object):
         if url is None:
             url = self.ae_url
 
-        # 清洗链接中的邀请码和注册码，返回纯净的链接
-        def href_cleaner(hrefTarget):
-            if isinstance(hrefTarget, list):
-                clean_href = []
-                for href in hrefs:
-                    if "?" in href:
-                        href = href.split("?")[0]
-                        clean_href.append(href)
-                    else:
-                        clean_href.append(href)
-                return clean_href
-
-            elif isinstance(hrefTarget, str):
-                return hrefTarget.split("?")[0]
-
         def show_data(show=True):
-            # 使用全局变量输出前端信息
-            Out_flow = ["序号    机场名    官网链接"]
 
             if show:
-                data_list = Out_flow + [
-                    "【{}】 【{}】 【{}】".format(i + 1, list(x)[0], list(x)[-1])
-                    for i, x in enumerate(zip(names, hrefs))
-                    if "http" in list(x)[-1]
-                ]
+                # 使用全局变量输出前端信息
+                # out_flow = ["序号    机场名    官网链接"]
+                # data_list = out_flow + [
+                #     "【{}】 【{}】 【{}】".format(i + 1, list(x)[0], list(x)[-1])
+                #     for i, x in enumerate(zip(names, hrefs))
+                #     if "http" in list(x)[-1]
+                # ]
                 # 前端展示API
                 return self.show()
             else:
@@ -407,7 +392,7 @@ class AirEcologySpider(object):
 
             # 获取去除邀请码的机场链接
             hrefs = [item.find("a")["href"] for item in items]
-            hrefs = href_cleaner(hrefs)
+            hrefs = self.href_cleaner(hrefs)
 
             if "保存" in usr_d:
                 # 保存至本地
@@ -440,7 +425,7 @@ class NetChainReview(object):
                 self.response = True
             else:
                 self.response = False
-        except socket.error as e:
+        except socket.error:
             self.response = False
         finally:
             self.s.close()
@@ -485,13 +470,17 @@ class VersionConsole(object):
             # 若无新版本可下载：退出该模块所在线程
 
             usr_choice = easygui.ynbox(
-                f"当前版本:{TITLE}"
+                f"当前版本:{TITLE} v{version}"
                 f'\n\n最新版本：v{self.vcs_res.get("version-server")}'
                 f"\n\n发现新版本软件！是否更新？",
                 "v2ray云彩姬安装向导",
             )
+            # TODO 在前端技术不成熟前，使用本方案更加可靠，直接访问文件下载链接，由用户手动安装（解压就可以直接运行）
+            if usr_choice:
+                webbrowser.open(self.vcs_res.get('url'))
+
         else:
-            easygui.msgbox(f"当前版本:{TITLE}" f"\n\n已是最新版本", "v2ray云彩姬安装向导")
+            easygui.msgbox(f"当前版本:{TITLE} v{version}" f"\n\n已是最新版本", "v2ray云彩姬安装向导")
 
 
 """################### 系统查全 ######################"""
@@ -583,7 +572,7 @@ class PrepareEnv(object):
 
 
 class V2RaycSpiderMasterPanel(object):
-    def __init__(self, init=True):
+    def __init__(self):
 
         # 环境初始化
         PrepareEnv()
@@ -688,7 +677,7 @@ class V2RaycSpiderMasterPanel(object):
             elif "[3]Trojan订阅连接" in usr_c:
                 resp = sp.run(mode="trojan")
             elif "[4]查询可用链接" in usr_c:
-                resp = sp.find_aviLink()
+                resp = sp.find_available_subscribe()
             elif "[5]返回" in usr_c:
                 resp = True
             else:
@@ -700,7 +689,7 @@ class V2RaycSpiderMasterPanel(object):
 
 
 # --------------------------------
-# 权限验证
+# API接口初始化
 # --------------------------------
 if ThreadPoolExecutor(max_workers=1).submit(NetChainReview().run).result():
     rc = RedisClient()
@@ -708,3 +697,6 @@ else:
     logger_local.warning("网络异常")
     easygui.msgbox("网络异常", title=TITLE)
     exit()
+
+if __name__ == '__main__':
+    V2RaycSpiderMasterPanel().home_menu()

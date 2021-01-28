@@ -1,9 +1,10 @@
 __all__ = ['GeventSchedule']
 
-import time
 import threading
+import time
 
 import schedule
+
 from BusinessCentralLayer.middleware.redis_io import *
 from BusinessCentralLayer.sentinel import noticer
 from BusinessLogicLayer.cluster import __task__
@@ -128,7 +129,7 @@ class GeventSchedule(object):
                 except schedule.IntervalError:
                     logger.error('interval set error')
 
-                self.crontab['action'] += 5
+                # self.crontab['action'] += 5
 
             while True:
                 schedule.run_pending()
@@ -136,7 +137,7 @@ class GeventSchedule(object):
 
         except Exception as err:
             logger.exception('Exception occurred ||{}'.format(err))
-            noticer.send_email(text_body='{}'.format(err), to='self')
+            noticer.send_email(msg='{}'.format(err), to_='self')
         except KeyboardInterrupt as err:
             logger.stop('Forced stop ||{}'.format(err))
 
