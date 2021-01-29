@@ -88,7 +88,7 @@ class FlexibleDistribute(object):
         self.to_redis()
 
         # 将数据推送至sqlite3
-        self.to_sqlite3(docker)
+        # self.to_sqlite3(docker)
 
         # Middleware.hera.put('push')
 

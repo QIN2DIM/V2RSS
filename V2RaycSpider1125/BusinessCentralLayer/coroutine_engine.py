@@ -177,14 +177,12 @@ class LightweightSpeedup(object):
         # 任务启动
         task_list = []
         power_ = self.power if self.power else power
+
         for x in range(power_):
             task = gevent.spawn(self.launch)
             task_list.append(task)
         gevent.joinall(task_list)
-        logger.success(f'<Gevent> mission completed -- [{self.__class__.__name__}]')
-
-        def run():
-            self.interface()
+        logger.success(f'<Gevent> mission completed -- <{self.__class__.__name__}>')
 
 
 class PuppetCore(object):

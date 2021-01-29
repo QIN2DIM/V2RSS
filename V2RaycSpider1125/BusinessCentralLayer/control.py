@@ -267,3 +267,8 @@ class Interface(object):
     @staticmethod
     def ddt(task_name=None):
         GeventSchedule().ddt(task_name)
+
+    @staticmethod
+    def subs_ddt(debug=True, power=12):
+        from BusinessLogicLayer.plugins.ddt_subs import SubscribesCleaner
+        SubscribesCleaner(debug=debug).interface(power=power)

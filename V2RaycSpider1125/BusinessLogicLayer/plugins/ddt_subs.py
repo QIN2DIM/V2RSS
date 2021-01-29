@@ -1,7 +1,6 @@
 __all__ = ['SubscribesCleaner', 'scl_deploy']
 
 # 独立使用的链接清理插件，还未并入系统，请勿调用，正确的做法是使用单独的进程运行该脚本
-exec("from gevent import monkey\nmonkey.patch_all()")
 import time
 import schedule
 from BusinessCentralLayer.coroutine_engine import lsu
@@ -11,6 +10,7 @@ from config import REDIS_SECRET_KEY, CRAWLER_SEQUENCE, logger
 
 
 class SubscribesCleaner(lsu):
+    """解耦清洗插件：国内IP调用很可能出现性能滑坡"""
     def __init__(self, debug=False):
         super(SubscribesCleaner, self).__init__()
         self.debug = debug
@@ -34,14 +34,17 @@ class SubscribesCleaner(lsu):
         except UnicodeDecodeError or TypeError as e:
             logger.debug(f"Retry put the subscribe({sub_info}) to work queue -- {e}")
             self.work_q.put_nowait(sub_info)
+        except Exception as e:
+            logger.warning(f"{sub_info} -- {e}")
 
 
-def scl_deploy(docker):
+def scl_deploy(docker=SubscribesCleaner):
     """
 
     @param docker: Python 类对象
     @return:
     """
+    logger.success(f'<GeventSchedule>启动成功 -- {docker.__name__}')
 
     def release_docker(interface: str = 'interface'):
         """
@@ -49,7 +52,7 @@ def scl_deploy(docker):
         @param interface: 接口函数名
         @return:
         """
-        logger.info(f'>> Do {docker.__name__}.')
+        logger.info(f'>> Do {docker.__name__}')
         exec(f'docker().{interface}()')
 
     schedule.every(1).minute.do(release_docker)
@@ -60,5 +63,6 @@ def scl_deploy(docker):
 
 
 if __name__ == '__main__':
-    # scl_deploy(SubscribesCleaner)
-    SubscribesCleaner(debug=True).interface(power=12)
+    # 作为单独脚本运行时需要打上补丁
+    exec("from gevent import monkey\nmonkey.patch_all(ssl=False)")
+    scl_deploy(SubscribesCleaner)

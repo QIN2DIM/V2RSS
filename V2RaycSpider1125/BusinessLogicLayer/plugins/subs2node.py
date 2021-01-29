@@ -26,7 +26,6 @@ def subs2node(subs: str, cache_path: str or bool = 'node_info.txt') -> dict:
 
     # 参数初始化
     class_ = ''
-    obj_analyze = {}
     try:
         # 订阅解析
         obj = urlparse(subs)
@@ -38,7 +37,9 @@ def subs2node(subs: str, cache_path: str or bool = 'node_info.txt') -> dict:
 
         obj_analyze = {'net': obj.netloc, 'token': obj.path.split('/')[-1], 'class_': class_}
 
-        res = requests.get(subs, headers={'user-agent': UserAgent().random})
+        res = requests.get(subs, headers={
+            'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+                          " Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.53"})
         node_info = base64.decodebytes(res.content)
 
         if cache_path:
@@ -46,7 +47,6 @@ def subs2node(subs: str, cache_path: str or bool = 'node_info.txt') -> dict:
                 f.write(node_info)
 
         return {'subs': subs, 'info': obj_analyze, "node": node_info.decode("utf8").split("\n")}
-
     except requests.exceptions.MissingSchema:
         print(f'{subs} -- 传入的subs格式有误或不是订阅链接')
     except requests.exceptions.RequestException as e:
