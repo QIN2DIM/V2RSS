@@ -2,7 +2,7 @@
 
 - 版本号：`v4.5.3-stable`
 
-- 推荐搭配：[qv2ray](https://qv2ray.net/) || [v2fly]([V2Fly.org](https://www.v2fly.org/))
+- 推荐搭配：[qv2ray](https://qv2ray.net/) || [v2fly](https://www.v2fly.org/)
 
 ## 一、服务说明
 
