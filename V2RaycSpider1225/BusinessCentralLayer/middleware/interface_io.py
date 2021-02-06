@@ -105,7 +105,7 @@ class SystemEngine(object):
                     dockers.append({"name": docker_name, "api": eval(f"dei.startup_{docker_name}")})
             # 无论有无权限都要装载采集器
             if not tasks['collector']:
-                dockers.append({"name": 'docker_name', "api": dei.startup_collector})
+                dockers.append({"name": 'collector', "api": dei.startup_collector})
             # 启动定时任务
             GeventSchedule(dockers=dockers)
         except KeyError:
