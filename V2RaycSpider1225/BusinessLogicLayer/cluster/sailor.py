@@ -26,7 +26,7 @@ def _is_overflow(task_name: str, rc=None):
     cache_size: int = Middleware.poseidon.qsize()
 
     # 判断缓冲队列是否已达单机采集极限
-    if storage_remain + cache_size >= cap:
+    if storage_remain + cache_size >= round(cap * 0.7):
         # 若已达或超过单机采集极限，则休眠任务
         logger.debug(f'<TaskManager> Overflow || 任务队列已满<{task_name}>({storage_remain}/{cap})')
         return True
@@ -86,7 +86,7 @@ def _sync_actions(
 
             # 防止过载。当本地缓冲任务即将突破容载极限时停止同步
             if _is_overflow(task_name=class_, rc=rc):
-                return 'overflow'
+                return 'offload'
 
             # 获取原子任务，该任务应已封装为exec语法
             # todo 将入队操作封装到redis里，以获得合理的循环退出条件
@@ -183,7 +183,7 @@ def manage_task(
     # if 'force_run' is False and the node has the permissions of collector
     if local_work:
         # if task queue can be work
-        if response != 'overflow':
+        if response == 'offload':
             logger.info(f'<TaskManager> Run || <{class_}>采集任务启动')
             vsu(core=PuppetCore(), docker=Middleware.poseidon).run(speedup)
         logger.success(f'<TaskManager> Finish || <{class_}>采集任务结束')
