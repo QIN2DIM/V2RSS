@@ -76,22 +76,23 @@ pip install pymysql -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 ### 2.2 关闭冰箱门
 
-[程序全局接口](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/V2RaycSpider1125/main.py) || 通过脚手架调试或启动项目。
+[程序全局接口](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/V2RaycSpider1125/main.py) || 通过脚手架调试/启动/部署项目。
 
-- 运行`main.py`（脚手架接口）启动项目；
+- 运行`main.py`（脚手架接口）调试/启动/部署项目。
 
 - 服务器后台运行；
 
-  - （推荐）搭配`tmux`使用，详见[Tmux 使用教程 - 阮一峰的网络日志 (ruanyifeng.com)](http://www.ruanyifeng.com/blog/2019/10/tmux.html)
-  - 使用原生机制部署
+  - （推荐）搭配`tmux`使用，详见[Tmux 使用教程](http://www.ruanyifeng.com/blog/2019/10/tmux.html)；
+  - 使用原生机制部署：
 
-```bash
-# CentOS7 部署
+```sh
+# CentOS7 部署  nohup 和‘&’缺一不可
 nohup python3 /qinse/V2RaycSpider1125/main.py deploy &
 ```
 
 ## 三、其他设置
 
-> 以上设置均在`main.py`以及`config.py`文件中有详细说明，遇到问题请自行检索或通过`issue/email`给作者留言。
+> - 若无特殊需求或安全性漏洞，本项目`master`分支的前端`panel`将不再升级/更新，其余项目进度将在[Projects](https://github.com/QIN2DIM/V2RayCloudSpider/projects)中公示；
+> - 更多<u>关于本项目的</u>bug请在`issue`中留言，欢迎二次开发。
 
 （更新中...）

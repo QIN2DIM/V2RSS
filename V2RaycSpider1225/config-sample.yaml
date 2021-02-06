@@ -1,0 +1,130 @@
+# TODO (√) 强制填写；(*)可选项
+
+# ---------------------------------------------------
+# TODO (√) Function Authority -- 功能权限
+# ---------------------------------------------------
+
+# ENABLE_DEPLOY 单节点部署定时任务开关
+ENABLE_DEPLOY:
+  # 定时任务总开关
+  global: True
+  # 建议在多服务器场景下将采集任务和ddt任务分离，
+  tasks:
+    # 采集订阅
+    collector: True
+    # 移除过期订阅
+    ddt_overdue: True
+    # 解耦订阅
+    ddt_decouple: True
+
+# ENABLE_DEPLOY 服务器内核开关
+ENABLE_KERNEL:
+  # 基准服务
+  basic: True
+  # 数据挖掘
+  async_dm: False
+  # 园丁系统
+  gardener: False
+
+# ENABLE_SERVER 部署Flask
+ENABLE_SERVER: True
+
+# ENABLE_COROUTINE 协程加速
+ENABLE_COROUTINE: True
+
+# ENABLE_REBOUND 数据回弹
+# 当master server宕机后，将slave中的订阅清洗后传回。
+# 该选项会反转主从关系，仅在主机数据丢失情况下手动开启。
+# 在完成数据覆盖后应立即将ENABLE_REBOUND置False后重启项目。
+ENABLE_REBOUND: False
+
+# ---------------------------------------------------
+# TODO (√)SINGLE_TASK_CAP -- 单类订阅的队列容载极限
+# 当某种链接的数量达到这个阈值则不会启动该类链接的采集任务
+# <Performance limit of 1xCPU 1GRAM VPS KVM>
+# Defaults type:int = 25
+# 推荐个人使用 场景下SINGLE_TASK_CAP不超过3
+# ---------------------------------------------------
+SINGLE_TASK_CAP: 25
+
+# ---------------------------------------------------
+# TODO (√)DEPLOY_INTERVAL -- schedule任务间隔,单位秒（s）
+# 定时任务中采集任务频次： 1轮/INTERVAL_ACTION
+# Defaults type:int = 5 * 60 s 既5分钟
+#
+# 定时任务中数据备份/过期移除频次： 1轮/INTERVAL_REFRESH
+# Defaults type:int = 60 * 60 s 既1小时
+
+# 定时任务中数据解耦/检查频次： 1轮/INTERVAL_REFRESH
+# Defaults type:int = 1 * 60 s 既1分钟
+
+# 为保证系统高可用性，请不要让任务巡回频次低于以上预设值
+# ---------------------------------------------------
+LAUNCH_INTERVAL:
+  collector: 300
+  ddt_overdue: 3600
+  ddt_decouple: 60
+
+
+# ---------------------------------------------------
+# TODO (√)Redis Cluster Configuration(SSH-BASE)
+# 若您不知道如何配置Redis远程连接，请自行搜索或↓
+# >> https://shimo.im/docs/5bqnroJYDbU4rGqy/
+# 注：password为redis密码
+# ---------------------------------------------------
+
+# TODO (√)Settings of the Master-Redis responsible for leading the workflow
+REDIS_MASTER:
+  host: &main_host ''
+  password: &main_password ''
+  port: 6379
+  db: 0
+
+# TODO (*)Setting of the Slave-Redis responsible for data disaster tolerance（DDT）
+REDIS_SLAVER_DDT:
+  # If you deploy this project on a single server
+  #  host: *main_host
+  #  password: *main_password
+  #  port: 6379
+  #  db: 1
+
+  # If you have extra servers please use the following settings
+  host: ''
+  password: ''
+  port: 6379
+  db: 0
+
+# TODO (x)This configuration is not applicable in the current version
+MYSQL_CONFIG:
+  user: ''
+  host: ''
+  password: ''
+  db: ''
+
+# ---------------------------------------------------
+# TODO (√)API for Flask(SSH-BASE)
+# flask开放的端口号，通信方式为HTTP
+# ---------------------------------------------------
+API_PORT: 6500
+
+# ---------------------------------------------------
+# TODO (*)Noticer -- 用于发送panic信息警报，默认发送给自己
+# 1. 当只需要发送给自己时推荐使用SERVER酱，两种通讯方式SERVER酱优先级更高
+# 2. 此项非必要填写，若为空则不会发送警告信息
+# ---------------------------------------------------
+# ---------------------------------------------------
+# 1. 使用Email推送-推荐使用QQ邮箱，开启邮箱SMTP服务教程如下
+# https://service.mail.qq.com/cgi-bin/help?subtype=1&&id=28&&no=1001256
+# ---------------------------------------------------
+SMTP_ACCOUNT:
+  # SMTP邮箱
+  email: ''
+  # SMTP授权码
+  sid: ''
+
+# ---------------------------------------------------
+# 2. 使用<SERVER酱>推送，请在SERVER_CHAN_SCKEY填写自己的Key
+# http://sc.ftqq.com/3.version
+# ---------------------------------------------------
+SERVER_CHAN_SCKEY: ''
+
