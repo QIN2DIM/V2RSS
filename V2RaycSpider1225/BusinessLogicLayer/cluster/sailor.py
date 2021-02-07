@@ -122,7 +122,8 @@ def _sync_actions(
                 # 节拍同步线程锁
                 if only_sync:
                     logger.warning(f"<TaskManager> OnlySync -- <{class_}>触发节拍同步线程锁，仅下载一枚原子任务")
-                    break
+                    return 'offload'
+
             # 否则打印警告日志并提前退出同步
             else:
                 logger.warning(f"<TaskManager> SyncFinish -- <{class_}>无可同步任务")
@@ -130,6 +131,13 @@ def _sync_actions(
 
     elif mode_sync == 'force_run':
         for slave_ in task_list:
+
+            # force_run ：适用于单机部署或单步调试下
+            _state = _is_overflow(task_name=class_, rc=rc)
+            # 需要确保无溢出风险，故即使是force_run的启动模式，任务执行数也不应逾越任务容载数
+            if _state == 'stop':
+                return 'stop'
+
             # 将相应的任务执行语句转换成exec语法
             expr = f'from BusinessLogicLayer.cluster.slavers.actions import {slave_}\n' \
                    f'{slave_}(at_once={beat_sync}).run()'
@@ -139,20 +147,14 @@ def _sync_actions(
 
             # 在force_run模式下仍制约于节拍同步线程锁
             # 此举服务于主机的订阅补充操作
-            # 优先级更高，不需要判断队列状态
+            # 优先级更高，不受队列可用容载影响强制中断同步操作
             if only_sync:
                 logger.warning(f"<TaskManager> OnlySync -- <{class_}>触发节拍同步线程锁，仅下载一枚原子任务")
-                break
-
-            # force_run ：适用于单机部署或单步调试下
-            # 将状态判断放在入操作之后，确保force_run 至少执行一次链接采集操作
-            _state = _is_overflow(task_name=class_, rc=rc)
-            # 需要确保无溢出风险，故即使是force_run的启动模式，任务执行数也不应逾越任务容载数
-            if _state == 'stop':
-                break
-
-        logger.success(f"<TaskManager> ForceCollect"
-                       f" -- 已将本地预设任务({actions.__all__.__len__() - task_list.__len__()})录入待执行任务队列")
+                return 'stop'
+        else:
+            logger.success(f"<TaskManager> ForceCollect"
+                           f" -- 已将本地预设任务({actions.__all__.__len__()})录入待执行队列")
+            return 'offload'
 
 
 @logger.catch()
@@ -218,8 +220,9 @@ def manage_task(
     # 若本机开启了采集器权限则创建协程空间
     # 若从control-deploy进入此函数，则说明本机必定具备创建协程空间权限
     if force_run:
-        logger.info(f'<TaskManager> ForceRun || <{class_}>采集任务启动')
-        vsu(core=PuppetCore(), docker=Middleware.poseidon).run(speedup)
+        if response == 'offload':
+            logger.info(f'<TaskManager> ForceRun || <{class_}>采集任务启动')
+            vsu(core=PuppetCore(), docker=Middleware.poseidon).run(speedup)
         logger.success(f'<TaskManager> ForceWorkFinish || <{class_}>采集任务结束')
         return True
 

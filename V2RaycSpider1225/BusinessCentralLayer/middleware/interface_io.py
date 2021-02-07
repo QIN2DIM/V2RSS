@@ -104,6 +104,8 @@ class _SystemEngine(object):
         except KeyError:
             logger.critical('config中枢层配置被篡改，ENABLE_DEPLOY 配置中无”tasks“键值对')
             exit()
+        except NameError:
+            logger.critical('eval()或exec()语法异常，检测变量名是否不一致。')
 
     @staticmethod
     def run(beat_sync=True, force_run=None) -> None:
