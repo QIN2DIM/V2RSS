@@ -95,7 +95,7 @@ class _SystemEngine(object):
             tasks = ENABLE_DEPLOY['tasks']
             for docker_name, permission in tasks.items():
                 if permission:
-                    dockers.append({"name": docker_name, "api": eval(f"dei.startup_{docker_name}")})
+                    dockers.append({"name": docker_name, "api": eval(f"_cd.startup_{docker_name}")})
             # 无论有无权限都要装载采集器
             if not tasks['collector']:
                 dockers.append({"name": 'collector', "api": _cd.startup_collector})
