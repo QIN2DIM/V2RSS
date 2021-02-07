@@ -7,9 +7,6 @@ import csv
 import gevent
 from typing import List
 
-# FIXME 修复config.yaml 初始化问题
-
-
 from BusinessCentralLayer.setting import *
 
 command_set = {
@@ -17,7 +14,7 @@ command_set = {
     # ---------------------------------------------
     # 部署接口
     # ---------------------------------------------
-    'deploy': "部署项目（定时任务+flask）",
+    'deploy': "部署项目（定时任务/Flask 开启与否根据yaml配置文件）",
     # ---------------------------------------------
     # 调试接口
     # ---------------------------------------------
@@ -27,7 +24,10 @@ command_set = {
     "force_run": "强制执行采集任务",
     "remain": "读取剩余订阅数量",
     "ping": "测试数据库连接",
-    "example": "python main.py run"
+    # ---------------------------------------------
+    # 调用示例
+    # ---------------------------------------------
+    "example": "python main.py ping"
 }
 
 
@@ -111,8 +111,11 @@ _ConfigQuarantine().run()
 
 
 class _ScaffoldGuider(object):
+    # __slots__ = list(command_set.keys())
+
     def __init__(self):
-        pass
+        # 脚手架公开接口
+        self.scaffold_ruler = [i for i in self.__dir__() if i.startswith('_scaffold_')]
 
     @logger.catch()
     def startup(self, driver_command_set: List[str]):
@@ -168,30 +171,15 @@ class _ScaffoldGuider(object):
         task_list = []
 
         # 测试数据库连接
-        if 'ping' in driver_command:
-            task_list.append(gevent.spawn(self._scaffold_ping))
-
-        # 立即唤醒一次subs_ddt链接解耦任务
-        if 'decouple' in driver_command:
-            task_list.append(gevent.spawn(self._scaffold_decouple))
-
-        # 立即执行一次过时链接清洗任务（越界清洗，既订阅将要过期也会被删除，默认3小时）
-        if 'overdue' in driver_command:
-            task_list.append(gevent.spawn(self._scaffold_overdue))
-
-        # 立即执行一次采集任务（当并发数大于1则强制使用协程加速）
-        if 'run' in driver_command:
-            task_list.append(gevent.spawn(self._scaffold_run))
-
-        # 强制执行采集任务（无论本机有没有开启采集权限都可执行）
-        if 'force_run' in driver_command:
-            task_list.append(gevent.spawn(self._scaffold_force_run))
-
-        # 读取数据库剩余订阅数量
-        if 'remain' in driver_command:
-            task_list.append(gevent.spawn(self._scaffold_remain))
-
-        gevent.joinall(task_list)
+        while driver_command.__len__() > 0:
+            _pending_command = driver_command.pop()
+            try:
+                task_list.append(gevent.spawn(eval(f"self._scaffold_{_pending_command}")))
+            except Exception as e:
+                logger.warning(f'脚手架暂未授权指令<{_pending_command}> {e}')
+        else:
+            # 并发执行以上指令
+            gevent.joinall(task_list)
 
         # -------------------------------
         # TODO 优先级3：自定义参数部署（阻塞线程）
@@ -202,12 +190,14 @@ class _ScaffoldGuider(object):
 
     @staticmethod
     def _scaffold_deploy():
+        logger.info(f"<ScaffoldGuider> Deploy || MainProcess")
         from BusinessCentralLayer.middleware.interface_io import SystemInterface as app
-        app.run(deploy_=True, coroutine_speed_up=True)
+        app.run(deploy_=True)
 
     @staticmethod
     def _scaffold_decouple():
         logger.info(f"<ScaffoldGuider> Decouple || General startup")
+
         from BusinessLogicLayer.plugins.ddt_subs import SubscribesCleaner
         SubscribesCleaner(debug=True).interface()
 
@@ -241,3 +231,5 @@ class _ScaffoldGuider(object):
 
 
 scaffold = _ScaffoldGuider()
+if __name__ == '__main__':
+    print(scaffold.scaffold_ruler)

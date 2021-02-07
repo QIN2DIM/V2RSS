@@ -5,6 +5,7 @@ from gevent.queue import Queue
 
 # 工作栈
 class Middleware:
+
     # cache of redis
     zeus = Queue()
 
@@ -13,10 +14,11 @@ class Middleware:
 
     theseus = {}
 
-    # work
+    # 共享任务队列
     poseidon = Queue()
 
     hera = Queue()
+
     # FIXME
     #  不明原因bug 使用dict（zip（））方案生成的同样的变量，
     #  在经过同一个函数方案后输出竟然不一样

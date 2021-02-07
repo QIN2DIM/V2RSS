@@ -11,7 +11,6 @@ from BusinessCentralLayer.setting import logger, LAUNCH_INTERVAL
 
 # FIXME
 #  本方案刻意限制了部署性能，请服务器资源阔绰的玩家自行使用APSchedule模块兼容协程部署任务
-#  资源阔绰定义：4xCPU，4G RAM
 #  加速版本的调度器将在未来版本开源
 class GeventSchedule(object):
     def __init__(self, dockers=None):

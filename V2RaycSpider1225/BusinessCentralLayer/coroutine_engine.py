@@ -1,7 +1,3 @@
-# FIXME:
-#  若您为项目开发者 请不要在生产环境中启用进度条功能 <- 未知bug
-
-
 __all__ = ['vsu', 'lsu', 'PuppetCore']
 
 from typing import List, Dict
@@ -26,7 +22,6 @@ class CoroutineEngine(object):
         # 初始化参数
         self.max_queue_size = 0
         self.power = power
-        # self.work_Q = Queue()
 
         # 驱动器
         self.core = core
@@ -115,8 +110,7 @@ class CoroutineEngine(object):
             self.power = 1
         else:
             self.flexible_power()
-        logger.info('Flexible Power:{}'.format(self.power))
-        logger.info('Queue Capacity:{}'.format(self.max_queue_size))
+        logger.info(f'<Gevent> Flexible Power:{self.power} || Queue Capacity:{self.max_queue_size}')
 
         # 启动进度条
         if use_bar:

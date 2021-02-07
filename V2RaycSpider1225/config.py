@@ -8,17 +8,27 @@ from sys import platform
 import pytz
 import yaml
 
-sample_ = os.path.join(os.path.dirname(__file__), 'config-sample.yaml')
+# ---------------------------------------------------
+# TODO 配置文件索引
+# 默认的单机配置文件为 config.yaml
+# ---------------------------------------------------
+
+# 若在单机上开启多个进程的任务，既每个进程应对应一个启动配置文件（.yaml）则需改动此处user_指向的文件名，如：
+# config_1.yaml   user_= os.path.join(os.path.dirname(__file__), 'config_1.yaml')
+# config_master.yaml   user_= os.path.join(os.path.dirname(__file__), 'config_master.yaml')
 user_ = os.path.join(os.path.dirname(__file__), 'config.yaml')
+
+# 配置模板的文件名 无特殊需求请不要改动
+sample_ = os.path.join(os.path.dirname(__file__), 'config-sample.yaml')
 
 try:
     if not os.path.exists(sample_):
-        print(">>> 请不要删除系统生成的config-sample.yaml，确保它位于工程根目录下")
+        print(">>> 请不要删除系统生成的配置模板config-sample.yaml，确保它位于工程根目录下")
         raise FileNotFoundError
     elif os.path.exists(sample_) and not os.path.exists(user_):
-        print(">>> 工程根目录下缺少config.yaml配置文件，请根据模板文件配置启动参数")
+        print(f">>> 工程根目录下缺少config.yaml配置文件")
         shutil.copy(sample_, user_)
-        print(">>> 初始化config... ")
+        print(">>> 初始化启动参数... ")
         print(">>> 请根据docs配置启动参数 https://github.com/QIN2DIM/V2RayCloudSpider")
         exit()
     elif os.path.exists(sample_) and os.path.exists(user_):
@@ -66,6 +76,9 @@ except FileNotFoundError:
 # ---------------------------------------------------
 # TODO (√) Function Authority -- 功能权限
 # ---------------------------------------------------
+
+# SINGLE_DEPLOYMENT 部署模式，单机部署True(默认)，分布式False
+SINGLE_DEPLOYMENT = config_['SINGLE_DEPLOYMENT']
 
 # ENABLE_DEPLOY 单节点部署定时任务开关
 ENABLE_DEPLOY: dict = config_['ENABLE_DEPLOY']
@@ -207,16 +220,6 @@ SERVER_CHAN_SCKEY: str = config_['SERVER_CHAN_SCKEY']
 # ---------------------------------------------------
 # (*) Core settings of the Master's secret key.Do not modify!
 REDIS_SECRET_KEY: str = "v2rayc_spider:{}"
-
-# (*) If you have a BusinessLogicLayer server, please configure here
-# ...
-
-# ---------------------------------------------------
-# (x) API -- 用于部署弹性伸缩中间件的引流接口
-# (若没有集群服务器不建议设置)
-# ---------------------------------------------------
-ESS_API_HOST: str = "None"
-ESS_API_PORT: int = 0
 
 # ---------------------------------------------------
 # 工程编号与版本号，版本号必须与工程版本(文件名)号一致 请勿改动!

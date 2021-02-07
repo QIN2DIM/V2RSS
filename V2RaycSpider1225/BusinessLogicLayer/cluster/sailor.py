@@ -1,10 +1,13 @@
 # TODO 该模块存在大量exec用法，请勿随意改动相关文件名或函数名
 __all__ = ['manage_task']
 
+import random
+
 from BusinessCentralLayer.coroutine_engine import vsu, PuppetCore
 from BusinessCentralLayer.middleware.redis_io import RedisClient
 from BusinessCentralLayer.middleware.work_io import Middleware
-from BusinessCentralLayer.setting import CRAWLER_SEQUENCE, REDIS_SECRET_KEY, SINGLE_TASK_CAP, ENABLE_DEPLOY, logger
+from BusinessCentralLayer.setting import CRAWLER_SEQUENCE, REDIS_SECRET_KEY, SINGLE_TASK_CAP, ENABLE_DEPLOY, \
+    SINGLE_DEPLOYMENT, logger
 from BusinessLogicLayer.cluster.slavers import actions
 
 
@@ -14,6 +17,9 @@ def _is_overflow(task_name: str, rc=None):
     @param task_name: class_
     @param rc: RedisClient Object Driver API
     @return:
+        --stop: 停止任务同步并结束本轮采集任务
+        --offload：停止任务同步并开始执行采集任务
+        --continue：继续同步任务
     """
 
     # TODO 将缓存操作原子化
@@ -25,11 +31,22 @@ def _is_overflow(task_name: str, rc=None):
     # 获取本机任务缓存
     cache_size: int = Middleware.poseidon.qsize()
 
+    # 判断任务队列是否达到满载状态或已溢出
+    if storage_remain >= cap:
+        logger.warning(f'<TaskManager> OverFlow || 任务溢出<{task_name}>({storage_remain}/{cap})')
+        return 'stop'
+
     # 判断缓冲队列是否已达单机采集极限
-    if storage_remain + cache_size >= round(cap * 0.7):
+    # 未防止绝对溢出，此处限制单机任务数不可超过满载值的~x％
+    # x = 1 if signal collector else x = 1/sum (Number of processes)
+    elif storage_remain + cache_size >= round(cap * 0.8):
         # 若已达或超过单机采集极限，则休眠任务
-        logger.debug(f'<TaskManager> Overflow || 任务队列已满<{task_name}>({storage_remain}/{cap})')
-        return True
+        logger.debug(f'<TaskManager> BeatPause || 节拍停顿<{task_name}>({storage_remain}/{cap})')
+        return 'offload'
+
+    # 否则可以继续同步任务
+    else:
+        return 'continue'
 
 
 def _sync_actions(
@@ -53,6 +70,7 @@ def _sync_actions(
 
     # 拷贝生成队列，需使用copy()完成拷贝，否则pop()会影响actions-list本体
     task_list: list = actions.__all__.copy()
+    random.shuffle(task_list)
 
     # 在本机环境中生成任务并加入消息队列
     if mode_sync == 'upload':
@@ -84,9 +102,12 @@ def _sync_actions(
     elif mode_sync == 'download':
         while True:
 
+            # 判断同步状态
             # 防止过载。当本地缓冲任务即将突破容载极限时停止同步
-            if _is_overflow(task_name=class_, rc=rc):
-                return 'offload'
+            # _state 状态有三，continue/offload/stop
+            _state = _is_overflow(task_name=class_, rc=rc)
+            if _state != 'continue':
+                return _state
 
             # 获取原子任务，该任务应已封装为exec语法
             # todo 将入队操作封装到redis里，以获得合理的循环退出条件
@@ -96,14 +117,17 @@ def _sync_actions(
             if atomic:
                 # 将执行语句推送至Poseidon本机消息队列
                 Middleware.poseidon.put_nowait(atomic)
+                logger.info(f'<TaskManager> offload atomic<{class_}>')
 
                 # 节拍同步线程锁
                 if only_sync:
                     logger.warning(f"<TaskManager> OnlySync -- <{class_}>触发节拍同步线程锁，仅下载一枚原子任务")
                     break
+            # 否则打印警告日志并提前退出同步
             else:
                 logger.warning(f"<TaskManager> SyncFinish -- <{class_}>无可同步任务")
                 break
+
     elif mode_sync == 'force_run':
         for slave_ in task_list:
             # 将相应的任务执行语句转换成exec语法
@@ -113,8 +137,22 @@ def _sync_actions(
             # 将执行语句推送至Poseidon本机消息队列
             Middleware.poseidon.put_nowait(expr)
 
-        logger.warning(f"<TaskManager> ForceCollect"
-                       f" -- 已将所有本地预设任务({task_list.__len__()})录入本机待执行任务队列")
+            # 在force_run模式下仍制约于节拍同步线程锁
+            # 此举服务于主机的订阅补充操作
+            # 优先级更高，不需要判断队列状态
+            if only_sync:
+                logger.warning(f"<TaskManager> OnlySync -- <{class_}>触发节拍同步线程锁，仅下载一枚原子任务")
+                break
+
+            # force_run ：适用于单机部署或单步调试下
+            # 将状态判断放在入操作之后，确保force_run 至少执行一次链接采集操作
+            _state = _is_overflow(task_name=class_, rc=rc)
+            # 需要确保无溢出风险，故即使是force_run的启动模式，任务执行数也不应逾越任务容载数
+            if _state == 'stop':
+                break
+
+        logger.success(f"<TaskManager> ForceCollect"
+                       f" -- 已将本地预设任务({actions.__all__.__len__() - task_list.__len__()})录入待执行任务队列")
 
 
 @logger.catch()
@@ -124,7 +162,7 @@ def manage_task(
         only_sync=False,
         startup=None,
         beat_sync=True,
-        force_run=False
+        force_run=None
 ) -> bool:
     """
     加载任务
@@ -147,6 +185,11 @@ def manage_task(
 
     # 审核采集权限，允许越权传参。当手动指定参数时，可授予本机采集权限，否则使用配置权限
     local_work: bool = startup if startup else ENABLE_DEPLOY.get('tasks').get('collector')
+
+    # 强制运行：指定参数优先级更高，若不指定则以是否单机部署模式决定运行force_run是否开启
+    # 默认单机模式下开启force_run
+    # 若未传参时也未定义部署形式（null），则默认不使用force_run
+    force_run = force_run if force_run else SINGLE_DEPLOYMENT
 
     # ----------------------------------------------------
     # 解析同步模式

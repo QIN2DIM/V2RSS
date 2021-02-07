@@ -1,10 +1,42 @@
-# TODO (√) 强制填写；(*)可选项
+# >>> 推荐配置
+# ---------------------------------------------------
+# TODO 单机部署
+# ---------------------------------------------------
+# -- SINGLE_DEPLOYMENT: True
+#   -- ENABLE_DEPLOY: All tasks open
+#   -- ENABLE_SERVER: use flask
+
+# ---------------------------------------------------
+# TODO 多机部署
+# ---------------------------------------------------
+# -- SINGLE_DEPLOYMENT: False
+#   -- Master:
+#     -- ENABLE_DEPLOY: shut down the collector！
+#     -- ENABLE_SERVER: use flask
+#   -- Slaves:
+#     -- ENABLE_DEPLOY: open the collector, close other tasks,
+#     -- ENABLE_SERVER: shut down the flask！
+
+# ---------------------------------------------------
+# TODO 其他建议
+# ---------------------------------------------------
+# -- ENABLE_COROUTINE: True
+# -- ENABLE_KERNEL: use 'basic' service only
+
+# ===================================================
+# >>> 符号说明
+# (√)核心参数 强制填写；不填写或填写有误无法正常启动项目
+# (*)边枝功能 可选项/使用默认配置；不填写不影响项目启动
+# ===================================================
 
 # ---------------------------------------------------
 # TODO (√) Function Authority -- 功能权限
 # ---------------------------------------------------
 
-# ENABLE_DEPLOY 单节点部署定时任务开关
+# SINGLE_DEPLOYMENT 部署模式，单机部署True(默认)，分布式False
+SINGLE_DEPLOYMENT: True
+
+# ENABLE_DEPLOY 定时任务开关
 ENABLE_DEPLOY:
   # 定时任务总开关
   global: True
@@ -65,7 +97,6 @@ LAUNCH_INTERVAL:
   ddt_overdue: 3600
   ddt_decouple: 60
 
-
 # ---------------------------------------------------
 # TODO (√)Redis Cluster Configuration(SSH-BASE)
 # 若您不知道如何配置Redis远程连接，请自行搜索或↓
@@ -73,7 +104,7 @@ LAUNCH_INTERVAL:
 # 注：password为redis密码
 # ---------------------------------------------------
 
-# TODO (√)Settings of the Master-Redis responsible for leading the workflow
+# TODO (√)Settings of the Master-Redis responsible for leading the cluster
 REDIS_MASTER:
   host: &main_host ''
   password: &main_password ''
@@ -94,7 +125,7 @@ REDIS_SLAVER_DDT:
   port: 6379
   db: 0
 
-# TODO (x)This configuration is not applicable in the current version
+# TODO (*)This configuration is not applicable in the current version
 MYSQL_CONFIG:
   user: ''
   host: ''
@@ -102,12 +133,17 @@ MYSQL_CONFIG:
   db: ''
 
 # ---------------------------------------------------
-# TODO (√)API for Flask(SSH-BASE)
+# TODO (√)Communication port for flask
 # flask开放的端口号，通信方式为HTTP
 # ---------------------------------------------------
 API_PORT: 6500
 
 # ---------------------------------------------------
+# TODO (*)Communication port for micro-service
+# ---------------------------------------------------
+REC_PORT: 6600
+
+# ===================================================
 # TODO (*)Noticer -- 用于发送panic信息警报，默认发送给自己
 # 1. 当只需要发送给自己时推荐使用SERVER酱，两种通讯方式SERVER酱优先级更高
 # 2. 此项非必要填写，若为空则不会发送警告信息

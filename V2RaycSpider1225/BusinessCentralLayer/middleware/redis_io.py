@@ -1,4 +1,4 @@
-__all__ = ['RedisClient', 'RedisDataDisasterTolerance', 'rddt']
+__all__ = ['RedisClient', 'RedisDataDisasterTolerance']
 
 from typing import List, Tuple
 
@@ -98,9 +98,9 @@ class RedisClient(object):
                 if self.is_stale(end_life, cross_threshold):
                     logger.debug(f'del-({key_name})--{subscribe}')
                     self.db.hdel(key_name, subscribe)
-            logger.success('{}:UPDATE - {}({})'.format(self.__class__.__name__, key_name, self.__len__(key_name)))
+            logger.success('<{}> UPDATE - {}({})'.format(self.__class__.__name__, key_name, self.__len__(key_name)))
         else:
-            logger.warning('{}:EMPTY - {}({})'.format(self.__class__.__name__, key_name, self.__len__(key_name)))
+            logger.warning('<{}> EMPTY - {}({})'.format(self.__class__.__name__, key_name, self.__len__(key_name)))
 
     @staticmethod
     def is_stale(subs_expiration_time: str, threshold: int = None) -> bool:
@@ -237,5 +237,3 @@ class RedisDataDisasterTolerance(RedisClient):
         except Exception as e:
             logger.exception(e)
 
-
-rddt = RedisDataDisasterTolerance

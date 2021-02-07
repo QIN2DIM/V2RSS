@@ -1,7 +1,5 @@
 __all__ = ['SystemInterface']
 
-# FIXME：如果您是项目开发者，请在项目调试中注释掉以下的monkey插件
-
 import multiprocessing
 
 from BusinessCentralLayer.middleware.redis_io import RedisClient
@@ -23,7 +21,7 @@ enable_coroutine = ENABLE_COROUTINE
 # ----------------------------------------
 # 容器接口液化
 # ----------------------------------------
-class DockerEngineInterface(object):
+class _ContainerDegradation(object):
     def __init__(self):
         """config配置参数一次性读取之后系统不再响应配置变动，修改参数需要手动重启项目"""
         # 热加载配置文件 载入越权锁
@@ -50,35 +48,30 @@ class DockerEngineInterface(object):
             sailor.manage_task(class_=task_name, speedup=self.go)
 
 
-dei = DockerEngineInterface()
+_cd = _ContainerDegradation()
 
 
-class SystemEngine(object):
+class _SystemEngine(object):
 
-    def __init__(self, **kwargs) -> None:
-        logger.info(f'<系统初始化>:SystemEngine -> {platform}')
+    def __init__(self) -> None:
+        logger.info(f'<系统初始化> SystemEngine -> {platform}')
 
         # 读取配置序列
-        self.deploy_cluster = CRAWLER_SEQUENCE
-        logger.info(f'<定位配置>:check_sequence:{self.deploy_cluster}')
+        logger.info(f'<定位配置> check_sequence:{CRAWLER_SEQUENCE}')
 
         # 默认linux下自动部署
-        logger.info('<部署设置>:enable_deploy:{}'.format(ENABLE_DEPLOY))
+        logger.info(f'<部署设置> enable_deploy:{ENABLE_DEPLOY}')
 
-        # 单机协程加速配置
-        self.speed_up = ENABLE_COROUTINE if kwargs.get(
-            'speed_up') is None else kwargs.get('speed_up')
-        logger.info("<协程加速>:speed_up:{}".format(self.speed_up))
+        # 协程加速配置
+        logger.info(f"<协程加速> Coroutine:{enable_coroutine}")
 
         # 解压接口容器
-        logger.info("<解压容器>:DockerEngineInterface")
+        logger.info("<解压容器> DockerEngineInterface")
 
         # 初始化进程
-        self.server_process, self.deploy_process = None, None
-        logger.info('<初始化进程>:deploy_process:server_process')
-        logger.info(f'<加载队列>:IndexQueue:{actions.__all__}')
+        logger.info(f'<加载队列> IndexQueue:{actions.__all__}')
 
-        logger.success('<Gevent>工程核心准备就绪 任务即将开始')
+        logger.success('<Gevent> 工程核心准备就绪 任务即将开始')
 
     @staticmethod
     def run_server() -> None:
@@ -105,15 +98,15 @@ class SystemEngine(object):
                     dockers.append({"name": docker_name, "api": eval(f"dei.startup_{docker_name}")})
             # 无论有无权限都要装载采集器
             if not tasks['collector']:
-                dockers.append({"name": 'collector', "api": dei.startup_collector})
+                dockers.append({"name": 'collector', "api": _cd.startup_collector})
             # 启动定时任务
             GeventSchedule(dockers=dockers)
         except KeyError:
             logger.critical('config中枢层配置被篡改，ENABLE_DEPLOY 配置中无”tasks“键值对')
             exit()
 
-    @logger.catch()
-    def run(self, beat_sync=True, force_run=False) -> None:
+    @staticmethod
+    def run(beat_sync=True, force_run=None) -> None:
         """
         本地运行--检查队列残缺
         # 所有类型任务的节点行为的同时发起 or 所有类型任务的节点行为按序执行,node任务之间互不影响
@@ -143,7 +136,7 @@ class SystemEngine(object):
         """
         # 同步任务队列(广度优先)
         # 这是一次越权执行，无论本机是否具备collector权限都将执行一轮协程空间的创建任务
-        for class_ in self.deploy_cluster:
+        for class_ in CRAWLER_SEQUENCE:
             sailor.manage_task(class_=class_, beat_sync=beat_sync, force_run=force_run)
 
         # FIXME 节拍同步
@@ -153,7 +146,7 @@ class SystemEngine(object):
 
         # 执行一次数据迁移
         # TODO 将集群接入多哨兵模式，减轻原生数据拷贝的额外CPU资源开销
-        dei.startup_ddt_overdue()
+        _cd.startup_ddt_overdue()
 
         # 任务结束
         logger.success('<Gevent>任务结束')
@@ -164,15 +157,16 @@ class SystemEngine(object):
         try:
             # 部署<单进程多线程>定时任务
             if ENABLE_DEPLOY['global']:
-                process_list.append(multiprocessing.Process(target=SystemEngine.run_deploy, name='deploymentTimingTask'))
+                process_list.append(
+                    multiprocessing.Process(target=_SystemEngine.run_deploy, name='deploymentTimingTask'))
 
             # 部署flask
             if ENABLE_SERVER:
-                process_list.append(multiprocessing.Process(target=SystemEngine.run_server, name='deploymentFlaskAPI'))
+                process_list.append(multiprocessing.Process(target=_SystemEngine.run_server, name='deploymentFlaskAPI'))
 
             # 执行多进程任务
             for process_ in process_list:
-                logger.info(f'<SystemProcess> Startup -- {process_.name}')
+                logger.success(f'<SystemProcess> Startup -- {process_.name}')
                 process_.start()
 
             # 添加阻塞
@@ -213,22 +207,22 @@ class SystemInterface(object):
     @staticmethod
     def ddt(task_name: str = None):
         if not task_name:
-            dei.startup_ddt_overdue()
+            _cd.startup_ddt_overdue()
         elif not (isinstance(task_name, str) and task_name in CRAWLER_SEQUENCE):
             logger.warning("<Interface>传入的参数（task_name）不合法，任务类型必须被指定在CRAWLER_SEQUENCE之中")
         else:
-            dei.startup_ddt_overdue(task_name)
+            _cd.startup_ddt_overdue(task_name)
 
     @staticmethod
     def subs_ddt(debug: bool = True, power: int = 12):
-        dei.startup_ddt_decouple(debug=debug, power=power)
+        _cd.startup_ddt_decouple(debug=debug, power=power)
 
     @staticmethod
     def run(
             deploy_: bool = None,
-            coroutine_speed_up: bool = False,
+            coroutine_speed_up: bool = None,
             beat_sync: bool = True,
-            force_run: bool = False
+            force_run: bool = None
     ) -> None:
         """
         主程序入口
@@ -241,21 +235,12 @@ class SystemInterface(object):
         global enable_coroutine
 
         # 手动传参优先级更高，修改系统权限
-        enable_coroutine = coroutine_speed_up
+        enable_coroutine = coroutine_speed_up if coroutine_speed_up else ENABLE_COROUTINE
 
         # 部署定时任务
         if deploy_:
-            SystemEngine(
-                speed_up=coroutine_speed_up,
-                enable_deploy=deploy_
-            ).startup()
+            _SystemEngine().startup()
 
         # 立刻执行任务(debug)
         else:
-            SystemEngine(
-                speed_up=coroutine_speed_up,
-                enable_deploy=deploy_
-            ).run(
-                beat_sync=beat_sync,
-                force_run=force_run
-            )
+            _SystemEngine().run(beat_sync=beat_sync, force_run=force_run)
