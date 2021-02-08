@@ -6,8 +6,6 @@
 
 核心技术栈 ：`Python3`||`GoLand`||`Linux`||`Redis`||`MySQL`||`Selenium`||`Flask`||`Docker`||`Ngnix`
 
-[TOC]
-
 ## 一、环境复现
 
 > `Tos`：该项目基于`Windows`环境开发测试，`CentOS7`环境调试部署，`Mac`用户~~可能~~无法正常使用。
@@ -177,20 +175,11 @@ pip install pymysql -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
   当前版本可不填写。
 
-#### 2.2.1 guider脚手架调试接口
-
-#### 2.2.2 高级配置
-
-- 微服务
-- 消息队列
-- 单元测试
-- 前后端分离开发
-
-### 2.2 关闭冰箱门
+#### 2.2.2 guider脚手架(伪)传参调试
 
 [程序全局接口](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/V2RaycSpider1225/main.py) || 通过脚手架调试/启动/部署项目。
 
-根据[环境配置说明][1] || 查看`argv`参数的运行逻辑。
+根据[环境配置说明][1] || 查看`argv`参数的运行原理。
 
 ```python
 # main.py 程序全局接口
@@ -203,24 +192,37 @@ if __name__ == '__main__':
     scaffold.startup(driver_command_set=argv)
 ```
 
-- 在`Terminal`中执行接口指令运行`main.py`（脚手架接口）查看可用指令，如：
+- 在`Terminal`中执行接口指令运行`main.py`（脚手架接口）**查看可用指令**，如：
 
 ```shell
 # 当前目录 /qinse/V2RaycSpider1225/
 python main.py 
 ```
 
-- 在`Terminal`中执行指令部署项目，如：
+<img src="https://i.loli.net/2021/02/08/PLICehspUt2qJjT.png" alt="Snipaste_2021-02-08_15-13-06"  />
+
+- 在`Terminal`中执行接口指令运行`main.py`（脚手架接口）**测试`redis`数据库连接**，如：
 
 ```shell
+# 当前目录 /qinse/V2RaycSpider1225/
+python main.py ping
+```
+
+![QQ截图20210208151341](https://i.loli.net/2021/02/08/iFXPzny9Y2CAI8S.png)
+
+- 在`Terminal`中执行接口指令运行`main.py`（脚手架接口）**部署云彩姬**，如：
+
+```bash
 # 当前目录 /qinse/V2RaycSpider1225/
 python main.py deploy
 ```
 
 - 使用`deploy`指令将在当前会话窗口启动一个双进程+多线程+多协程的阻塞任务，若不使用`后台挂起`指令或诸如`tmux`的会话管理工具，当前会话将无法进行其他操作，且当远程登陆软件退出后任务进程将被终止。
-
   - （推荐）搭配`tmux`使用，详见[Tmux 使用教程][1]；
-  - 使用`centOS 7`原生指令执行挂起后台任务，如：
+
+![QQ截图20210208152313](https://i.loli.net/2021/02/08/OIPpBRrEcvMAqhX.png)
+
+- 或使用`centOS 7`原生指令执行挂起后台任务，如：
 
 ```shell
 # 当前目录 /qinse/V2RaycSpider1225/
@@ -228,10 +230,47 @@ python main.py deploy
 nohup python main.py deploy &
 ```
 
+### 2.3 关闭冰箱门
+
+#### 2.3.1 `beat_sync`与`only-sync`
+
+#### 2.3.2 `beyond`与`ddt`
+
+#### 2.3.3 `offload`
+
+#### 2.3.4 订阅过期
+
+- 如何定义订阅过期时间
+
+- 如何判断订阅过期
+
+#### 2.3.5 订阅失效
+
+- 如何定义机场故障
+- 如何判断订阅失效
+
 ## 三、其他设置
 
 > - 若无特殊需求或安全性漏洞，本项目`master`分支的前端`panel`将不再升级/更新，其余项目进度将在[Projects](https://github.com/QIN2DIM/V2RayCloudSpider/projects)中公示；
 > - 更多<u>关于本项目的</u>bug请在`issue`中留言，欢迎二次开发。
+
+### 3.1 微服务
+
+#### 3.1.1 基于`go-zero`改进的呼吸节拍中间件
+
+#### 3.1.2 园丁系统——低代码实现的端到端订阅发布模型
+
+### 3.2 后端2077
+
+#### 3.2.1 基于`trojan-go`与混淆神经网络改进的嵌入式“匿名”代理方案
+
+#### 3.2.2 基于分布式异构挖掘技术的永久订阅与机场贯通策略
+
+### 3.3 前端2077
+
+#### 3.3.1 基于`Nonebot2`框架的QQ机器人订阅分发插件
+
+#### 3.3.2 基于`捷径` + `Shadowrocket`的订阅获取脚本
 
 （更新中...）
 
