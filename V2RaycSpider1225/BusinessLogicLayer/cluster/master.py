@@ -22,7 +22,7 @@ from BusinessLogicLayer.plugins.faker_info import get_header, get_proxy
 class BaseAction(object):
     """针对STAFF机场的基准行为"""
 
-    def __init__(self, silence=True, anti=True, email_class='@qq.com', life_cycle=1, at_once=True) -> None:
+    def __init__(self, silence=True, anti=True, email_class='@qq.com', life_cycle=1, beat_sync=True) -> None:
         """
         设定登陆选项，初始化登陆器
         @param silence: 静默启动；为True时静默访问<linux 必须启用>
@@ -45,7 +45,7 @@ class BaseAction(object):
         self.end_life = self.generate_life_cycle(life_cycle)
 
         # 是否为单爬虫调试模式
-        self.beat_sync = at_once
+        self.beat_sync = beat_sync
 
     @staticmethod
     def generate_account(email_class: str = '@qq.com') -> tuple:
@@ -214,7 +214,7 @@ class ActionMasterGeneral(BaseAction):
     """
 
     def __init__(self, register_url: str, silence: bool = True, anti_slider: bool = False, email: str = '@gmail.com',
-                 life_cycle: int = 1, hyper_params: dict = None, at_once=True):
+                 life_cycle: int = 1, hyper_params: dict = None, beat_sync=True):
         """
 
         @param register_url: 机场注册网址，STAFF原生register接口
@@ -224,7 +224,7 @@ class ActionMasterGeneral(BaseAction):
         @param life_cycle: 会员试用时长 trail time；
         @param hyper_params: 模型超级参数
         """
-        super(ActionMasterGeneral, self).__init__(silence, True, email, life_cycle, at_once)
+        super(ActionMasterGeneral, self).__init__(silence, True, email, life_cycle, beat_sync)
 
         self.action_name = self.__class__.__name__
 
@@ -303,7 +303,7 @@ class ActionMasterGeneral(BaseAction):
                 time.sleep(3)
 
     def run(self):
-        logger.info("DO -- <{}>:at_once:{}".format(self.__class__.__name__, self.beat_sync))
+        logger.info("DO -- <{}>:beat_sync:{}".format(self.__class__.__name__, self.beat_sync))
 
         api = self.set_spider_option()
 

@@ -64,7 +64,7 @@ class RedisClient(object):
                     # 此分发逻辑将会加入排序功能
 
                     # 若链接过期 -> loop next -> finally :db-del stale subscribe
-                    if self.is_stale(end_life):
+                    if self.is_stale(end_life, beyond=3):
                         continue
                     # 若链接可用 -> break off -> 分发 -> finally :db-del subscribe
                     else:
@@ -75,8 +75,6 @@ class RedisClient(object):
                     return False
                 # 关联解除
                 finally:
-                    self.db.hdel(key_name, self.subscribe)
-
                     from BusinessCentralLayer.middleware.subscribe_io import detach
                     detach(self.subscribe, beat_sync=True)
         finally:
@@ -103,10 +101,10 @@ class RedisClient(object):
             logger.warning('<{}> EMPTY - {}({})'.format(self.__class__.__name__, key_name, self.__len__(key_name)))
 
     @staticmethod
-    def is_stale(subs_expiration_time: str, threshold: int = None) -> bool:
+    def is_stale(subs_expiration_time: str, beyond: int = None) -> bool:
         """
         判断订阅链接是否过期
-        @param threshold: 链接剩余可用时间不足 threshold 小时达到可删除阈值
+        @param beyond: 链接剩余可用时间不足 beyond 小时达到可删除阈值
         @todo v_5.0.X update 若`订阅存活时间` < `阈值` 也需删除
         @param subs_expiration_time: 可转换为datetime 的 str 时间戳
         @return: True 过期或越过阈值 需删除；False链接为过期或未达阈值，无特殊需求请勿删除
@@ -121,9 +119,9 @@ class RedisClient(object):
             now_time = datetime.fromisoformat(str(datetime.now(TIME_ZONE_CN)).split('.')[0])
 
             # 时间比对 并返回是否过期的响应 -> bool
-            if threshold and isinstance(threshold, int):
-                return False if subs_end_time >= now_time + timedelta(hours=threshold) else True
-            elif threshold is None:
+            if beyond and isinstance(beyond, int):
+                return False if subs_end_time >= now_time + timedelta(hours=beyond) else True
+            elif beyond is None:
                 return False if subs_end_time >= now_time else True
 
     def __len__(self, key_name) -> int:
@@ -236,4 +234,3 @@ class RedisDataDisasterTolerance(RedisClient):
             logger.error(f"redis-slave {self.redis_virtual} 可能宕机")
         except Exception as e:
             logger.exception(e)
-

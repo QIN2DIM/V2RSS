@@ -49,101 +49,101 @@ tasks_list: list = __all__
 
 
 class ActionOhrCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionOhrCloud, self).__init__(register_url='https://www.ssr99.xyz/auth/register',
-                                             silence=silence, life_cycle=2, anti_slider=False, at_once=at_once)
+                                             silence=silence, life_cycle=2, anti_slider=False, beat_sync=beat_sync)
 
 
 class ActionKakCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionKakCloud, self).__init__(register_url='https://www.kakayun.cyou/auth/register',
-                                             silence=silence, life_cycle=2, anti_slider=True, at_once=at_once,
+                                             silence=silence, life_cycle=2, anti_slider=True, beat_sync=beat_sync,
                                              hyper_params={'ssr': False})
 
 
 class ActionJfCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionJfCloud, self).__init__(register_url='https://www.jafiyun.cc/auth/register',
-                                            silence=silence, anti_slider=False, at_once=at_once,
+                                            silence=silence, anti_slider=False, beat_sync=beat_sync,
                                             hyper_params={'ssr': False})
 
 
 class ActionMxCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionMxCloud, self).__init__(register_url='https://www.mxyssr.fun/auth/register',
-                                            silence=silence, life_cycle=2, anti_slider=True, at_once=at_once)
+                                            silence=silence, life_cycle=2, anti_slider=True, beat_sync=beat_sync)
 
 
 class ActionN95Cloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionN95Cloud, self).__init__(register_url='https://n95cloud.vip/auth/register',
-                                             silence=silence, anti_slider=False, at_once=at_once, )
+                                             silence=silence, anti_slider=False, beat_sync=beat_sync, )
 
 
 class ActionReCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionReCloud, self).__init__(register_url="https://www.rerere.xyz/auth/register",
-                                            silence=silence, life_cycle=1, anti_slider=True, at_once=at_once, )
+                                            silence=silence, life_cycle=1, anti_slider=True, beat_sync=beat_sync, )
 
 
 class ActionTheSSR(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionTheSSR, self).__init__(register_url='https://ssrthe.shop/auth/register',
-                                           silence=silence, email='@qq.com', anti_slider=False, at_once=at_once, )
+                                           silence=silence, email='@qq.com', anti_slider=False, beat_sync=beat_sync, )
 
 
 class ActionUfoCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionUfoCloud, self).__init__(register_url='https://ufocloud.xyz/auth/register',
-                                             silence=silence, email='@qq.com', anti_slider=False, at_once=at_once,
+                                             silence=silence, email='@qq.com', anti_slider=False, beat_sync=beat_sync,
                                              hyper_params={'ssr': False})
 
 
 class ActionWgCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionWgCloud, self).__init__(register_url='https://www.wiougong.space/auth/register',
-                                            silence=silence, life_cycle=1, anti_slider=True, at_once=at_once)
+                                            silence=silence, life_cycle=1, anti_slider=True, beat_sync=beat_sync)
 
 
 class ActionZuiSuCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionZuiSuCloud, self).__init__(register_url='https://zuisucloud.cloud/auth/register',
-                                               silence=silence, anti_slider=True, at_once=at_once, )
+                                               silence=silence, anti_slider=True, beat_sync=beat_sync, )
 
 
 class ActionJdSuCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionJdSuCloud, self).__init__(register_url='https://jdycloud.xyz/auth/register',
-                                              silence=silence, life_cycle=30, anti_slider=True, at_once=at_once,
+                                              silence=silence, life_cycle=30, anti_slider=True, beat_sync=beat_sync,
                                               hyper_params={'usr_email': True, 'v2ray': False})
 
 
 class ActionHuoJianCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionHuoJianCloud, self).__init__(register_url='https://huojian987.com/auth/register',
                                                  silence=silence, email='@qq.com', life_cycle=30, anti_slider=True,
-                                                 at_once=at_once,
+                                                 beat_sync=beat_sync,
                                                  hyper_params={'v2ray': False})
 
 
 class ActionKaiKaiCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionKaiKaiCloud, self).__init__(register_url='https://www.kakayun.cyou/auth/register',
-                                                silence=silence, life_cycle=1, anti_slider=True, at_once=at_once,
+                                                silence=silence, life_cycle=1, anti_slider=True, beat_sync=beat_sync,
                                                 hyper_params={'ssr': False})
 
 
 class ActionUUCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionUUCloud, self).__init__(register_url='https://www.uuyun.club/auth/register',
-                                            silence=silence, life_cycle=1, anti_slider=False, at_once=at_once,
+                                            silence=silence, life_cycle=1, anti_slider=False, beat_sync=beat_sync,
                                             hyper_params={'ssr': False})
 
 
 class ActionSuFeiCloud(ActionMasterGeneral):
-    def __init__(self, silence=True, at_once=True):
+    def __init__(self, silence=True, beat_sync=True):
         super(ActionSuFeiCloud, self).__init__(register_url='https://www.dagewokuaitule.icu/auth/register',
-                                               silence=silence, life_cycle=2, anti_slider=False, at_once=at_once)
+                                               silence=silence, life_cycle=2, anti_slider=False, beat_sync=beat_sync)
 
 
 if __name__ == '__main__':

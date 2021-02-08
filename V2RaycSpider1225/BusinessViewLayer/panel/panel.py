@@ -113,7 +113,6 @@ class SubscribeRequester(object):
         # self.Home()
 
         self.subscribe = ""
-        self.v2ray_attention_link = ""
 
     @staticmethod
     def save_flow(data_flow="N/A", class_=""):
@@ -131,11 +130,14 @@ class SubscribeRequester(object):
         def search(redis_driver) -> list:
             target_list = []
             for task_type in ["v2ray", "ssr", "trojan"]:
+                # List[Tuple[subs,end_life]]
                 target = list(
                     redis_driver.hgetall(REDIS_SECRET_KEY.format(task_type)).items()
                 )
+                # end_life, class_, subs
+                # 过期时间， 订阅类型， 订阅链接
                 target_list += [
-                    "".center(2, " ").join([i[-1], "{}".format(task_type), i[0]])
+                    "".center(2, " ").join([i[-1], f"{task_type}", i[0]])
                     for i in target
                 ]
             return target_list
@@ -156,6 +158,7 @@ class SubscribeRequester(object):
         usr_choice = easygui.choicebox(
             msg="注:审核标准为北京时区；点击获取，链接自动复制", title=TITLE, choices=avi_info, preselect=1
         )
+
         logger_local.info(usr_choice)
         if "-" in usr_choice:
             task_name, subscribe = (
@@ -213,7 +216,7 @@ class SubscribeRequester(object):
             # 返回上一页
             return True
 
-    def run(self, mode: str, work_interface: str = "/v2raycs/api/item/subscribe"):
+    def run(self, mode: str):
         """
         mode: ssr,v2ray,trojan
         work_interface:
@@ -226,13 +229,6 @@ class SubscribeRequester(object):
 
         try:
             self.subscribe = rc.get(REDIS_SECRET_KEY.format(mode))
-            if not self.subscribe:
-                self.subscribe = (
-                    requests.post(
-                        f"http://107.182.21.117:6563{work_interface}",
-                        data={"type": f"{mode}"},
-                    ).json().get("info")
-                )
         finally:
             return self.resp_tip(self.subscribe, mode)
 
@@ -617,7 +613,7 @@ class V2RaycSpiderMasterPanel(object):
             if "[1]查看机场生态" in usr_c:
                 resp = self.air_port_menu()
             elif "[2]获取订阅链接" in usr_c:
-                resp = self.ssr_spider_menu()
+                resp = self.subs_require_menu()
             elif "[3]打开本地文件" in usr_c:
                 os.startfile(LOCAL_PATH_DATABASE_FH)
                 resp = False
@@ -651,7 +647,7 @@ class V2RaycSpiderMasterPanel(object):
             # 返回
             return resp
 
-    def ssr_spider_menu(self):
+    def subs_require_menu(self):
         """
         一级菜单
         :mode: True:本地采集，False 服务器采集

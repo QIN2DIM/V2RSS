@@ -85,7 +85,7 @@ def _sync_actions(
 
                 # 将相应的任务执行语句转换成exec语法
                 expr = f'from BusinessLogicLayer.cluster.slavers.actions import {slave_}\n' \
-                       f'{slave_}(at_once={beat_sync}).run()'
+                       f'{slave_}(beat_sync={beat_sync}).run()'
 
                 # 将执行语句同步至消息队列
                 rc.sync_message_queue(mode='upload', message=expr)
@@ -140,7 +140,7 @@ def _sync_actions(
 
             # 将相应的任务执行语句转换成exec语法
             expr = f'from BusinessLogicLayer.cluster.slavers.actions import {slave_}\n' \
-                   f'{slave_}(at_once={beat_sync}).run()'
+                   f'{slave_}(beat_sync={beat_sync}).run()'
 
             # 将执行语句推送至Poseidon本机消息队列
             Middleware.poseidon.put_nowait(expr)

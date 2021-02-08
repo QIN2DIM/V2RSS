@@ -25,7 +25,7 @@ class FlexibleDistribute(object):
             if all(docker) and isinstance(docker, list):
                 Middleware.zeus.put_nowait(dict(zip(SQLITE3_CONFIG['header'].split(','), docker + [str(uuid4()), ])))
             if beat_sync:
-                self.at_once = beat_sync
+                self.beat_sync = beat_sync
                 self.start()
         except TypeError:
             pass
@@ -162,8 +162,8 @@ def pop_subs_to_admin(class_: str):
                 logger.success('管理员模式--链接分发成功')
 
                 # 立即执行链接解耦，将同一账号的所有订阅移除
-                # at_once =True立即刷新，False延迟刷新（节拍同步）
-                threading.Thread(target=detach, kwargs={"subscribe": subs, 'at_once': True}).start()
+                # beat_sync =True立即刷新，False延迟刷新（节拍同步）
+                threading.Thread(target=detach, kwargs={"subscribe": subs, 'beat_sync': True}).start()
 
                 return {'msg': 'success', 'subscribe': subs, 'subsType': class_}
     except Exception as e:
