@@ -272,6 +272,8 @@ nohup python main.py deploy &
 
 #### 3.3.2 基于`捷径` + `Shadowrocket`的订阅获取脚本
 
+> [demo效果演示][6]
+
 （更新中...）
 
 [1]: https://shimo.im/docs/5bqnroJYDbU4rGqy/	"环境配置说明"
@@ -279,4 +281,6 @@ nohup python main.py deploy &
 [3]: http://sc.ftqq.com/3.version	"SERVER酱"
 [4]: https://service.mail.qq.com/cgi-bin/help?subtype=1&amp;&amp;id=28&amp;&amp;no=1001256	"SMTP QQ"
 [5]: http://www.ruanyifeng.com/blog/2016/07/yaml.html	"YAML 语言教程"
+
+[6]: https://www.yuque.com/docs/share/cb2105c2-7d0f-4f98-a909-70d01c2f5896?	"《V2Ray云彩姬捷径脚本效果演示》"
 
