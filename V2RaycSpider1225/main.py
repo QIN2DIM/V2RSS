@@ -6,3 +6,4 @@ from BusinessCentralLayer.scaffold import scaffold
 """欢迎使用V2Ray云彩姬"""
 if __name__ == '__main__':
     scaffold.startup(driver_command_set=argv)
+    # scaffold.startup(['', 'ping'])

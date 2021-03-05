@@ -15,6 +15,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
 from BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
+from BusinessCentralLayer.middleware.subscribe_io import set_task2url_cache
 from BusinessCentralLayer.setting import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
 from BusinessLogicLayer.plugins.faker_info import get_header, get_proxy
 
@@ -157,25 +158,39 @@ class BaseAction(object):
             By.XPATH,
             element_xpath_str
         ))).get_attribute(href_xpath_str)
+
+        # 若对象可捕捉则解析数据并持久化数据
         if self.subscribe:
+            # 失败重试3次
             for x in range(3):
                 # ['domain', 'subs', 'class_', 'end_life', 'res_time', 'passable','username', 'password', 'email']
                 try:
+                    # 机场域名
                     domain = urlparse(self.register_url).netloc
+                    # 采集时间
                     res_time = str(datetime.now(TIME_ZONE_CN)).split('.')[0]
+                    # 链接可用，默认为true
                     passable = 'true'
+                    # 信息键
                     docker = [domain, self.subscribe, class_, self.end_life, res_time, passable, self.username,
                               self.password, self.email]
+                    # 根据不同的beat_sync形式持久化数据
                     FlexibleDistribute(docker=docker, beat_sync=self.beat_sync)
-                    # flexible_distribute(self.subscribe, class_, self.end_life, driver_name=self.__class__.__name__)
+                    # 数据存储成功后结束循环
                     logger.success(">> GET <{}> -> {}:{}".format(self.__class__.__name__, class_, self.subscribe))
+                    # TODO ADD v5.1.0更新特性，记录机场域名-订阅域名映射缓存
+                    set_task2url_cache(task_name=self.__class__.__name__, register_url=self.register_url,
+                                       subs=self.subscribe)
                     break
                 except Exception as e:
                     logger.debug(">> FAILED <{}> -> {}:{}".format(self.__class__.__name__, class_, e))
                     time.sleep(1)
                     continue
+            # 若没有成功存储，返回None
             else:
                 return None
+        # 否则调入健壮工程
+        # TODO 判断异常原因，构建解决方案，若无可靠解决方案，确保该任务安全退出
         else:
             if retry >= 3:
                 raise TimeoutException
@@ -214,7 +229,7 @@ class ActionMasterGeneral(BaseAction):
     """
 
     def __init__(self, register_url: str, silence: bool = True, anti_slider: bool = False, email: str = '@gmail.com',
-                 life_cycle: int = 1, hyper_params: dict = None, beat_sync=True):
+                 life_cycle: int = 1, hyper_params: dict = None, beat_sync: bool = True, sync_class: dict = None):
         """
 
         @param register_url: 机场注册网址，STAFF原生register接口
@@ -249,6 +264,11 @@ class ActionMasterGeneral(BaseAction):
 
         if not self.hyper_params['usr_email']:
             self.email = self.username
+
+        # TODO 使用该参数控制账户解耦合时采集的链接类型
+        # 当前版本弃用
+        if sync_class:
+            self.sync_class = sync_class
 
     # TODO -> 断网重连 -> 引入retrying 第三方库替代原生代码
     def sign_up(self, api, retry_=0, max_retry_num_=5):
@@ -302,6 +322,7 @@ class ActionMasterGeneral(BaseAction):
                 logger.debug('{}验证超时，3s 后重试'.format(self.__class__.__name__))
                 time.sleep(3)
 
+    # TODO 当sync_class 参数可用时，使用if-if 结构发起任务；否则使用if-elif，该操作防止链接溢出
     def run(self):
         logger.info("DO -- <{}>:beat_sync:{}".format(self.__class__.__name__, self.beat_sync))
 
@@ -324,7 +345,7 @@ class ActionMasterGeneral(BaseAction):
                 )
 
             # get ssr link
-            if self.hyper_params['ssr']:
+            elif self.hyper_params['ssr']:
                 self.load_any_subscribe(
                     api,
                     """//a[@onclick="importSublink('ssr')"]/..//a[contains(@class,'copy')]""",
@@ -336,8 +357,14 @@ class ActionMasterGeneral(BaseAction):
             # if self.hyper_params['qtl']: ...
         except TimeoutException:
             logger.error(f'>>> TimeoutException <{self.__class__.__name__}> -- {self.register_url}')
-        except WebDriverException as e:
+        # except WebDriverException as e:
+        #     logger.exception(f">>> Exception <{self.__class__.__name__}> -- {e}")
+        except Exception as e:
             logger.exception(f">>> Exception <{self.__class__.__name__}> -- {e}")
         finally:
             # Middleware.hera.put_nowait("push")
             api.quit()
+
+
+if __name__ == '__main__':
+    ActionMasterGeneral('', sync_class={'ssr': True})

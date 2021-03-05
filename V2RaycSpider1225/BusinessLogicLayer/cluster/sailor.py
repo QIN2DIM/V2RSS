@@ -2,6 +2,8 @@
 __all__ = ['manage_task']
 
 import random
+from collections import Counter
+from urllib.parse import urlparse
 
 from BusinessCentralLayer.coroutine_engine import vsu, PuppetCore
 from BusinessCentralLayer.middleware.redis_io import RedisClient
@@ -69,11 +71,17 @@ def _sync_actions(
     rc = RedisClient()
 
     # 拷贝生成队列，需使用copy()完成拷贝，否则pop()会影响actions-list本体
+    # [A-Cloud,B-Cloud, ...]
     task_list: list = actions.__all__.copy()
     random.shuffle(task_list)
 
     # 在本机环境中生成任务并加入消息队列
     if mode_sync == 'upload':
+
+        # 临时方案，解决链接溢出问题
+        if round(rc.__len__(REDIS_SECRET_KEY.format(class_)) * 1.25) > SINGLE_TASK_CAP:
+            logger.warning("<TaskManager> UploadHijack -- 连接池任务已溢出，上传任务被劫持")
+            return None
 
         # 持续实例化采集任务
         while True:
@@ -134,6 +142,7 @@ def _sync_actions(
 
             # force_run ：适用于单机部署或单步调试下
             _state = _is_overflow(task_name=class_, rc=rc)
+
             # 需要确保无溢出风险，故即使是force_run的启动模式，任务执行数也不应逾越任务容载数
             if _state == 'stop':
                 return 'stop'
@@ -240,4 +249,4 @@ def manage_task(
 
 
 if __name__ == '__main__':
-    manage_task('ssr', only_sync=True)
+    _sync_actions('ssr', only_sync=True, mode_sync='upload')

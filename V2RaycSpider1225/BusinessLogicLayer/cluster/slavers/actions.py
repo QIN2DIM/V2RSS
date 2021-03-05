@@ -4,16 +4,18 @@ __all__ = [
     # ---------------------
     # 无障碍
     # ---------------------
-    'ActionJfCloud',  # 1day 2G
-    'ActionSuFeiCloud',  # 2day 50G
-
+    'ActionMiTaoCloud',  # 1day 10G
     # ---------------------
     # 需要滑动验证
     # ---------------------
     'ActionReCloud',  # 1day 10G
-    'ActionHuoJianCloud',  # public welfare
-    'ActionMxCloud',  # 2day 50G
-    "ActionKaiKaiCloud",  # 1day 10G
+    # 'ActionKaiKaiCloud',  # 1day 10G
+    'ActionSuFeiCloud',  # 2day 5G
+
+    # ---------------------
+    # 公益节点
+    # ---------------------
+    # 'ActionHuoJianCloud',  # public welfare
 
     # ---------------------
     # 需要邮箱验证
@@ -25,11 +27,13 @@ __all__ = [
     # ---------------------
     # 'ActionWgCloud',
     # 'ActionJdSuCloud',
+    # 'ActionOhrCloud',  # error Null and No new users are accepted
+    # 'ActionJfCloud',  # 1day 1G
+    # 'ActionMxCloud',  # 1day 2G
 
     # ---------------------
     # DDoS防御 or 系统宕机
     # ---------------------
-    # 'ActionOhrCloud', # error Null and No new users are accepted
     # 'ActionZuiSuCloud', # error 521 web server is down
 
     # ---------------------
@@ -44,8 +48,6 @@ __all__ = [
     # 'ActionN95Cloud',
 
 ]
-
-tasks_list: list = __all__
 
 
 class ActionOhrCloud(ActionMasterGeneral):
@@ -143,44 +145,61 @@ class ActionUUCloud(ActionMasterGeneral):
 class ActionSuFeiCloud(ActionMasterGeneral):
     def __init__(self, silence=True, beat_sync=True):
         super(ActionSuFeiCloud, self).__init__(register_url='https://www.dagewokuaitule.icu/auth/register',
-                                               silence=silence, life_cycle=2, anti_slider=False, beat_sync=beat_sync)
+                                               silence=silence, life_cycle=2, anti_slider=True, beat_sync=beat_sync)
+
+
+class ActionMiTaoCloud(ActionMasterGeneral):
+    def __init__(self, silence=True, beat_sync=True):
+        super(ActionMiTaoCloud, self).__init__(register_url='https://mitaocloud.net/auth/register',
+                                               silence=silence, life_cycle=1, anti_slider=False, beat_sync=beat_sync,
+                                               hyper_params={'ssr': False})
+
+
+# 任务浅拷贝
+tasks_list: list = __all__
+exec("from urllib.parse import urlparse")
+task2url = dict(zip(eval(f"[i for i in __all__]"), [eval(f"urlparse({i}().register_url).netloc") for i in __all__]))
+
+# ===============================================
+# 测试区
+# ===============================================
+
+
+from BusinessCentralLayer.coroutine_engine import lsu
+
+
+class GhostFiller(lsu):
+    def __init__(self, docker, silence: bool = False, power: int = 1):
+        """
+
+        @param docker: 需要测试或快速填充的机场实例
+        @param silence: 是否静默启动
+        @param power: 发起次数,采用协程策略，既一次性并发count个任务
+        @return:
+        """
+        super(GhostFiller, self).__init__()
+
+        # 参数初始化
+        self.power = power
+        self.docker = docker
+        self.silence = silence
+        self.docker_behavior = "self.docker(self.silence).run()"
+
+        # 为并发任务打入协程加速补丁
+        if power > 1:
+            exec("from gevent import monkey\nmonkey.patch_all(ssl=False)")
+
+        # 自启任务
+        self.interface()
+
+    def offload_task(self):
+        for _ in range(self.power):
+            self.work_q.put_nowait(self.docker_behavior)
+
+    def control_driver(self, docker_behavior: str):
+        exec(docker_behavior)
 
 
 if __name__ == '__main__':
-    from BusinessCentralLayer.coroutine_engine import lsu
-
-
-    class GhostFiller(lsu):
-        def __init__(self, docker, silence: bool = False, power: int = 1):
-            """
-
-            @param docker: 需要测试或快速填充的机场实例
-            @param silence: 是否静默启动
-            @param power: 发起次数,采用协程策略，既一次性并发count个任务
-            @return:
-            """
-            super(GhostFiller, self).__init__()
-
-            # 参数初始化
-            self.power = power
-            self.docker = docker
-            self.silence = silence
-            self.docker_behavior = "self.docker(self.silence).run()"
-
-            # 为并发任务打入协程加速补丁
-            if power > 1:
-                exec("from gevent import monkey\nmonkey.patch_all(ssl=False)")
-
-            # 自启任务
-            self.interface()
-
-        def offload_task(self):
-            for _ in range(self.power):
-                self.work_q.put_nowait(self.docker_behavior)
-
-        def control_driver(self, docker_behavior: str):
-            exec(docker_behavior)
-
-
-    GhostFiller(docker=ActionSuFeiCloud, silence=True, power=2)
-    GhostFiller(docker=ActionMxCloud, silence=True, power=2)
+    # GhostFiller(docker=ActionReCloud, silence=False, power=1)
+    GhostFiller(docker=ActionMiTaoCloud, silence=True, power=4)

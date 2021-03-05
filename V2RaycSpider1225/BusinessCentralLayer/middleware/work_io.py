@@ -5,7 +5,6 @@ from gevent.queue import Queue
 
 # 工作栈
 class Middleware:
-
     # cache of redis
     zeus = Queue()
 

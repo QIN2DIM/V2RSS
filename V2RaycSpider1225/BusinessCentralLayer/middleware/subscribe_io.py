@@ -1,6 +1,7 @@
-__all__ = ['FlexibleDistribute', 'pop_subs_to_admin', 'detach']
+__all__ = ['FlexibleDistribute', 'pop_subs_to_admin', 'detach', 'set_task2url_cache']
 
 import threading
+from urllib.parse import urlparse
 from uuid import uuid4
 
 from BusinessCentralLayer.middleware.flow_io import FlowTransferStation
@@ -91,6 +92,31 @@ class FlexibleDistribute(object):
         # self.to_sqlite3(docker)
 
         # Middleware.hera.put('push')
+
+
+def set_task2url_cache(task_name, register_url, subs):
+    """
+
+    @param task_name: XXCloud
+    @param register_url:
+    @param subs:
+    @return:
+    """
+    from config import SINGLE_DEPLOYMENT
+    from BusinessCentralLayer.middleware.work_io import Middleware
+    try:
+        docker = {
+            urlparse(register_url).netloc: {
+                "name": task_name,
+                "type": urlparse(subs).netloc
+            }
+        }
+        Middleware.theseus.update(docker)
+        # TODO 功能复杂化
+        if not SINGLE_DEPLOYMENT:
+            pass
+    except Exception as e:
+        logger.error(f"<CharMap> {task_name} || {e}")
 
 
 def detach(subscribe, beat_sync=False):
