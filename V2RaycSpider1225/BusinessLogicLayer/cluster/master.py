@@ -15,7 +15,6 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 
 from BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
-from BusinessCentralLayer.middleware.subscribe_io import set_task2url_cache
 from BusinessCentralLayer.setting import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
 from BusinessLogicLayer.plugins.faker_info import get_header, get_proxy
 
@@ -179,8 +178,8 @@ class BaseAction(object):
                     # 数据存储成功后结束循环
                     logger.success(">> GET <{}> -> {}:{}".format(self.__class__.__name__, class_, self.subscribe))
                     # TODO ADD v5.1.0更新特性，记录机场域名-订阅域名映射缓存
-                    set_task2url_cache(task_name=self.__class__.__name__, register_url=self.register_url,
-                                       subs=self.subscribe)
+                    # set_task2url_cache(task_name=self.__class__.__name__, register_url=self.register_url,
+                    #                    subs=self.subscribe)
                     break
                 except Exception as e:
                     logger.debug(">> FAILED <{}> -> {}:{}".format(self.__class__.__name__, class_, e))

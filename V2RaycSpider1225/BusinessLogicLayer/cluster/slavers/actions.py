@@ -29,7 +29,7 @@ __all__ = [
     # 'ActionJdSuCloud',
     # 'ActionOhrCloud',  # error Null and No new users are accepted
     # 'ActionJfCloud',  # 1day 1G
-    # 'ActionMxCloud',  # 1day 2G
+    'ActionMxCloud',  # 1day 2G
 
     # ---------------------
     # DDoS防御 or 系统宕机

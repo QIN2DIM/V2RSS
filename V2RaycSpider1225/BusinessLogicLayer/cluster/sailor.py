@@ -2,8 +2,6 @@
 __all__ = ['manage_task']
 
 import random
-from collections import Counter
-from urllib.parse import urlparse
 
 from BusinessCentralLayer.coroutine_engine import vsu, PuppetCore
 from BusinessCentralLayer.middleware.redis_io import RedisClient
