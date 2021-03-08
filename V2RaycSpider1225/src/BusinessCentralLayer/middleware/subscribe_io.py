@@ -179,9 +179,9 @@ def pop_subs_to_admin(class_: str):
                 # apollo队列内的元素都是欲删除缓存，当ddt发动后会一次性情况当前所有的缓存
 
                 # 对订阅进行质量粗检
-                if subs2node(subs=subs, cache_path=False, timeout=2)['node'].__len__() <= 3:
-                    logger.debug(f"<check> BadLink -- {subs}")
-                    continue
+                # if subs2node(subs=subs, cache_path=False, timeout=2)['node'].__len__() <= 3:
+                #     logger.debug(f"<check> BadLink -- {subs}")
+                #     continue
 
                 # 使用节拍同步线程锁发起连接池回滚指令,仅生成/同步一枚原子任务
                 threading.Thread(target=manage_task, kwargs={"class_": class_, "only_sync": True}).start()
