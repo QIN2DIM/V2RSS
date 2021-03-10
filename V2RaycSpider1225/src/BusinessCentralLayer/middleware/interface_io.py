@@ -3,13 +3,13 @@ __all__ = ['SystemInterface']
 import multiprocessing
 
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
-from src.BusinessCentralLayer.sentinel.noticer import send_email
 from src.BusinessCentralLayer.setting import ENABLE_COROUTINE, REDIS_SECRET_KEY, CRAWLER_SEQUENCE, SINGLE_TASK_CAP, \
     API_DEBUG, API_PORT, API_THREADED, ENABLE_DEPLOY, ENABLE_SERVER, OPEN_HOST, logger, platform
 from src.BusinessLogicLayer.cluster import sailor
 from src.BusinessLogicLayer.cluster.slavers import actions
 from src.BusinessLogicLayer.deploy import GeventSchedule
 from src.BusinessLogicLayer.plugins.ddt_subs import SubscribesCleaner
+from src.BusinessLogicLayer.plugins.noticer import send_email
 from src.BusinessViewLayer.myapp.app import app
 
 # ----------------------------------------
@@ -69,7 +69,7 @@ class _SystemEngine(object):
         logger.info("<解压容器> DockerEngineInterface")
 
         # 初始化进程
-        logger.info(f'<加载队列> IndexQueue:{actions.__all__}')
+        logger.info(f'<加载队列> IndexQueue:{actions.__entropy__}')
 
         logger.success('<Gevent> 工程核心准备就绪 任务即将开始')
 

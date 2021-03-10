@@ -8,7 +8,6 @@ from src.BusinessCentralLayer.middleware.flow_io import FlowTransferStation
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.middleware.work_io import Middleware
 from src.BusinessCentralLayer.setting import logger, REDIS_SECRET_KEY, CRAWLER_SEQUENCE, NGINX_SUBSCRIBE, SQLITE3_CONFIG
-from src.BusinessLogicLayer.plugins.subs2node import subs2node
 
 
 class FlexibleDistribute(object):

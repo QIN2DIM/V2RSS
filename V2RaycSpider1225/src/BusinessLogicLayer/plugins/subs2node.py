@@ -55,5 +55,7 @@ def subs2node(subs: str, cache_path: str or bool = 'node_info.txt', timeout: int
         return {'subs': subs, 'info': obj_analyze, "node": [i for i in node_info.decode("utf8").split("\n") if i]}
     except requests.exceptions.MissingSchema:
         print(f'{subs} -- 传入的subs格式有误或不是订阅链接')
+    except requests.exceptions.ProxyError:
+        exit(1)
     except requests.exceptions.RequestException as e:
         print(f'{subs} -- {e}')

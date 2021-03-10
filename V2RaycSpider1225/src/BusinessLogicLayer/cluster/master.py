@@ -22,7 +22,8 @@ from src.BusinessLogicLayer.plugins.faker_info import get_header, get_proxy
 class BaseAction(object):
     """针对STAFF机场的基准行为"""
 
-    def __init__(self, silence=True, anti=True, email_class='@qq.com', life_cycle=1, beat_sync=True) -> None:
+    def __init__(self, silence=True, anti=True, beat_sync=True,
+                 action_name: str = 'BaseAction', email_class='@qq.com', life_cycle=1) -> None:
         """
         设定登陆选项，初始化登陆器
         @param silence: 静默启动；为True时静默访问<linux 必须启用>
@@ -46,6 +47,8 @@ class BaseAction(object):
 
         # 是否为单爬虫调试模式
         self.beat_sync = beat_sync
+
+        self.action_name = action_name
 
     @staticmethod
     def generate_account(email_class: str = '@qq.com') -> tuple:
@@ -176,13 +179,13 @@ class BaseAction(object):
                     # 根据不同的beat_sync形式持久化数据
                     FlexibleDistribute(docker=docker, beat_sync=self.beat_sync)
                     # 数据存储成功后结束循环
-                    logger.success(">> GET <{}> -> {}:{}".format(self.__class__.__name__, class_, self.subscribe))
+                    logger.success(">> GET <{}> -> {}:{}".format(self.action_name, class_, self.subscribe))
                     # TODO ADD v5.1.0更新特性，记录机场域名-订阅域名映射缓存
                     # set_task2url_cache(task_name=self.__class__.__name__, register_url=self.register_url,
                     #                    subs=self.subscribe)
                     break
                 except Exception as e:
-                    logger.debug(">> FAILED <{}> -> {}:{}".format(self.__class__.__name__, class_, e))
+                    logger.debug(">> FAILED <{}> -> {}:{}".format(self.action_name, class_, e))
                     time.sleep(1)
                     continue
             # 若没有成功存储，返回None
@@ -228,7 +231,8 @@ class ActionMasterGeneral(BaseAction):
     """
 
     def __init__(self, register_url: str, silence: bool = True, anti_slider: bool = False, email: str = '@gmail.com',
-                 life_cycle: int = 1, hyper_params: dict = None, beat_sync: bool = True, sync_class: dict = None):
+                 life_cycle: int = 1, hyper_params: dict = None, beat_sync: bool = True,
+                 action_name: str = 'ActionMasterGeneral', sync_class: dict = None):
         """
 
         @param register_url: 机场注册网址，STAFF原生register接口
@@ -238,9 +242,10 @@ class ActionMasterGeneral(BaseAction):
         @param life_cycle: 会员试用时长 trail time；
         @param hyper_params: 模型超级参数
         """
-        super(ActionMasterGeneral, self).__init__(silence, True, email, life_cycle, beat_sync)
+        super(ActionMasterGeneral, self).__init__(silence=silence, anti=True, email_class=email,
+                                                  life_cycle=life_cycle, beat_sync=beat_sync)
 
-        self.action_name = self.__class__.__name__
+        self.action_name = action_name
 
         # 机场注册网址
         self.register_url = register_url
@@ -318,12 +323,12 @@ class ActionMasterGeneral(BaseAction):
                 api.find_element_by_xpath("//button[contains(@class,'confirm')]").click()
                 break
             except NoSuchElementException:
-                logger.debug('{}验证超时，3s 后重试'.format(self.__class__.__name__))
+                logger.debug('{}验证超时，3s 后重试'.format(self.action_name))
                 time.sleep(3)
 
     # TODO 当sync_class 参数可用时，使用if-if 结构发起任务；否则使用if-elif，该操作防止链接溢出
     def run(self):
-        logger.info("DO -- <{}>:beat_sync:{}".format(self.__class__.__name__, self.beat_sync))
+        logger.info("DO -- <{}>:beat_sync:{}".format(self.action_name, self.beat_sync))
 
         api = self.set_spider_option()
 
@@ -355,11 +360,11 @@ class ActionMasterGeneral(BaseAction):
             # if self.hyper_params['kit']: ...
             # if self.hyper_params['qtl']: ...
         except TimeoutException:
-            logger.error(f'>>> TimeoutException <{self.__class__.__name__}> -- {self.register_url}')
+            logger.error(f'>>> TimeoutException <{self.action_name}> -- {self.register_url}')
         # except WebDriverException as e:
         #     logger.exception(f">>> Exception <{self.__class__.__name__}> -- {e}")
         except Exception as e:
-            logger.exception(f">>> Exception <{self.__class__.__name__}> -- {e}")
+            logger.exception(f">>> Exception <{self.action_name}> -- {e}")
         finally:
             # Middleware.hera.put_nowait("push")
             api.quit()

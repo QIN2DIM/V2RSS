@@ -24,6 +24,7 @@ command_set = {
     "force_run": "强制执行采集任务",
     "remain": "读取剩余订阅数量",
     "ping": "测试数据库连接",
+    "panel": "打开桌面前端面板",
     # ---------------------------------------------
     # 调用示例
     # ---------------------------------------------
@@ -241,6 +242,11 @@ class _ScaffoldGuider(object):
     def _scaffold_ping():
         from src.BusinessCentralLayer.middleware.redis_io import RedisClient
         logger.info(f"<ScaffoldGuider> Ping || {RedisClient().test()}")
+
+    @staticmethod
+    def _scaffold_panel():
+        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
+        SystemInterface.system_panel()
 
 
 scaffold = _ScaffoldGuider()

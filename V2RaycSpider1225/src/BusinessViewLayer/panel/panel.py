@@ -9,12 +9,13 @@ from datetime import datetime, timedelta
 
 import easygui
 import pyperclip
+import requests
+import yaml
 from bs4 import BeautifulSoup
 
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessViewLayer.panel.config_panel import *
 
-# pip install {package-name} -i https://pypi.tuna.tsinghua.edu.cn/simple
 """################### 进程管理 ######################"""
 
 
@@ -302,6 +303,10 @@ class AirEcologySpider(object):
             res = requests.get(url, headers=headers)
             res.raise_for_status()
             return res.text
+        except requests.exceptions.ProxyError:
+            easygui.exceptionbox("请关闭系统代理后使用此功能！", TITLE)
+            logger_local.warning("请关闭系统代理后使用此功能！")
+            return False
         except Exception as e:
             logger_local.exception(e)
             return False
@@ -340,29 +345,29 @@ class AirEcologySpider(object):
         elif isinstance(hrefs, str):
             return hrefs.split("?")[0]
 
+    def show_data(self, show=True, names: list = None, hrefs: list = None):
+
+        if show:
+            # 使用全局变量输出前端信息
+            out_flow = ["序号    机场名    官网链接"]
+            self.data_list = out_flow + [
+                "【{}】 【{}】 【{}】".format(i + 1, list(x)[0], list(x)[-1])
+                for i, x in enumerate(zip(names, hrefs))
+                if "http" in list(x)[-1]
+            ]
+            # 前端展示API
+            return self.show()
+        else:
+            response_ = [["序号", "机场名", "官网连接"], ] + [
+                [i + 1, list(x)[0], list(x)[-1]]
+                for i, x in enumerate(zip(names, hrefs))
+                if "http" in list(x)[-1]
+            ]
+            return response_
+
     def run(self, url=None):
         if url is None:
             url = self.ae_url
-
-        def show_data(show=True):
-
-            if show:
-                # 使用全局变量输出前端信息
-                # out_flow = ["序号    机场名    官网链接"]
-                # data_list = out_flow + [
-                #     "【{}】 【{}】 【{}】".format(i + 1, list(x)[0], list(x)[-1])
-                #     for i, x in enumerate(zip(names, hrefs))
-                #     if "http" in list(x)[-1]
-                # ]
-                # 前端展示API
-                return self.show()
-            else:
-                response_ = [["序号", "机场名", "官网连接"], ] + [
-                    [i + 1, list(x)[0], list(x)[-1]]
-                    for i, x in enumerate(zip(names, hrefs))
-                    if "http" in list(x)[-1]
-                ]
-                return response_
 
         func_list = ["[1]查看", "[2]保存", "[3]返回"]
         usr_d = easygui.choicebox(title=TITLE, choices=func_list)
@@ -388,13 +393,13 @@ class AirEcologySpider(object):
 
             if "保存" in usr_d:
                 # 保存至本地
-                self.response = show_data(show=False)
+                self.response = self.show_data(show=False, names=names, hrefs=hrefs)
                 self.save()
                 # 自动打开
                 os.startfile(self.default_path)
             elif "查看" in usr_d:
                 # 前端打印
-                return show_data()
+                return self.show_data(show=True, names=names, hrefs=hrefs)
 
 
 """################### 网络审查 ######################"""
@@ -429,6 +434,7 @@ class NetChainReview(object):
 
 class VersionConsole(object):
     def __init__(self):
+        from src.BusinessCentralLayer.setting import API_HOST, API_PORT, ROUTE_API
         self.vcs_res: dict = requests.post(
             f'http://{API_HOST}:{API_PORT}{ROUTE_API["version_manager"]}',
             data={"local_version": version},
@@ -680,9 +686,8 @@ class V2RaycSpiderMasterPanel(object):
             return resp
 
 
-# --------------------------------
-# API接口初始化
-# --------------------------------
+"""################### 启动检测 ######################"""
+
 if ThreadPoolExecutor(max_workers=1).submit(NetChainReview().run).result():
     rc = RedisClient()
 else:

@@ -1,8 +1,7 @@
-from os.path import join, dirname
+import os
+from sys import platform
 
 from loguru import logger as logger_local
-
-from src.config import *
 
 """********************************* panel环境变量 *********************************"""
 # 我就是云彩姬!
@@ -52,14 +51,14 @@ version = "5.1.0"
        --*updated.exe
 """
 # 软件本地根目录
-ROOT_DIR_PROJECT = "C:\\Program Files\\V2RaySpider" if "win" in platform else dirname(__file__)
+ROOT_DIR_PROJECT = "C:\\Program Files\\V2RaySpider" if "win" in platform else os.path.dirname(__file__)
 
 # 软件本地日志目录
-LOCAL_DIR_LOG = join(ROOT_DIR_PROJECT, "logs")
+LOCAL_DIR_LOG = os.path.join(ROOT_DIR_PROJECT, "logs")
 
 # 本地运行日志
 logger_local.add(
-    join(LOCAL_DIR_LOG, "runtime_local.log"),
+    os.path.join(LOCAL_DIR_LOG, "runtime_local.log"),
     level="DEBUG",
     rotation="1 week",
     retention="20 days",
@@ -67,32 +66,32 @@ logger_local.add(
 )
 
 logger_local.add(
-    join(LOCAL_DIR_LOG, "error_local.log"),
+    os.path.join(LOCAL_DIR_LOG, "error_local.log"),
     level="ERROR",
     rotation="1 week",
     encoding="utf8",
 )
 
 # 软件本地数据仓库
-LOCAL_DIR_DATABASE = join(ROOT_DIR_PROJECT, "Database")
+LOCAL_DIR_DATABASE = os.path.join(ROOT_DIR_PROJECT, "Database")
 
 # 软件本地请求历史
-LOCAL_PATH_DATABASE_FH = join(LOCAL_DIR_DATABASE, "FetchRequestsHistory.txt")
+LOCAL_PATH_DATABASE_FH = os.path.join(LOCAL_DIR_DATABASE, "FetchRequestsHistory.txt")
 
 # 软件查看机场生态的缓存文件
-LOCAL_PATH_AIRPORT_INFO = join(LOCAL_DIR_DATABASE, "FetchAirEcologyInfo.csv")
+LOCAL_PATH_AIRPORT_INFO = os.path.join(LOCAL_DIR_DATABASE, "FetchAirEcologyInfo.csv")
 
 # 软件本地的客户端配置文件
-LOCAL_PATH_DATABASE_YAML = join(LOCAL_DIR_DATABASE, "user.yaml")
+LOCAL_PATH_DATABASE_YAML = os.path.join(LOCAL_DIR_DATABASE, "user.yaml")
 
 # 软件本地的客户端配置信息
 USER_YAML = {"path": "", "version": f"{version}"}
 
 # 软件默认下载仓库
-LOCAL_DIR_DEPOT = join(ROOT_DIR_PROJECT, "depot")
+LOCAL_DIR_DEPOT = os.path.join(ROOT_DIR_PROJECT, "depot")
 
 # 软件更新模组
-PLUGIN_UPDATED_MODULE = join(LOCAL_DIR_DEPOT, "updated.exe")
+PLUGIN_UPDATED_MODULE = os.path.join(LOCAL_DIR_DEPOT, "updated.exe")
 
 # 各版本v2raycs默认下载路径
-LOCAL_DIR_DEPOT_CLIENT = join(LOCAL_DIR_DEPOT, "client")
+LOCAL_DIR_DEPOT_CLIENT = os.path.join(LOCAL_DIR_DEPOT, "client")
