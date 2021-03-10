@@ -11,8 +11,8 @@ from src.BusinessCentralLayer.setting import logger
 class CoroutineSpeedup(object):
     """轻量化的协程控件"""
 
-    def __init__(self, work_q: Queue = Queue(), task_docker=None, power: int = None):
-        self.work_q = work_q
+    def __init__(self, work_q: Queue = None, task_docker=None, power: int = None):
+        self.work_q = work_q if work_q else Queue()
         self.task_docker = task_docker
         self.power = power
 
@@ -38,10 +38,10 @@ class CoroutineSpeedup(object):
 
         @return:
         """
-        if not self.work_q and self.task_docker:
+        if self.task_docker:
             for task in self.task_docker:
                 self.work_q.put_nowait(task)
-            self.max_queue_size = self.work_q.qsize()
+        self.max_queue_size = self.work_q.qsize()
 
     def killer(self):
         """

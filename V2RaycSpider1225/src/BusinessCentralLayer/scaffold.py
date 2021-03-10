@@ -230,8 +230,9 @@ class _ScaffoldGuider(object):
             return False
 
         logger.info(f"<ScaffoldGuider> ForceRun || MainCollector")
-        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface as app
-        app.run(deploy_=False, force_run=True)
+        from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE
+        from src.BusinessLogicLayer.apis.vulcan_ash import ForceRunRelease
+        ForceRunRelease(task_docker=CRAWLER_SEQUENCE).interface()
 
     @staticmethod
     def _scaffold_remain():
