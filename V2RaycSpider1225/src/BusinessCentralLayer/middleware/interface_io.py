@@ -45,7 +45,7 @@ class _ContainerDegradation(object):
         @return:
         """
         for task_name in self.deploy_cluster:
-            sailor.manage_task(class_=task_name, speedup=self.go)
+            sailor.manage_task(class_=task_name)
 
 
 _cd = _ContainerDegradation()
