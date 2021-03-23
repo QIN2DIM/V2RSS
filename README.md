@@ -30,7 +30,6 @@
 
     - Clone项目，根据[技术文档](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/技术文档(demo).md)合理配置`config.py`以及服务端环境后使用脚手架调试或部署项目。
 
-        ![Snipaste_2020-11-25_12-19-45](https://i.loli.net/2020/11/25/P9Kyr1ZEG43obnD.png)
 
 ## :ocean: 网上冲浪 
 

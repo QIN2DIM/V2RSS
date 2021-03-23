@@ -34,6 +34,8 @@
 
 将`V2RaycSpider+版本号`的源码文件打包上传至服务器的`/qinse`目录下（在根目录下新建）。
 
+![Snipaste_2020-11-25_12-19-45](https://i.loli.net/2021/03/24/h2f3VFKxZvmJrPw.png)
+
 #### 2.1.2 配置Redis
 
 根据[环境配置说明][1]配置`redis`，若您初次为服务器配置`redis`，建议所有的操作都在`/qinse`工程目录下进行。
