@@ -21,6 +21,32 @@ class ActionShunt(object):
         self.shunt_seq = []
         self.atomic_seq = []
 
+    # -----------------------------------------
+    # public
+    # -----------------------------------------
+
+    @staticmethod
+    def generate_entity(atomic: dict, silence=True, beat_sync=True):
+        return ActionMasterGeneral(
+            silence=silence,
+            beat_sync=beat_sync,
+            action_name=atomic['name'],
+            register_url=atomic['register_url'],
+            anti_slider=atomic['anti_slider'],
+            life_cycle=atomic['life_cycle'],
+            email=atomic['email'],
+            hyper_params=atomic['hyper_params'],
+        ).run
+
+    def shunt(self):
+        self._shunt_action()
+        self._pop_atomic()
+        return self.shunt_seq
+
+    # -----------------------------------------
+    # private
+    # -----------------------------------------
+
     def _shunt_action(self):
         action_list = actions.__entropy__.copy()
         for action_tag in action_list:
@@ -32,28 +58,17 @@ class ActionShunt(object):
                 self.atomic_seq.append(action_tag)
 
     def _pop_atomic(self):
-
         while True:
+            # 当步态特征列表无剩余选项时结束迭代任务
             if self.atomic_seq.__len__() < 1:
                 break
-            action_atomic = self.atomic_seq.pop()
+            # 取出机场步态特征的原子描述
+            atomic = self.atomic_seq.pop()
+            # 特征同步
             for passable_trace in self.work_seq:
                 if passable_trace != self.class_:
-                    action_atomic['hyper_params'][passable_trace] = False
-
-            amg = ActionMasterGeneral(
-                silence=self.silence,
-                beat_sync=self.beat_sync,
-                action_name=action_atomic['name'],
-                register_url=action_atomic['register_url'],
-                anti_slider=action_atomic['anti_slider'],
-                life_cycle=action_atomic['life_cycle'],
-                email=action_atomic['email'],
-                hyper_params=action_atomic['hyper_params'],
-            ).run
-            self.shunt_seq.append(amg)
-
-    def shunt(self):
-        self._shunt_action()
-        self._pop_atomic()
-        return self.shunt_seq
+                    atomic['hyper_params'][passable_trace] = False
+            # 根据步态特征实例化任务
+            entity_ = self.generate_entity(atomic=atomic, silence=self.silence, beat_sync=self.beat_sync)
+            # 将实例化任务加入待执行队列
+            self.shunt_seq.append(entity_)

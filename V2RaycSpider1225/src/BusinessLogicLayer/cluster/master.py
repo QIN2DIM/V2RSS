@@ -361,8 +361,8 @@ class ActionMasterGeneral(BaseAction):
             # if self.hyper_params['qtl']: ...
         except TimeoutException:
             logger.error(f'>>> TimeoutException <{self.action_name}> -- {self.register_url}')
-        # except WebDriverException as e:
-        #     logger.exception(f">>> Exception <{self.__class__.__name__}> -- {e}")
+        except WebDriverException as e:
+            logger.error(f">>> WebDriverException <{self.action_name}> -- {e}")
         except Exception as e:
             logger.exception(f">>> Exception <{self.action_name}> -- {e}")
         finally:

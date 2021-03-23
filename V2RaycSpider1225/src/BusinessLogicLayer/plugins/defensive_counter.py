@@ -185,7 +185,7 @@ class SliderValidation(object):
         #     track.remove(x)
         time.sleep(0.1)
         # 模拟人往回滑动
-        imitate = ActionChains(driver).move_by_offset(xoffset=-2, yoffset=0)
+        imitate = ActionChains(driver).move_by_offset(xoffset=-1, yoffset=0)
         time.sleep(0.015)
         imitate.perform()
         time.sleep(random.uniform(0.6, 1))
@@ -249,7 +249,7 @@ class SliderValidation(object):
         bg_path = self.save_bg(self.api, bg_path)
 
         # 移动距离
-        distance = self.get_offset(full_bg_path, bg_path, offset=60)
+        distance = self.get_offset(full_bg_path, bg_path, offset=45)
 
         # 获取移动轨迹
         track = self.get_track(distance)
