@@ -11,13 +11,18 @@ from src.BusinessCentralLayer.setting import logger
 class CoroutineSpeedup(object):
     """轻量化的协程控件"""
 
-    def __init__(self, work_q: Queue = None, task_docker=None, power: int = None):
+    def __init__(self, work_q: Queue = None, task_docker=None, power: int = None, debug: bool = True):
+        # 任务容器：queue
         self.work_q = work_q if work_q else Queue()
+        # 任务容器：迭代器
         self.task_docker = task_docker
+        # 协程数
         self.power = power
-
+        # 是否打印日志信息
+        self.debug_logger = debug
+        # 任务队列满载时刻长度
         self.max_queue_size = 0
-
+        # 任务缓存空间
         self.temp_cache: Dict[str:int] = {}
         self.apollo: List[List[str]] = []
 
@@ -74,4 +79,5 @@ class CoroutineSpeedup(object):
 
         self.killer()
 
-        logger.success(f'<Gevent> mission completed -- <{self.__class__.__name__}>')
+        if self.debug_logger:
+            logger.success(f'<Gevent> mission completed -- <{self.__class__.__name__}>')

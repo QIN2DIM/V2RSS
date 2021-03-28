@@ -13,7 +13,6 @@ import zipfile
 from concurrent.futures import ThreadPoolExecutor
 
 import easygui
-# 软件安装引导
 import requests
 import yaml
 

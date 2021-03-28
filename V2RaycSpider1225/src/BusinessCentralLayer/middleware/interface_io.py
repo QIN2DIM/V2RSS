@@ -199,12 +199,7 @@ class SystemInterface(object):
         """
         from src.BusinessViewLayer.panel.panel import V2RaycSpiderMasterPanel
         v2raycs = V2RaycSpiderMasterPanel()
-        try:
-            v2raycs.home_menu()
-        except Exception as e:
-            v2raycs.debug(e)
-        finally:
-            v2raycs.kill()
+        v2raycs.home_menu()
 
     @staticmethod
     def ddt(task_name: str = None):

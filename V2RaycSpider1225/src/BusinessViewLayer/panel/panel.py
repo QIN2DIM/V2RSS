@@ -6,15 +6,68 @@ import sys
 import webbrowser
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
+from uuid import uuid4
 
 import easygui
 import pyperclip
+import redis
 import requests
 import yaml
 from bs4 import BeautifulSoup
 
-from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessViewLayer.panel.config_panel import *
+
+"""################### 数据库管理 ######################"""
+
+
+class RedisClientPanel(object):
+    def __init__(self):
+        self.db = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, decode_responses=True,
+                                    db=REDIS_DB)
+        self.subscribe = ''
+
+    def get_driver(self) -> redis.StrictRedis:
+        return self.db
+
+    def get(self, key_name, pop_=0) -> str or bool:
+        """
+
+        :param key_name:
+        :param pop_:
+        :return:
+        """
+        while True:
+            target_raw: dict = self.db.hgetall(key_name)
+            try:
+                self.subscribe, end_life = list(target_raw.items()).pop(pop_)
+                # 订阅连接到期时间 -> datetime
+                subs_end_time = datetime.fromisoformat(end_life)
+                # 上海时区 -> datetime
+                now_time = datetime.fromisoformat(str(datetime.now(TIME_ZONE_CN)).split('.')[0])
+                # 时间比对 判断是否过期的响应 -> bool
+                is_stale = False if subs_end_time > now_time + timedelta(hours=3) else True
+                if is_stale:
+                    continue
+                else:
+                    return self.subscribe
+            except IndexError:
+                return False
+            finally:
+                try:
+                    # 清洗出订阅中的token
+                    token = urlparse(self.subscribe).path
+                    # 遍历所有任务类型
+                    for task in ['v2ray', 'ssr']:
+                        # 遍历某种类型的链接池
+                        for sub in self.db.hgetall(REDIS_SECRET_KEY.format(task)).items():
+                            # 匹配用户token
+                            if token == urlparse(sub[0]).path:
+                                # 若节拍同步，立即移除订阅
+                                self.db.hdel(REDIS_SECRET_KEY.format(task), sub[0])
+                except Exception as e:
+                    print(e)
+
 
 """################### 进程管理 ######################"""
 
@@ -103,7 +156,7 @@ class ProcessZeus(object):
                 self.stale_res_time = datetime.fromisoformat(date_)
 
 
-"""################### 内置爬虫 ######################"""
+"""################### 官能团 ######################"""
 
 
 class SubscribeRequester(object):
@@ -126,7 +179,6 @@ class SubscribeRequester(object):
         查询池状态
         :return:
         """
-        from uuid import uuid4
 
         def search(redis_driver) -> list:
             target_list = []
@@ -223,10 +275,6 @@ class SubscribeRequester(object):
         work_interface:
 
         """
-        # TODO:
-        #  替换为<弹性伸缩>方案
-        # FIXME:
-        #  pyinstaller 打包bug；调用修改global value 会使本函数无法被main function transfer
 
         try:
             self.subscribe = rc.get(REDIS_SECRET_KEY.format(mode))
@@ -316,10 +364,6 @@ class AirEcologySpider(object):
 
         # 定位项目
         items = soup.find_all("li", class_="link-item")
-
-        # 机场名
-        # names = [item.find("span", class_="sitename").text.strip() for item in items]
-
         # 获取去除邀请码的机场链接
         hrefs = [item.find("a")["href"] for item in items]
         hrefs = self.href_cleaner(hrefs)
@@ -368,38 +412,48 @@ class AirEcologySpider(object):
     def run(self, url=None):
         if url is None:
             url = self.ae_url
-
         func_list = ["[1]查看", "[2]保存", "[3]返回"]
-        usr_d = easygui.choicebox(title=TITLE, choices=func_list)
-        logger_local.info(usr_d)
-        if "返回" in usr_d:
+        usr_choice = easygui.choicebox(title=TITLE, choices=func_list)
+        logger_local.info(usr_choice)
+        if "返回" in usr_choice:
             return True
 
         response = self.handle_html(url)
         if response:
-            soup = BeautifulSoup(response, "html.parser")
-
             # 定位项目
-            items = soup.find_all("li", class_="link-item")
-
+            items = BeautifulSoup(response, "html.parser").find_all("li", class_="link-item")
             # 机场名
-            names = [
-                item.find("span", class_="sitename").text.strip() for item in items
-            ]
-
+            names = [item.find("span", class_="sitename").text.strip() for item in items]
             # 获取去除邀请码的机场链接
             hrefs = [item.find("a")["href"] for item in items]
             hrefs = self.href_cleaner(hrefs)
-
-            if "保存" in usr_d:
-                # 保存至本地
+            if "保存" in usr_choice:
                 self.response = self.show_data(show=False, names=names, hrefs=hrefs)
                 self.save()
-                # 自动打开
                 os.startfile(self.default_path)
-            elif "查看" in usr_d:
-                # 前端打印
+            elif "查看" in usr_choice:
                 return self.show_data(show=True, names=names, hrefs=hrefs)
+
+
+class WalkingOnThinIce(object):
+    """垂直挖掘——采集、脱敏、优选、分发全网节点订阅源"""
+
+    def __init__(self):
+        pass
+
+
+class GardenerSystem(object):
+    """园丁系统——低代码实现的永久订阅模型"""
+
+    def __init__(self):
+        pass
+
+
+class Icebreaker(object):
+    """破冰船——利用分布式终端代理实现混淆神经网络（ONN）"""
+
+    def __init__(self):
+        pass
 
 
 """################### 网络审查 ######################"""
@@ -434,51 +488,26 @@ class NetChainReview(object):
 
 class VersionConsole(object):
     def __init__(self):
-        from src.BusinessCentralLayer.setting import API_HOST, API_PORT, ROUTE_API
-        self.vcs_res: dict = requests.post(
-            f'http://{API_HOST}:{API_PORT}{ROUTE_API["version_manager"]}',
-            data={"local_version": version},
-        ).json()
+        self.vcs_res: dict = {}
 
-    def run(self):
+    @staticmethod
+    def dev_update():
+        usr_choice = easygui.ynbox(
+            f"当前版本:{TITLE} v{version}-dev "
+            f"\n\n开发版不提供自动更新通道，请关注项目动态"
+            f"\n\n{GITHUB_PROJECT}",
+            "v2ray云彩姬安装向导",
+            choices=['Redirect', 'Cancel']
+        )
+        if usr_choice:
+            webbrowser.open(GITHUB_PROJECT)
+        return True
 
-        # 若已有新版本可下载：
-        if self.vcs_res.get("need_update"):
+    def release_update(self):
+        """
 
-            # 判断本地缓冲目录是否有该版本文件
-            #       若不存在
-            #           尝试：
-            #               扫描缓冲目录是否有冲突文件
-            #                   若无：启动`update process`守护进程拉取项目文件
-
-            # todo:启动修复程序
-            # from config import PLUGIN_UPDATED_MODULE
-            # if usr_choice:
-            #     os.startfile(PLUGIN_UPDATED_MODULE)
-
-            #           翻车：
-            #               回滚操作历史，删除残缺的下载文件
-            #       若存在
-            #           启动view询问是否更新文件
-            #               若更新
-            #                   - 关闭主进程
-            #                   - 将新版本软件解压到旧版本软件所在目录的上一级目录
-            #                   >> 自动打开新版软件 >>
-            #                   << 删除旧版本项目文件 <<
-            # 若无新版本可下载：退出该模块所在线程
-
-            usr_choice = easygui.ynbox(
-                f"当前版本:{TITLE} v{version}"
-                f'\n\n最新版本：v{self.vcs_res.get("version-server")}'
-                f"\n\n发现新版本软件！是否更新？",
-                "v2ray云彩姬安装向导",
-            )
-            # TODO 在前端技术不成熟前，使用本方案更加可靠，直接访问文件下载链接，由用户手动安装（解压就可以直接运行）
-            if usr_choice:
-                webbrowser.open(self.vcs_res.get('url'))
-
-        else:
-            easygui.msgbox(f"当前版本:{TITLE} v{version}" f"\n\n已是最新版本", "v2ray云彩姬安装向导")
+        :return:
+        """
 
 
 """################### 系统查全 ######################"""
@@ -490,7 +519,6 @@ class PrepareEnv(object):
     def __init__(self) -> None:
         self.is_new_user = False
         try:
-
             # 检查默认下载地址是否残缺 深度优先初始化系统文件
             root = [
                 ROOT_DIR_PROJECT,
@@ -501,8 +529,6 @@ class PrepareEnv(object):
                 LOCAL_DIR_DEPOT,
                 LOCAL_DIR_DEPOT_CLIENT,
             ]
-            # TODO:
-            #  通过ROOT是否存在来判断该用户是否为新用 --> 加入更多参数断言
             if not os.path.exists(ROOT_DIR_PROJECT):
                 self.is_new_user = True
 
@@ -539,96 +565,68 @@ class PrepareEnv(object):
         finally:
             logger_local.success("运行环境链接完毕")
 
-    @staticmethod
-    def check_update():
-        # FIXME:修改这个更新模块，panel无法实现自动更新功能
-        def pull_updated_model():
-            res = requests.get("https://t.qinse.top/subscribe/updated.exe")
-            with open(
-                    PLUGIN_UPDATED_MODULE,
-                    "wb",
-            ) as f:
-                f.write(res.content)
-
-        if os.path.basename(PLUGIN_UPDATED_MODULE) not in os.listdir(
-                LOCAL_DIR_DATABASE
-        ):
-            logger_local.info("pull updated_module")
-            ThreadPoolExecutor(max_workers=1).submit(pull_updated_model)
-        else:
-            ThreadPoolExecutor(max_workers=1).submit(VersionConsole().run, True)
-
-    def run(self):
-
-        # 检查版本更新
-        self.check_update()
-
-        return rc.test()
-
 
 """################### 程序入口 ######################"""
 
 
 class V2RaycSpiderMasterPanel(object):
     def __init__(self):
-
-        # 环境初始化
-        PrepareEnv()
         # 主菜单
-        self.MAIN_HOME_MENU = [
+        self.main_home_menu = [
             "[1]查看机场生态",
             "[2]获取订阅链接",
             "[3]打开本地文件",
             "[4]检查版本更新",
             "[5]退出",
         ]
-
-        # air_port_menu
-        self.AIRPORT_HOME_MENU = ["[1]白嫖机场", "[2]高端机场", "[3]机场汇总", "[4]返回", "[5]退出"]
-        self.AIRPORT_FUNCTION_MENU = ["[1]查看", "[2]保存", "[3]返回"]
-        self.airHome = "https://52bp.org"
-
+        # 机场生态首页
+        self.airport_home_menu = [
+            "[1]白嫖机场",
+            "[2]高端机场",
+            "[3]机场汇总",
+            "[4]返回",
+            "[5]退出"
+        ]
+        # 机场生态内页
+        self.airport_function_menu = [
+            "[1]查看",
+            "[2]保存",
+            "[3]返回"
+        ]
         # 根据配置信息自动选择采集模式
-        self.SSR_HOME_MENU = [
+        self.ssr_home_menu = [
             "[1]V2Ray订阅链接",
             "[2]SSR订阅链接",
-            "[3]Trojan订阅连接",
-            "[4]查询可用链接",
-            "[5]返回",
-            "[6]退出",
+            "[3]查询可用链接",
+            # "[4]园丁模式",
+            # "[5]垂直挖掘模式",
+            # "[6]破冰船一键代理",
+            "返回",
+            "退出",
         ]
-
-    @staticmethod
-    def kill():
-        try:
-            rc.kill()
-        except Exception as e:
-            logger_local.exception(e)
-
-    @staticmethod
-    def debug(info):
-        logger_local.debug(info)
 
     def home_menu(self):
         """主菜单"""
-        # ['[1]查看机场生态', '[2]获取订阅链接', '[3]检查版本更新', '[4]退出', ]
+        # ----------------------------------------
+        # UI功能选择
+        # ----------------------------------------
         resp = True
-        usr_c = easygui.choicebox("功能列表", TITLE, self.MAIN_HOME_MENU, preselect=1)
-        logger_local.info(usr_c)
+        usr_choice: str = easygui.choicebox("功能列表", TITLE, self.main_home_menu, preselect=1)
+        logger_local.info(usr_choice)
         try:
-            if "[1]查看机场生态" in usr_c:
+            if usr_choice.startswith("[1]查看机场生态"):
                 resp = self.air_port_menu()
-            elif "[2]获取订阅链接" in usr_c:
+            elif usr_choice.startswith("[2]获取订阅链接"):
                 resp = self.subs_require_menu()
-            elif "[3]打开本地文件" in usr_c:
+            elif usr_choice.startswith("[3]打开本地文件"):
                 os.startfile(LOCAL_PATH_DATABASE_FH)
                 resp = False
-            elif "更新" in usr_c:
-                ThreadPoolExecutor(max_workers=1).submit(VersionConsole().run)
+            elif usr_choice.startswith("[4]检查版本更新"):
+                ThreadPoolExecutor(max_workers=1).submit(VersionConsole().dev_update)
             else:
                 resp = False
         except TypeError:
-            # 若出现未知异常，则启动垃圾回收机制，强制退出
+            # 若出现未知异常，强制退出
             resp = False
         finally:
             if resp:
@@ -638,8 +636,10 @@ class V2RaycSpiderMasterPanel(object):
 
     def air_port_menu(self):
         """air_port_menu GUI导航"""
-        # ['[1]白嫖机场', '[2]高端机场', '[3]机场汇总', '[4]返回', '[5]退出']
-        usr_c = easygui.choicebox("功能列表", TITLE, self.AIRPORT_HOME_MENU, preselect=0)
+        # ----------------------------------------
+        # UI功能选择
+        # ----------------------------------------
+        usr_c = easygui.choicebox("功能列表", TITLE, self.airport_home_menu, preselect=0)
         logger_local.info(usr_c)
         resp = True
         try:
@@ -650,7 +650,6 @@ class V2RaycSpiderMasterPanel(object):
         except TypeError:
             resp = True
         finally:
-            # 返回
             return resp
 
     def subs_require_menu(self):
@@ -659,24 +658,27 @@ class V2RaycSpiderMasterPanel(object):
         :mode: True:本地采集，False 服务器采集
         :return:
         """
+        # ----------------------------------------
         # 初始化进程冻结锁
-        # process_locker()
+        # ----------------------------------------
         ProcessZeus().process_locker()
         resp = True
+        # ----------------------------------------
         # UI功能选择
-        usr_c = easygui.choicebox("功能列表", TITLE, self.SSR_HOME_MENU, preselect=1)
+        # ----------------------------------------
+        usr_c: str = easygui.choicebox("功能列表", TITLE, self.ssr_home_menu, preselect=1)
         logger_local.info(usr_c)
-        sp = SubscribeRequester()
+        sr = SubscribeRequester()
         try:
             if "[1]V2Ray订阅链接" in usr_c:
-                resp = sp.run(mode="v2ray")
+                resp = sr.run(mode="v2ray")
             elif "[2]SSR订阅链接" in usr_c:
-                resp = sp.run(mode="ssr")
-            elif "[3]Trojan订阅连接" in usr_c:
-                resp = sp.run(mode="trojan")
-            elif "[4]查询可用链接" in usr_c:
-                resp = sp.find_available_subscribe()
-            elif "[5]返回" in usr_c:
+                resp = sr.run(mode="ssr")
+            elif "[3]查询可用链接" in usr_c:
+                resp = sr.find_available_subscribe()
+            elif "[4]园丁模式" in usr_c:
+                resp = GardenerSystem()
+            elif "返回" in usr_c:
                 resp = True
             else:
                 resp = False
@@ -687,13 +689,19 @@ class V2RaycSpiderMasterPanel(object):
 
 
 """################### 启动检测 ######################"""
-
-if ThreadPoolExecutor(max_workers=1).submit(NetChainReview().run).result():
-    rc = RedisClient()
-else:
-    logger_local.warning("网络异常")
-    easygui.msgbox("网络异常", title=TITLE)
-    exit()
+try:
+    # 运行环境初始化
+    PrepareEnv()
+    # 握手检测
+    if ThreadPoolExecutor(max_workers=1).submit(NetChainReview().run).result():
+        rc = RedisClientPanel()
+    else:
+        logger_local.warning("网络异常")
+        easygui.msgbox("网络异常", title=TITLE)
+        exit()
+except Exception as et:
+    # Tcl_AsyncDelete: async handler deleted by the wrong thread ?
+    easygui.exceptionbox(str(et))
 
 if __name__ == '__main__':
     V2RaycSpiderMasterPanel().home_menu()

@@ -275,7 +275,7 @@ class ActionMasterGeneral(BaseAction):
             self.sync_class = sync_class
 
     # TODO -> 断网重连 -> 引入retrying 第三方库替代原生代码
-    def sign_up(self, api, retry_=0, max_retry_num_=5):
+    def sign_up(self, api, retry_=0, max_retry_num_=2):
         """
 
         @param api:
@@ -296,6 +296,8 @@ class ActionMasterGeneral(BaseAction):
         api.find_element_by_id('passwd').send_keys(self.password)
 
         api.find_element_by_id('repasswd').send_keys(self.password)
+
+        time.sleep(0.5)
 
         # 滑动验证
         def spider_module(retry=0, max_retry_num=2):

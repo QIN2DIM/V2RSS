@@ -17,6 +17,7 @@ class GhostFiller(CoroutineSpeedup):
         # 参数初始化
         self.docker = docker
         self.silence = silence
+        self.debug_logger = False
 
         # 根据步态特征获取实例化任务
         from src.BusinessLogicLayer.apis.shunt_cluster import ActionShunt
@@ -36,12 +37,13 @@ class GhostFiller(CoroutineSpeedup):
 
 def gevent_ghost_filler(docker: dict, silence: bool, power: int = 1):
     import gevent
+    from concurrent.futures.thread import ThreadPoolExecutor
+    with ThreadPoolExecutor(max_workers=power) as t:
+        for _ in range(power):
+            t.submit(GhostFiller(docker=docker, silence=silence).run)
 
-    from gevent import monkey
-    monkey.patch_all(ssl=False)
-
-    task_list = []
-    for _ in range(power):
-        task = gevent.spawn(GhostFiller(docker=docker, silence=silence).run)
-        task_list.append(task)
-    gevent.joinall(task_list)
+    # task_list = []
+    # for _ in range(power):
+    #     task = gevent.spawn()
+    #     task_list.append(task)
+    # gevent.joinall(task_list)

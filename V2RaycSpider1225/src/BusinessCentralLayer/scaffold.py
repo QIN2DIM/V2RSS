@@ -25,6 +25,7 @@ command_set = {
     "remain": "读取剩余订阅数量",
     "ping": "测试数据库连接",
     "panel": "打开桌面前端面板",
+    "packer": "打包生成桌面客户端（windows可用）",
     # ---------------------------------------------
     # 调用示例
     # ---------------------------------------------
@@ -249,7 +250,47 @@ class _ScaffoldGuider(object):
         from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
         SystemInterface.system_panel()
 
+    @staticmethod
+    def _scaffold_packer():
+        pass
+        # packer()
+
 
 scaffold = _ScaffoldGuider()
+
+
+def packer(ico_path: str = None, output_dir=None, py_panel=None):
+    """
+    打包panel
+    :param ico_path:
+    :param output_dir:
+    :param py_panel:
+    :return:
+    """
+    # ----------------------------
+    # 参数整理
+    # ----------------------------
+    if ico_path is None:
+        ico_path = join(PANEL_DIR_ROOT, 'logo.ico')
+    if output_dir is None:
+        output_dir = join(PANEL_DIR_ROOT, 'bin')
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
+    if py_panel is None:
+        py_panel = join(PANEL_DIR_ROOT, 'panel.py')
+    # ----------------------------
+    # 根据不同的操作系统选择不同的打包方案
+    # > Windows:Pyinstaller
+    # https://pyinstaller.readthedocs.io/en/stable/usage.html#options
+    # ----------------------------
+
+    if platform.startswith('win'):
+        pass
+    elif platform.startswith('linux'):
+        pass
+    elif platform.startswith('darwin'):
+        pass
+
+
 if __name__ == '__main__':
-    print(scaffold.scaffold_ruler)
+    packer()

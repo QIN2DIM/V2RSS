@@ -133,12 +133,20 @@ ActionMxCloud = {
     'email': '@gmail.com'
 }
 
+ActionGsouCloud = {
+    'name': "ActionGsouCloud",
+    'register_url': "https://gsou.cloud/auth/register",
+    'life_cycle': 3,
+    'anti_slider': False,
+    'hyper_params': {'ssr': True, 'v2ray': False},
+    'email': "@gmail"
+}
 __entropy__ = [
     # ---------------------
     # 无障碍
     # ---------------------
     # ActionMiTaoCloud,  # 1day 10G
-
+    ActionGsouCloud,  # 3day 30G
     # ---------------------
     # 需要滑动验证
     # ---------------------
@@ -166,7 +174,7 @@ __entropy__ = [
     # 'ActionOhrCloud',  # error Null and No new users are accepted
     # 'ActionJfCloud',  # 1day 1G
 
-    ActionMxCloud,  # 1day 2G
+    # ActionMxCloud,  # 1day 2G
 
     # ---------------------
     # DDoS防御 or 系统宕机
@@ -188,6 +196,10 @@ __entropy__ = [
 
 if __name__ == '__main__':
     # 单步调试，启动指定机场的采集任务
+    from gevent import monkey
+
+    monkey.patch_all()
     from src.BusinessLogicLayer.apis.ghost_filler import gevent_ghost_filler
 
-    gevent_ghost_filler(docker=ActionKakCloud, silence=True)
+    # gevent_ghost_filler(docker=ActionGsouCloud, silence=False, power=3)
+    gevent_ghost_filler(docker=ActionSuFeiCloud, silence=False, power=1)

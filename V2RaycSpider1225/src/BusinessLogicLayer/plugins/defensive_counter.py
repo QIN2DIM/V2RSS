@@ -137,12 +137,12 @@ class SliderValidation(object):
         """
         track = []
         current = 0
-        mid = distance * 3.824481 / 4
+        mid = distance * 3.924481 / 4
         t = 1.4414
         v = 0
         while current < distance:
             if current < mid:
-                a = random.uniform(0.6012, 0.712)
+                a = random.uniform(0.6012, 0.612)
             else:
                 a = -random.uniform(0.11, 0.13)
             v0 = v
@@ -179,13 +179,10 @@ class SliderValidation(object):
         ActionChains(driver).click_and_hold(slider).perform()
         for step in track:
             ActionChains(driver).move_by_offset(xoffset=step, yoffset=0).perform()
-        # while track:
-        #     x = random.choice(track)
-        #     ActionChains(driver).move_by_offset(xoffset=x, yoffset=0).perform()
-        #     track.remove(x)
+
         time.sleep(0.1)
         # 模拟人往回滑动
-        imitate = ActionChains(driver).move_by_offset(xoffset=-1, yoffset=0)
+        imitate = ActionChains(driver).move_by_offset(xoffset=-2, yoffset=0)
         time.sleep(0.015)
         imitate.perform()
         time.sleep(random.uniform(0.6, 1))
@@ -197,7 +194,7 @@ class SliderValidation(object):
         time.sleep(0.019)
         imitate.perform()
         time.sleep(0.033)
-        ActionChains(driver).move_by_offset(xoffset=1, yoffset=0).perform()
+        ActionChains(driver).move_by_offset(xoffset=3, yoffset=0).perform()
         # 放开圆球
         ActionChains(driver).release(slider).perform()
 

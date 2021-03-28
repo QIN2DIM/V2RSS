@@ -1,31 +1,48 @@
 import os
 from sys import platform
 
+import pytz
 from loguru import logger as logger_local
 
-"""********************************* panel环境变量 *********************************"""
+"""********************************* TOS *********************************"""
 # 我就是云彩姬!
 TITLE = "V2Ray云彩姬"
-
+# Github项目地址
+GITHUB_PROJECT = 'https://github.com/QIN2DIM/V2RayCloudSpider'
+"""********************************* panel环境变量 *********************************"""
+# 时区统一
+TIME_ZONE_CN = pytz.timezone("Asia/Shanghai")
 # ---------------------------------------------------
 # TODO (√)BAND_BATCH -- 自闭时间：PC(链接获取)进程锁死的冷却时间
 # Defaults type:float = 0.75 minute
 # ---------------------------------------------------
 BAND_BATCH: float = 0.75
-
 # ---------------------------------------------------
 # (*)Redis BusinessLogicLayer Server Configuration(SSH-Advanced)
 # ---------------------------------------------------
-# (*) Core settings of the Master's secret key.Do not modify!
+# todo Core settings of the Master's secret key.Do not modify!
 REDIS_SECRET_KEY: str = "v2rayc_spider:{}"
-
+# 请确保以下Redis设置与master-redis配置一致
+REDIS_HOST: str = ''
+REDIS_PASSWORD: str = ''
+REDIS_PORT: int = 6379
+REDIS_DB: int = 0
+# ---------------------------------------------------
+# (*) Flask API Setting
+# ---------------------------------------------------
+# 请确保以下Flask设置与server配置一致
+API_PORT = 6500
+API_HOST = REDIS_HOST
+ROUTE_API = {
+    "version_manager": "/v2raycs/api/version_manager",
+}
 # ---------------------------------------------------
 # 工程编号与版本号，版本号必须与工程版本(文件名)号一致 请勿改动!
 # version命名规则 k.u.r -b
 #   --k kernel 内核级更新
 #   --u update 加入新功能/模块/机制
 #   --r repair 修复已知漏洞或小改动
-#   --b branch 分支版本，分为 测试版(beta)、稳定版(release)
+#   --b branch 分支版本，分为 测试版(beta)、开发版（dev）、稳定版(release)
 # project_num命名规则 K25，既每进行一次内核级更新时K+1，如：
 #   "4.u.r 0925" -> "5.u.r 1025"
 # ---------------------------------------------------
@@ -95,3 +112,10 @@ PLUGIN_UPDATED_MODULE = os.path.join(LOCAL_DIR_DEPOT, "updated.exe")
 
 # 各版本v2raycs默认下载路径
 LOCAL_DIR_DEPOT_CLIENT = os.path.join(LOCAL_DIR_DEPOT, "client")
+"""********************************* 参数微调 *********************************"""
+
+# 耦合操作：用于兼容直接从scaffold发起的模块调用
+if REDIS_HOST == '' or REDIS_PASSWORD == '':
+    from src.BusinessCentralLayer.setting import REDIS_MASTER
+
+    REDIS_HOST, REDIS_PASSWORD = REDIS_MASTER['host'], REDIS_MASTER['password']
