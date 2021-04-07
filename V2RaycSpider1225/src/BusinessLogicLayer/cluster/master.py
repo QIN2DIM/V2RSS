@@ -71,10 +71,9 @@ class BaseAction(object):
         """
         return str(datetime.now(TIME_ZONE_CN) + timedelta(days=trial_time)).split('.')[0]
 
-    def set_spider_option(self, use_proxy=False) -> Chrome:
+    def set_spider_option(self) -> Chrome:
         """
         ChromeDriver settings
-        @param use_proxy: 使用代理 <当前版本禁用>：部分机场禁止国内ip访问
         @return:
         """
 
@@ -96,11 +95,6 @@ class BaseAction(object):
 
         # 更换头部
         options.add_argument(f'user-agent={get_header()}')
-
-        if use_proxy:
-            proxy_ip = get_proxy(True)
-            if proxy_ip:
-                options.add_argument(f'proxy-server={proxy_ip}')
 
         # 静默启动
         if self.silence is True:
@@ -275,7 +269,7 @@ class ActionMasterGeneral(BaseAction):
             self.sync_class = sync_class
 
     # TODO -> 断网重连 -> 引入retrying 第三方库替代原生代码
-    def sign_up(self, api, retry_=0, max_retry_num_=2):
+    def sign_up(self, api, retry_=0, max_retry_num_=4):
         """
 
         @param api:

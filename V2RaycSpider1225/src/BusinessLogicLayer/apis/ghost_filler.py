@@ -36,12 +36,15 @@ class GhostFiller(CoroutineSpeedup):
 
 
 def gevent_ghost_filler(docker: dict, silence: bool, power: int = 1):
-    import gevent
     from concurrent.futures.thread import ThreadPoolExecutor
-    with ThreadPoolExecutor(max_workers=power) as t:
-        for _ in range(power):
-            t.submit(GhostFiller(docker=docker, silence=silence).run)
+    if power > 1:
+        with ThreadPoolExecutor(max_workers=power) as t:
+            for _ in range(power):
+                t.submit(GhostFiller(docker=docker, silence=silence).run)
+    else:
+        GhostFiller(docker=docker, silence=silence).run()
 
+    # import gevent
     # task_list = []
     # for _ in range(power):
     #     task = gevent.spawn()

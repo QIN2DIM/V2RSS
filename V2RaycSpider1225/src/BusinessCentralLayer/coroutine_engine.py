@@ -64,20 +64,18 @@ class CoroutineSpeedup(object):
 
         # 任务重载
         self.offload_task()
-
-        # 任务启动
         task_list = []
+        # 配置弹性采集功率
         power_ = self.power if self.power else power
-
         if self.max_queue_size != 0:
             power_ = self.max_queue_size if power_ > self.max_queue_size else power_
-
+        # 任务启动
         for x in range(power_):
             task = gevent.spawn(self.launch)
             task_list.append(task)
         gevent.joinall(task_list)
-
+        # 缓存回收
         self.killer()
-
+        # 全局日志信息打印
         if self.debug_logger:
             logger.success(f'<Gevent> mission completed -- <{self.__class__.__name__}>')

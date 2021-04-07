@@ -26,6 +26,7 @@ command_set = {
     "ping": "测试数据库连接",
     "panel": "打开桌面前端面板",
     "packer": "打包生成桌面客户端（windows可用）",
+    "launcher": "返回采集器的单步启动接口",
     # ---------------------------------------------
     # 调用示例
     # ---------------------------------------------
@@ -254,6 +255,16 @@ class _ScaffoldGuider(object):
     def _scaffold_packer():
         pass
         # packer()
+
+    @staticmethod
+    def _scaffold_launcher(name: str = None) -> dict:
+        from src.BusinessLogicLayer.cluster.slavers import actions
+        from src.BusinessLogicLayer.apis.ghost_filler import gevent_ghost_filler
+        response = {"entropy": actions.__entropy__, "actions": actions}
+        if name is None:
+            return response
+        else:
+            gevent_ghost_filler(docker=eval("actions.name"), silence=True)
 
 
 scaffold = _ScaffoldGuider()
