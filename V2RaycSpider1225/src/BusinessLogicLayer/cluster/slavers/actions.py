@@ -139,17 +139,40 @@ ActionGsouCloud = {
     'life_cycle': 3,
     'anti_slider': False,
     'hyper_params': {'ssr': True, 'v2ray': False},
-    'email': "@gmail"
+    'email': "@gmail.com"
 }
+
+ActionDuosCloud = {
+    'name': "ActionDuosCloud",
+    'register_url': "https://www.douluos.xyz/auth/register",
+    'life_cycle': 1,
+    'anti_slider': True,
+    'hyper_params': {'ssr': False, 'v2ray': True},
+    'email': "@gmail.com"
+}
+
+ActionThunderCloud = {
+    'name': "ActionDuosCloud",
+    'register_url': "https://sdyun.cc/auth/register",
+    'life_cycle': 1,
+    'anti_slider': True,
+    'hyper_params': {'ssr': True, 'v2ray': False},
+    'email': "@gmail.com"
+}
+
 __entropy__ = [
     # ---------------------
     # 无障碍
     # ---------------------
     # ActionMiTaoCloud,  # 1day 10G
-    ActionGsouCloud,  # 3day 30G
+    # ActionGsouCloud,  # 3day 30G
+
+    # ActionThunderCloud,  # 1day 10G 非通用代码
     # ---------------------
     # 需要滑动验证
     # ---------------------
+    ActionDuosCloud,  # 1day 2G
+
     ActionReCloud,  # 1day 10G
 
     ActionKakCloud,  # 1day 10G
@@ -194,12 +217,21 @@ __entropy__ = [
 
 ]
 
-if __name__ == '__main__':
-    # 单步调试，启动指定机场的采集任务
+
+def test_entropy_queue(entropy_name=None, silence: bool = False, power: bool = 1):
     from gevent import monkey
 
     monkey.patch_all()
     from src.BusinessLogicLayer.apis.ghost_filler import gevent_ghost_filler
 
-    # gevent_ghost_filler(docker=ActionGsouCloud, silence=False, power=3)
-    gevent_ghost_filler(docker=ActionSuFeiCloud, silence=False, power=1)
+    if entropy_name:
+        try:
+            return gevent_ghost_filler(docker=entropy_name, silence=silence, power=power)
+        except TypeError:
+            pass
+    else:
+        return gevent_ghost_filler(docker=__entropy__, silence=silence, power=__entropy__.__len__())
+
+
+if __name__ == '__main__':
+    test_entropy_queue(entropy_name=None)

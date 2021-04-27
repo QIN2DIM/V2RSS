@@ -35,18 +35,20 @@ class GhostFiller(CoroutineSpeedup):
             return False
 
 
-def gevent_ghost_filler(docker: dict, silence: bool, power: int = 1):
+def gevent_ghost_filler(docker: dict or list, silence: bool, power: int = 1):
+    import gevent
     from concurrent.futures.thread import ThreadPoolExecutor
+    task_list = []
+
     if power > 1:
-        with ThreadPoolExecutor(max_workers=power) as t:
-            for _ in range(power):
-                t.submit(GhostFiller(docker=docker, silence=silence).run)
+        if isinstance(docker, dict):
+            with ThreadPoolExecutor(max_workers=power) as t:
+                for _ in range(power):
+                    t.submit(GhostFiller(docker=docker, silence=silence).run)
+        elif isinstance(docker, list):
+            for i in range(docker.__len__()):
+                task = gevent.spawn(GhostFiller(docker=docker[i], silence=silence).run)
+                task_list.append(task)
+            gevent.joinall(task_list)
     else:
         GhostFiller(docker=docker, silence=silence).run()
-
-    # import gevent
-    # task_list = []
-    # for _ in range(power):
-    #     task = gevent.spawn()
-    #     task_list.append(task)
-    # gevent.joinall(task_list)

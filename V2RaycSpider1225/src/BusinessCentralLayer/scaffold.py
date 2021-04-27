@@ -27,6 +27,7 @@ command_set = {
     "panel": "打开桌面前端面板",
     "packer": "打包生成桌面客户端（windows可用）",
     "launcher": "返回采集器的单步启动接口",
+    "entropy": "打印采集队列",
     # ---------------------------------------------
     # 调用示例
     # ---------------------------------------------
@@ -250,6 +251,12 @@ class _ScaffoldGuider(object):
     def _scaffold_panel():
         from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
         SystemInterface.system_panel()
+
+    @staticmethod
+    def _scaffold_entropy():
+        from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__
+        for host_ in __entropy__:
+            print(host_)
 
     @staticmethod
     def _scaffold_packer():
