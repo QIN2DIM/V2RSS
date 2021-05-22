@@ -52,5 +52,5 @@ def get_subs_num():
     return jsonify(apis_get_subs_num())
 
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=6500, debug=True)
+# if __name__ == '__main__':
+#     app.run(host='0.0.0.0', port=6500, debug=True)
