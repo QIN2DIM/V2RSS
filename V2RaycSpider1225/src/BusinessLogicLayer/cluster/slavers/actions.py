@@ -177,7 +177,7 @@ __entropy__ = [
 
     ActionKakCloud,  # 1day 10G
 
-    ActionSuFeiCloud,  # 2day 5G
+    # ActionSuFeiCloud,  # 2day
 
     # ---------------------
     # 公益节点
@@ -218,7 +218,7 @@ __entropy__ = [
 ]
 
 
-def test_entropy_queue(entropy_name=None, silence: bool = False, power: bool = 1):
+def test_entropy_queue(entropy_name=None, silence: bool = False, power: int = 1):
     from gevent import monkey
 
     monkey.patch_all()

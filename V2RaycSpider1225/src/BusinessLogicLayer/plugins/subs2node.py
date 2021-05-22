@@ -31,6 +31,11 @@ def subs2node(subs: str, cache_path: str or bool = 'node_info.txt', timeout: int
     headers = {
         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
                       " Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.53"}
+    # 危险操作：使流量不通过系统代理
+    proxies = {
+        'http': None,
+        'https': None
+    }
     try:
         # 订阅解析
         obj = urlparse(subs)
@@ -42,9 +47,9 @@ def subs2node(subs: str, cache_path: str or bool = 'node_info.txt', timeout: int
 
         obj_analyze = {'net': obj.netloc, 'token': obj.path.split('/')[-1], 'class_': class_}
         if timeout:
-            res = requests.get(subs, headers=headers, timeout=timeout)
+            res = requests.get(subs, headers=headers, timeout=timeout, proxies=proxies)
         else:
-            res = requests.get(subs, headers=headers)
+            res = requests.get(subs, headers=headers, proxies=proxies)
 
         node_info = base64.decodebytes(res.content)
 

@@ -3,6 +3,7 @@ __all__ = ['scaffold']
 from gevent import monkey
 
 monkey.patch_all()
+import time
 import csv
 import gevent
 from typing import List
@@ -28,6 +29,7 @@ command_set = {
     "packer": "打包生成桌面客户端（windows可用）",
     "launcher": "返回采集器的单步启动接口",
     "entropy": "打印采集队列",
+    "exile": "执行队列运维脚本（高饱和强阻塞任务）",
     # ---------------------------------------------
     # 调用示例
     # ---------------------------------------------
@@ -201,7 +203,6 @@ class _ScaffoldGuider(object):
     @staticmethod
     def _scaffold_decouple():
         logger.info(f"<ScaffoldGuider> Decouple || General startup")
-
         from src.BusinessLogicLayer.plugins.ddt_subs import SubscribesCleaner
         SubscribesCleaner(debug=True).interface()
 
@@ -253,10 +254,17 @@ class _ScaffoldGuider(object):
         SystemInterface.system_panel()
 
     @staticmethod
-    def _scaffold_entropy():
-        from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__
-        for host_ in __entropy__:
-            print(host_)
+    def _scaffold_entropy(_debug=False):
+        from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__, test_entropy_queue
+
+        if _debug:
+            try:
+                test_entropy_queue(entropy_name=None, silence=True)
+            except Exception as e:
+                logger.exception(e)
+        else:
+            for host_ in __entropy__:
+                print(host_)
 
     @staticmethod
     def _scaffold_packer():
@@ -272,6 +280,36 @@ class _ScaffoldGuider(object):
             return response
         else:
             gevent_ghost_filler(docker=eval("actions.name"), silence=True)
+
+    @staticmethod
+    def _scaffold_exile(task_sequential=4):
+
+        logger.debug(f"<ScaffoldGuider> Exile[0/{task_sequential}] || Running scaffold exile...")
+        time.sleep(0.3)
+
+        # task1: 检查队列任务
+        logger.debug(f"<ScaffoldGuider> Exile[1/{task_sequential}] || Checking the task queue...")
+        time.sleep(0.3)
+        _ScaffoldGuider._scaffold_entropy(_debug=True)
+        # logger.success(f">>> [Mission Completed] || entropy")
+
+        # task2: decouple
+        logger.debug(f"<ScaffoldGuider> Exile[2/{task_sequential}] || Cleaning the subscribe pool...")
+        time.sleep(0.3)
+        _ScaffoldGuider._scaffold_decouple()
+        # logger.success(f">>> [Mission Completed] || decouple")
+
+        # task3: overdue
+        logger.debug(f"<ScaffoldGuider> Exile[3/{task_sequential}] || Cleaning timed out subscribes...")
+        time.sleep(0.3)
+        _ScaffoldGuider._scaffold_overdue()
+        # logger.success(">>> [Mission Completed] || overdue")
+
+        # finally: print task-queue， remaining subscribes
+        logger.debug(f"<ScaffoldGuider> Exile[{task_sequential}/{task_sequential}] || Outputting debug data...")
+        _ScaffoldGuider._scaffold_entropy()
+        _ScaffoldGuider._scaffold_remain()
+        logger.success("<ScaffoldGuider> Exile[Mission Completed] || exile")
 
 
 scaffold = _ScaffoldGuider()
@@ -308,7 +346,3 @@ def packer(ico_path: str = None, output_dir=None, py_panel=None):
         pass
     elif platform.startswith('darwin'):
         pass
-
-
-if __name__ == '__main__':
-    packer()
