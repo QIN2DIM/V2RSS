@@ -47,8 +47,9 @@ def subs2node(subs: str, cache_path: str or bool = 'node_info.txt', timeout: int
 
         obj_analyze = {'net': obj.netloc, 'token': obj.path.split('/')[-1], 'class_': class_}
         if timeout:
-            res = requests.get(subs, headers=headers, timeout=timeout, proxies=proxies)
+            res = requests.get(subs, headers=headers, timeout=timeout)
         else:
+            # res = requests.get(subs, headers=headers)
             res = requests.get(subs, headers=headers, proxies=proxies)
 
         node_info = base64.decodebytes(res.content)

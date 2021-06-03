@@ -160,13 +160,22 @@ ActionThunderCloud = {
     'email': "@gmail.com"
 }
 
+ActionBitEbCloud = {
+    'name': "ActionBitEbCloud",
+    'register_url': "https://biteb.me/auth/register",
+    'life_cycle': 3,
+    'anti_slider': False,
+    'hyper_params': {'ssr': False, 'v2ray': True},
+    'email': "@gmail.com"
+}
+
 __entropy__ = [
     # ---------------------
     # 无障碍
     # ---------------------
     # ActionMiTaoCloud,  # 1day 10G
     # ActionGsouCloud,  # 3day 30G
-
+    ActionBitEbCloud,  # 7day 100G
     # ActionThunderCloud,  # 1day 10G 非通用代码
     # ---------------------
     # 需要滑动验证
@@ -234,4 +243,4 @@ def test_entropy_queue(entropy_name=None, silence: bool = False, power: int = 1)
 
 
 if __name__ == '__main__':
-    test_entropy_queue(entropy_name=None)
+    test_entropy_queue(entropy_name=ActionBitEbCloud)
