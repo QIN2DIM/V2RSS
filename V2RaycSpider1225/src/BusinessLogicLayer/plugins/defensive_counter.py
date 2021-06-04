@@ -1,4 +1,4 @@
-__all__ = ['validation_interface']
+__all__ = ['validation_interface', 'SliderValidation']
 
 import base64
 import random
@@ -27,12 +27,20 @@ class EmailAddressVerification(object):
 # 滑动验证模组
 class SliderValidation(object):
 
-    def __init__(self, driver):
+    def __init__(self, driver, debug=False):
         self.api = driver
+        self.debug = debug
         self.wait = WebDriverWait(self.api, 5)
 
+        if self.debug:
+            print(">>> 正在加载 Slider Validation Debug Module...")
+
+    def _debug_printer(self, msg):
+        if self.debug:
+            print(f"{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))} | {msg}")
+
     @staticmethod
-    def save_base64img(data_str, save_name):
+    def _save_base64img(data_str, save_name):
         """
         将 base64 数据转化为图片保存到指定位置
         :param data_str: base64 数据，不包含类型
@@ -44,7 +52,7 @@ class SliderValidation(object):
         file.close()
 
     @staticmethod
-    def get_base64_by_canvas(driver, class_name, contain_type):
+    def _get_base64_by_canvas(driver, class_name, contain_type):
         """
         将 canvas 标签内容转换为 base64 数据
         :param class_name: canvas 标签的类名
@@ -65,8 +73,8 @@ class SliderValidation(object):
         else:
             return bg_img[bg_img.find(',') + 1:]
 
-    def save_full_bg(self, driver, full_bg_path="fbg.png",
-                     full_bg_class='geetest_canvas_fullbg geetest_fade geetest_absolute'):
+    def _save_full_bg(self, driver, full_bg_path="fbg.png",
+                      full_bg_class='geetest_canvas_fullbg geetest_fade geetest_absolute'):
         """
         保存完整的的背景图
         :param driver: webdriver 对象
@@ -74,12 +82,12 @@ class SliderValidation(object):
         :param full_bg_class: 完整背景图的 class 属性
         :return: 保存路径
         """
-        bg_img_data = self.get_base64_by_canvas(driver, full_bg_class, False)
-        self.save_base64img(bg_img_data, full_bg_path)
+        bg_img_data = self._get_base64_by_canvas(driver, full_bg_class, False)
+        self._save_base64img(bg_img_data, full_bg_path)
         return full_bg_path
 
-    def save_bg(self, driver, bg_path="bg.png",
-                bg_class='geetest_canvas_bg geetest_absolute'):
+    def _save_bg(self, driver, bg_path="bg.png",
+                 bg_class='geetest_canvas_bg geetest_absolute'):
         """
         保存包含缺口的背景图
         :param driver: webdriver 对象
@@ -87,12 +95,12 @@ class SliderValidation(object):
         :param bg_class: 背景图的 class 属性
         :return: 保存路径
         """
-        bg_img_data = self.get_base64_by_canvas(driver, bg_class, False)
-        self.save_base64img(bg_img_data, bg_path)
+        bg_img_data = self._get_base64_by_canvas(driver, bg_class, False)
+        self._save_base64img(bg_img_data, bg_path)
         return bg_path
 
     @staticmethod
-    def is_pixel_equal(img1, img2, x, y):
+    def _is_pixel_equal(img1, img2, x, y):
         """
         判断两个像素是否相同
         :param img2: 图片1
@@ -111,7 +119,7 @@ class SliderValidation(object):
         else:
             return False
 
-    def get_offset(self, full_bg_path, bg_path, offset=60):
+    def _get_offset(self, full_bg_path, bg_path, offset=60):
         """
         获取缺口偏移量
         :param full_bg_path: 不带缺口图片路径
@@ -123,13 +131,13 @@ class SliderValidation(object):
         bg = Image.open(bg_path)
         for i in range(offset, full_bg.size[0]):
             for j in range(full_bg.size[1]):
-                if not self.is_pixel_equal(full_bg, bg, i, j):
+                if not self._is_pixel_equal(full_bg, bg, i, j):
                     offset = i
                     return offset
         return offset
 
     @staticmethod
-    def get_track(distance):
+    def _get_track(distance):
         """
         根据偏移量获取拟人的移动轨迹
         :param distance: 偏移量
@@ -153,7 +161,7 @@ class SliderValidation(object):
 
         return track
 
-    def get_slider(self, driver, slider_class='geetest_slider_button'):
+    def _get_slider(self, driver, slider_class='geetest_slider_button'):
         """
         获取滑块
         :param driver:
@@ -169,13 +177,13 @@ class SliderValidation(object):
                 time.sleep(0.5)
         return slider
 
-    def drag_the_ball(self, driver, track):
+    def _drag_the_ball(self, driver, track):
         """
         根据运动轨迹拖拽
         :param driver: webdriver 对象
         :param track: 运动轨迹
         """
-        slider = self.get_slider(driver)
+        slider = self._get_slider(driver)
         ActionChains(driver).click_and_hold(slider).perform()
         for step in track:
             ActionChains(driver).move_by_offset(xoffset=step, yoffset=0).perform()
@@ -197,8 +205,13 @@ class SliderValidation(object):
         ActionChains(driver).move_by_offset(xoffset=3, yoffset=0).perform()
         # 放开圆球
         ActionChains(driver).release(slider).perform()
+        time.sleep(1.5)
 
-    def is_try_again(self):
+    def _awakening(self):
+        self.api.find_element_by_class_name('geetest_radar_tip').click()
+        time.sleep(1)
+
+    def _is_try_again(self):
         """[summary]
 
         判断是否能够点击重试
@@ -209,7 +222,7 @@ class SliderValidation(object):
             button = self.api.find_element_by_class_name('geetest_reset_tip_content')
             button.click()
 
-    def is_success(self):
+    def _is_success(self):
         """[summary]
 
         判断是否成功
@@ -221,45 +234,45 @@ class SliderValidation(object):
             return True
         return False
 
-    def run(self, full_bg_path: str = None, bg_path: str = None):
+    def run(self, full_bg_path: str = 'fbg.png', bg_path: str = 'bg.png', retry_num: int = 1):
 
-        if not full_bg_path:
-            full_bg_path = 'fbg.png'
-        if not bg_path:
-            bg_path = 'bg.png'
+        self._debug_printer("唤醒极验...")
 
-        # 唤醒极验
-        # print("唤醒极验")
-        self.api.find_element_by_class_name('geetest_radar_tip').click()
-        time.sleep(1)
+        self._awakening()
 
-        # 加载 Geetest 验证码
-        # print("加载 Geetest 验证码")
+        self._debug_printer("正在加载 Geetest 验证码...")
         self.wait.until(expected_conditions.presence_of_element_located((By.CLASS_NAME, 'geetest_canvas_slice')))
         self.wait.until(expected_conditions.presence_of_element_located((By.CLASS_NAME, 'geetest_canvas_fullbg')))
 
-        # get full image
-        # print("get full image")
-        full_bg_path = self.save_full_bg(self.api, full_bg_path)
+        self._debug_printer("正在截取拼图图像...")
+        full_bg_path = self._save_full_bg(self.api, full_bg_path)
+        bg_path = self._save_bg(self.api, bg_path)
 
-        # get defective image
-        bg_path = self.save_bg(self.api, bg_path)
+        # 失败重试循环体
+        for _ in range(retry_num):
 
-        # 移动距离
-        distance = self.get_offset(full_bg_path, bg_path, offset=45)
+            self._debug_printer("计算移动距离...")
+            distance = self._get_offset(full_bg_path, bg_path, offset=45)
 
-        # 获取移动轨迹
-        track = self.get_track(distance)
+            self._debug_printer("获取移动轨迹...")
+            track = self._get_track(distance)
 
-        # 滑动圆球至缺口处
-        # print(track.__len__(), track)
-        self.drag_the_ball(self.api, track)
+            self._debug_printer("正在拽动滑块...")
+            self._drag_the_ball(self.api, track)
 
-        time.sleep(1.5)
-        if self.is_success():
-            return True
-        else:
-            return False
+            # 执行成功，结束重试循环，返回true
+            if self._is_success():
+                self._debug_printer("程序执行成功！")
+                return True
+            # 元素加载超时，捕获失败，陷入重试循环
+            else:
+                # 等待滑块复位
+                self._debug_printer("元素加载超时！正在等待重试...")
+                time.sleep(1.5)
+                continue
+        # 执行失败
+        self._debug_printer("程序执行失败！即将返回主干业务流...")
+        return False
 
 
 eav = EmailAddressVerification
@@ -278,3 +291,7 @@ def validation_interface(api, methods='slider', **kwargs):
     # TODO:加载Email邮箱验证模块<开发中>
     if methods == 'email':
         return eav(api).run(kwargs)
+
+
+def utils_slider(api, full_bg_path, bg_path):
+    return SliderValidation(driver=api).run(full_bg_path=full_bg_path, bg_path=bg_path)

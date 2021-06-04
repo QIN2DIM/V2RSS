@@ -16,7 +16,10 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
 from src.BusinessCentralLayer.setting import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
-from src.BusinessLogicLayer.plugins.faker_info import get_header, get_proxy
+from src.BusinessLogicLayer.plugins.faker_info import get_header
+from src.BusinessLogicLayer.plugins.defensive_counter import SliderValidation
+
+_ACTION_DEBUG = False
 
 
 class BaseAction(object):
@@ -119,6 +122,10 @@ class BaseAction(object):
         else:
             # 有反爬虫/默认：一般模式启动
             return Chrome(options=options, executable_path=CHROMEDRIVER_PATH)
+
+    def get_html_handle(self, api: Chrome, url, wait_seconds: int = 15):
+        api.set_page_load_timeout(time_to_wait=wait_seconds)
+        api.get(url)
 
     def sign_in(self, api: Chrome):
         """Please rewrite this function!"""
@@ -226,7 +233,7 @@ class ActionMasterGeneral(BaseAction):
 
     def __init__(self, register_url: str, silence: bool = True, anti_slider: bool = False, email: str = '@gmail.com',
                  life_cycle: int = 1, hyper_params: dict = None, beat_sync: bool = True,
-                 action_name: str = 'ActionMasterGeneral', sync_class: dict = None):
+                 action_name: str = 'ActionMasterGeneral', sync_class: dict = None, debug=False):
         """
 
         @param register_url: 机场注册网址，STAFF原生register接口
@@ -267,20 +274,70 @@ class ActionMasterGeneral(BaseAction):
         # 当前版本弃用
         if sync_class:
             self.sync_class = sync_class
+        # =====================================
+        # v-5.4.r 添加功能：I/O任务超时设置
+        # =====================================
+        # 作业开始时间点
+        self.work_clock_global = time.time()
+        self.work_clock_utils = self.work_clock_global
+        # 作业生命周期(秒)
+        self.work_clock_max_wait = 60
+
+        # 调试模式: 只能运行一个实例，否则打印信息非常混乱
+        if debug or _ACTION_DEBUG:
+            self.debug = True
+        else:
+            self.debug = False
+
+    def _debug_printer(self, msg):
+        if self.debug:
+            print(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))} | {self.action_name} | {msg}")
+
+    def _utils_slider(self, api):
+        # 更新作业时间
+        self.work_clock_utils = time.time()
+        # 生成缓存路径
+        full_bg_path = join(SERVER_DIR_CACHE_BGPIC, f'fbg_{self.action_name}.{self.work_clock_utils}.png')
+        bg_path = join(SERVER_DIR_CACHE_BGPIC, f'bg_{self.action_name}.{self.work_clock_utils}.png')
+        try:
+            # 调用滑块验证模块
+            work_success = SliderValidation(driver=api, debug=self.debug).run(full_bg_path, bg_path, retry_num=2)
+            # 执行成功，结束重试循环，返回true
+            if work_success:
+                # 更新作业时间
+                self.work_clock_utils = time.time()
+                return True
+        # 网络不给力 刷新当前网页
+        except WebDriverException:
+            # 更新作业时间
+            self.work_clock_utils = time.time()
+            return False
+
+    def _is_timeout(self):
+        """任务超时简易判断"""
+        self._debug_printer(self.work_clock_utils - self.work_clock_global)
+        if self.work_clock_utils - self.work_clock_global > self.work_clock_max_wait:
+            return True
+        else:
+            return False
 
     # TODO -> 断网重连 -> 引入retrying 第三方库替代原生代码
-    def sign_up(self, api, retry_=0, max_retry_num_=4):
+    def sign_up(self, api):
         """
 
         @param api:
-        @param retry_:
-        @param max_retry_num_:
         @return:
         """
-        if retry_ > max_retry_num_:
-            return False
+        # ======================================
+        # 紧急制动，本次行为释放宣告失败，拉闸撤退！！
+        # ======================================
+        if self._is_timeout():
+            raise TimeoutException
 
-        from src.BusinessLogicLayer.plugins.defensive_counter import validation_interface
+        # ======================================
+        # 填充注册数据
+        # ======================================
+
         WebDriverWait(api, 15) \
             .until(expected_conditions.presence_of_element_located((By.ID, 'name'))) \
             .send_keys(self.username)
@@ -293,49 +350,59 @@ class ActionMasterGeneral(BaseAction):
 
         time.sleep(0.5)
 
-        # 滑动验证
-        def spider_module(retry=0, max_retry_num=2):
-            if retry > max_retry_num:
-                return False
-            try:
-                full_bg_path = join(SERVER_DIR_CACHE_BGPIC, f'fbg_{self.action_name}.png')
-                bg_path = join(SERVER_DIR_CACHE_BGPIC, f'bg_{self.action_name}.png')
-                response = validation_interface(api, methods='slider', full_bg_path=full_bg_path, bg_path=bg_path)
-                return response
-            except NoSuchElementException:
-                retry += 1
-                spider_module(retry)
+        # ======================================
+        # 依据实体抽象特征，选择相应的解决方案
+        # ======================================
 
+        # 滑动验证
         if self.anti_slider:
-            if not spider_module():
+            # 打开工具箱
+            response = self._utils_slider(api=api)
+            # 执行失败刷新页面并重试N次
+            if not response:
+                self.work_clock_utils = time.time()
                 api.refresh()
                 return self.sign_up(api)
 
+        # ======================================
+        # 提交注册数据，完成注册任务
+        # ======================================
         api.find_element_by_id('register-confirm').click()
 
-        for x in range(max_retry_num_):
+        for x in range(3):
             try:
                 time.sleep(1.5)
                 api.find_element_by_xpath("//button[contains(@class,'confirm')]").click()
-                break
+                return True
             except NoSuchElementException:
                 logger.debug('{}验证超时，3s 后重试'.format(self.action_name))
                 time.sleep(3)
+                continue
+        raise TimeoutException
 
     # TODO 当sync_class 参数可用时，使用if-if 结构发起任务；否则使用if-elif，该操作防止链接溢出
     def run(self):
         logger.info("DO -- <{}>:beat_sync:{}".format(self.action_name, self.beat_sync))
 
+        # ======================================
+        # 获取任务设置
+        # ======================================
         api = self.set_spider_option()
-
-        api.get(self.register_url)
-
+        # ======================================
+        # 执行核心业务逻辑
+        # ======================================
         try:
+            # 跳转网页
+            # 设置超时（堡垒机/Cloudflare/WebError/流量劫持/IP防火墙）引发TimeoutException
+            self.get_html_handle(api=api, url=self.register_url, wait_seconds=15)
+
+            # 注册账号
             self.sign_up(api)
 
+            # 等待核心元素加载/渲染
             self.wait(api, 20, "//div[@class='card-body']")
 
-            # get v2ray link
+            # 捕获各类型订阅
             if self.hyper_params['v2ray']:
                 self.load_any_subscribe(
                     api,
@@ -343,8 +410,6 @@ class ActionMasterGeneral(BaseAction):
                     'data-clipboard-text',
                     'v2ray'
                 )
-
-            # get ssr link
             elif self.hyper_params['ssr']:
                 self.load_any_subscribe(
                     api,
@@ -352,9 +417,9 @@ class ActionMasterGeneral(BaseAction):
                     'data-clipboard-text',
                     'ssr'
                 )
-            # if self.hyper_params['trojan']: ...
-            # if self.hyper_params['kit']: ...
-            # if self.hyper_params['qtl']: ...
+            # elif self.hyper_params['trojan']: ...
+            # elif self.hyper_params['kit']: ...
+            # elif self.hyper_params['qtl']: ...
         except TimeoutException:
             logger.error(f'>>> TimeoutException <{self.action_name}> -- {self.register_url}')
         except WebDriverException as e:
@@ -362,7 +427,6 @@ class ActionMasterGeneral(BaseAction):
         except Exception as e:
             logger.exception(f">>> Exception <{self.action_name}> -- {e}")
         finally:
-            # Middleware.hera.put_nowait("push")
             api.quit()
 
 

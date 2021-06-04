@@ -169,14 +169,43 @@ ActionBitEbCloud = {
     'email': "@gmail.com"
 }
 
+# =============================================
+# ActionJSSRCloud
+# 分裂写法，使任务完全解耦
+# 永久域名 www.jssr.cc
+# 国内代理 www.jssrvpn.xyz
+# =============================================
+
+ActionJssForSSRCloud = {
+    'name': "ActionJssForSSRCloud",
+    'register_url': "https://www.jssr.cc/auth/register",
+    'life_cycle': 2,
+    'anti_slider': True,
+    'hyper_params': {'ssr': True, 'v2ray': False},
+    'email': "@gmail.com"
+}
+
+ActionJssForV2rayCloud = {
+    'name': "ActionJssForV2rayCloud",
+    'register_url': "https://www.jssr.cc/auth/register",
+    'life_cycle': 2,
+    'anti_slider': True,
+    'hyper_params': {'ssr': False, 'v2ray': True},
+    'email': "@gmail.com"
+}
+
 __entropy__ = [
     # ---------------------
     # 无障碍
     # ---------------------
     # ActionMiTaoCloud,  # 1day 10G
+
     # ActionGsouCloud,  # 3day 30G
+
     ActionBitEbCloud,  # 7day 100G
+
     # ActionThunderCloud,  # 1day 10G 非通用代码
+
     # ---------------------
     # 需要滑动验证
     # ---------------------
@@ -185,6 +214,9 @@ __entropy__ = [
     ActionReCloud,  # 1day 10G
 
     ActionKakCloud,  # 1day 10G
+
+    ActionJssForSSRCloud,  # 2day 50G
+    ActionJssForV2rayCloud,  # 2day 50G
 
     # ActionSuFeiCloud,  # 2day
 
@@ -243,4 +275,7 @@ def test_entropy_queue(entropy_name=None, silence: bool = False, power: int = 1)
 
 
 if __name__ == '__main__':
-    test_entropy_queue(entropy_name=ActionBitEbCloud)
+    test_entropy_queue(
+        entropy_name=ActionJssForSSRCloud,
+        silence=False,
+    )
