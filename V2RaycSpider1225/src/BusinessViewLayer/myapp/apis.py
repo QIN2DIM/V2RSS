@@ -1,5 +1,7 @@
 __all__ = [
     'apis_admin_get_subs',
+    'apis_admin_get_subs_v2',
+    'apis_admin_get_subs_v2_debug',
     "apis_admin_get_entropy",
 
     'apis_get_subs_num',
@@ -10,7 +12,7 @@ __all__ = [
 import csv
 
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
-from src.BusinessCentralLayer.middleware.subscribe_io import pop_subs_to_admin
+from src.BusinessCentralLayer.middleware.subscribe_io import pop_subs_to_admin, select_subs_to_admin
 from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE, NGINX_SUBSCRIBE, SERVER_PATH_DEPOT_VCS, REDIS_SECRET_KEY
 
 
@@ -122,6 +124,15 @@ def apis_get_subs_num() -> dict:
 
 def apis_admin_get_entropy() -> list:
     return RedisClient().get_driver().get(REDIS_SECRET_KEY.format("__entropy__")).split("$")
+
+
+def apis_admin_get_subs_v2(entropy_name: str = None) -> dict:
+    return select_subs_to_admin(select_netloc=entropy_name)
+
+
+def apis_admin_get_subs_v2_debug(entropy_name: str = None, _debug=True) -> dict:
+    """测试接口|获取链接后，该链接不会被主动移除"""
+    return select_subs_to_admin(select_netloc=entropy_name, _debug=_debug)
 
 
 if __name__ == '__main__':

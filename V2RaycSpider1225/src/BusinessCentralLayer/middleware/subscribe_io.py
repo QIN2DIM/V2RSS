@@ -1,6 +1,13 @@
-__all__ = ['FlexibleDistribute', 'pop_subs_to_admin', 'detach', 'set_task2url_cache']
+__all__ = [
+    'FlexibleDistribute',
+    'pop_subs_to_admin',
+    'detach',
+    'set_task2url_cache',
+    'select_subs_to_admin',
+]
 
 import threading
+from collections import Counter
 from urllib.parse import urlparse
 from uuid import uuid4
 
@@ -196,6 +203,54 @@ def pop_subs_to_admin(class_: str):
         return {'msg': 'failed', 'info': str(e)}
 
 
+def select_subs_to_admin(select_netloc: str = None, _debug=False) -> dict:
+    # 池内所有类型订阅
+    remain_subs = []
+    # 订阅池状态映射表
+    mapping_subs_status = {}
+    # 链接-类型映射表
+    mapping_subs_type = {}
+    # 清洗数据
+    for filed in CRAWLER_SEQUENCE:
+        # 提取池内对应类型的所有订阅链接
+        filed_sbus: list = RedisClient().sync_remain_subs(REDIS_SECRET_KEY.format(filed))
+        # 更新汇总队列
+        remain_subs += filed_sbus
+        # 提取subs netloc映射区间
+        urls = [urlparse(i[0]).netloc for i in filed_sbus]
+        # 更新映射表
+        mapping_subs_status.update({filed: dict(Counter(urls))})
+        mapping_subs_type.update(zip([i[0] for i in filed_sbus], [filed, ] * len(filed_sbus)))
+
+    # 初始化状态下，返回订阅池状态
+    if not select_netloc:
+        return {'msg': 'success', 'info': mapping_subs_status}
+    # 指定netloc状态下，分发对应netloc的subscribe
+    else:
+        for tag in remain_subs:
+            # 提取信息键
+            subscribe, end_life = tag[0], tag[-1]
+            # 存在对应netloc的链接并可存活至少beyond小时
+            if select_netloc in subscribe and not RedisClient().is_stale(subs_expiration_time=end_life, beyond=6):
+                logger.debug("<SuperAdmin> -- 获取订阅")
+                try:
+                    return {
+                        'msg': "success",
+                        'debug': _debug,
+                        'info': {
+                            "subscribe": subscribe,
+                            "endLife": end_life,
+                            'subsType': mapping_subs_type[subscribe],
+                            "netloc": select_netloc
+                        }
+                    }
+                finally:
+                    if not _debug:
+                        threading.Thread(target=detach, kwargs={"subscribe": subscribe, 'beat_sync': True}).start()
+        # 无库存或误码
+        return {'msg': "failed", "netloc": select_netloc, "info": "指令错误或不存在该类型订阅", "status": mapping_subs_status}
+
+
 if __name__ == '__main__':
-    url = 'https://www.jssv2raytoday.xyz/link/lRpFe0B8rvamG5IL?sub=3'
-    detach(url, True)
+    s = select_subs_to_admin(select_netloc="sss", _debug=True)
+    print(s)

@@ -51,16 +51,49 @@ def get_subs_num():
 # ===========================================================
 # Admin Interface
 # ===========================================================
+from uuid import uuid4
+
+_private_interface = "Fill in your own private interface"
 
 
-@app.route("/super_admin/10963426-69f4-4495-96ba-de51e2b2036c/<command_>", methods=['GET'])
+# ----------------------------------
+# 随机获取某个类型的订阅 v1
+# ----------------------------------
+@app.route(f"/super_admin/{uuid4()}/<command_>", methods=['GET'])
 def admin_get_subs(command_):
     return jsonify(apis_admin_get_subs(command_))
 
 
-@app.route("/",methods=['GET'])
+# ----------------------------------
+# 获取指定netloc/domain的订阅 v1
+# ----------------------------------
+
+
+@app.route(f"/super_admin/{uuid4()}/debug/<_entropy_name>", methods=['GET'])
+def admin_get_subs_v2_debug(_entropy_name):
+    """获取/debug"""
+    return jsonify(apis_admin_get_subs_v2_debug(entropy_name=_entropy_name, _debug=True))
+
+
+@app.route(f"/super_admin/{uuid4()}/<_entropy_name>", methods=['GET'])
+def admin_get_subs_v2(_entropy_name):
+    """获取/general"""
+    return jsonify(apis_admin_get_subs_v2(entropy_name=_entropy_name))
+
+
+@app.route(f"/super_admin/{uuid4()}", methods=['GET'])
+def admin_select_subs():
+    """查询/general"""
+    return jsonify(apis_admin_get_subs_v2_debug(entropy_name=None))
+
+
+# ----------------------------------
+# 获取正在活动的任务队列
+# ----------------------------------
+@app.route(f"/super_admin/{uuid4()}", methods=['GET'])
 def admin_get_entropy():
     return jsonify(apis_admin_get_entropy())
 
-# if __name__ == '__main__':
-#     app.run(host='0.0.0.0', port=6500, debug=True)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=6500, debug=True)
