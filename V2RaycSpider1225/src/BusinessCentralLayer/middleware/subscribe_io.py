@@ -231,7 +231,7 @@ def select_subs_to_admin(select_netloc: str = None, _debug=False) -> dict:
             # 提取信息键
             subscribe, end_life = tag[0], tag[-1]
             # 存在对应netloc的链接并可存活至少beyond小时
-            if select_netloc in subscribe and not RedisClient().is_stale(subs_expiration_time=end_life, beyond=6):
+            if select_netloc in urlparse(subscribe).netloc and not RedisClient().is_stale(end_life, beyond=6):
                 logger.debug("<SuperAdmin> -- 获取订阅")
                 try:
                     return {
