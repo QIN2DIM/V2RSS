@@ -9,6 +9,7 @@ from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE, REDIS_SECRET_KEY,
     SINGLE_DEPLOYMENT, logger
 from src.BusinessLogicLayer.apis.shunt_cluster import ActionShunt
 from src.BusinessLogicLayer.apis.vulcan_ash import ShuntRelease
+from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__
 
 
 def _is_overflow(task_name: str, rc=None):
@@ -49,6 +50,23 @@ def _is_overflow(task_name: str, rc=None):
         return 'continue'
 
 
+def _update_entropy(rc=None):
+    # 组合entropy标注数据
+    try:
+        atomic_queue = []
+        for i in __entropy__:
+            work_filed = [f"{j[0].upper()}" for j in i['hyper_params'].items() if j[-1]]
+            work_filed = "&".join(work_filed).strip()
+            atomic_item = f"|{work_filed}| {i['name']}"
+            atomic_queue.append(atomic_item)
+        # 更新列表
+        if rc is None:
+            rc = RedisClient()
+        rc.get_driver().set(name=REDIS_SECRET_KEY.format("__entropy__"), value="$".join(atomic_queue))
+    except Exception as e:
+        logger.exception(e)
+
+
 def _sync_actions(
         class_: str,
         mode_sync: str = None,
@@ -65,18 +83,25 @@ def _sync_actions(
     """
     logger.info(f"<TaskManager> Sync{mode_sync.title()} || 正在同步<{class_}>任务队列...")
 
-    # TODO 原子化同步行为
+    # ================================================
+    # 节拍停顿 原子同步
+    # ================================================
     rc = RedisClient()
-
-    # 节拍停顿
     _state = _is_overflow(task_name=class_, rc=rc)
     if _state == 'stop':
         return _state
 
+    # ================================================
+    # 更新任务信息
+    # ================================================
+    _update_entropy(rc=rc)
+
     sync_queue: list = ActionShunt(class_, silence=True, beat_sync=beat_sync).shunt()
     random.shuffle(sync_queue)
 
-    # 在本机环境中生成任务并加入消息队列
+    # ================================================
+    # $执行核心业务
+    # ================================================
     if mode_sync == 'upload':
 
         # fixme:临时方案:解决链接溢出问题
@@ -94,8 +119,6 @@ def _sync_actions(
                 logger.warning("<TaskManager> OnlySync -- 触发节拍同步线程锁，仅上传一枚原子任务")
                 break
         logger.success("<TaskManager> UploadTasks -- 任务上传完毕")
-
-    # 同步分布式消息队列的任务
     elif mode_sync == 'download':
         async_queue: list = []
 
@@ -132,7 +155,6 @@ def _sync_actions(
             else:
                 # logger.warning(f"<TaskManager> SyncFinish -- <{atomic}>无可同步任务")
                 return 'offload'
-
     elif mode_sync == 'force_run':
         for slave_ in sync_queue:
 
@@ -240,4 +262,5 @@ def manage_task(
 
 if __name__ == '__main__':
     # _sync_actions('ssr', only_sync=True, mode_sync='upload')
-    manage_task('v2ray')
+    # manage_task('v2ray')
+    _update_entropy()

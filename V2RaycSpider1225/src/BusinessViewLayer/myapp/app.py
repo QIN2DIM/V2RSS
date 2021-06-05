@@ -8,6 +8,9 @@ from src.BusinessViewLayer.myapp.apis import *
 app = Flask(__name__)
 
 
+# ===========================================================
+# Public Interface
+# ===========================================================
 @app.route(ROUTE_API['capture_subscribe'], methods=['POST'])
 def capture_subscribe():
     """
@@ -37,20 +40,27 @@ def version_manager():
 
 @app.route("/", methods=['GET'])
 def redirect_to_my_blog():
-    return redirect("https://www.qinse.top/v2raycs/")
-
-
-# 该接口用于<iOS捷径>订阅瞬时获取服务，暂不对Windows客户端开放
-# 该接口用于<团队管理员>自取链接，不对外开放使用
-@app.route("/super_admin/10963426-69f4-4495-96ba-de51e2b2036c/<command_>", methods=['GET'])
-def admin_get_subs(command_):
-    return jsonify(apis_admin_get_subs(command_))
+    return redirect("https://github.com/QIN2DIM/V2RayCloudSpider")
 
 
 @app.route(ROUTE_API['get_subs_num'], methods=['GET'])
 def get_subs_num():
     return jsonify(apis_get_subs_num())
 
+
+# ===========================================================
+# Admin Interface
+# ===========================================================
+
+
+@app.route("/super_admin/10963426-69f4-4495-96ba-de51e2b2036c/<command_>", methods=['GET'])
+def admin_get_subs(command_):
+    return jsonify(apis_admin_get_subs(command_))
+
+
+@app.route("/",methods=['GET'])
+def admin_get_entropy():
+    return jsonify(apis_admin_get_entropy())
 
 # if __name__ == '__main__':
 #     app.run(host='0.0.0.0', port=6500, debug=True)

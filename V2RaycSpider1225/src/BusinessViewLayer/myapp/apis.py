@@ -1,15 +1,17 @@
 __all__ = [
-    'apis_version_manager',
-    'apis_get_subs_num',
     'apis_admin_get_subs',
-    'apis_capture_subscribe'
+    "apis_admin_get_entropy",
+
+    'apis_get_subs_num',
+    'apis_version_manager',
+    'apis_capture_subscribe',
 ]
 
 import csv
 
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.middleware.subscribe_io import pop_subs_to_admin
-from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE, NGINX_SUBSCRIBE, SERVER_PATH_DEPOT_VCS
+from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE, NGINX_SUBSCRIBE, SERVER_PATH_DEPOT_VCS, REDIS_SECRET_KEY
 
 
 def apis_capture_subscribe(style: dict) -> dict:
@@ -118,5 +120,9 @@ def apis_get_subs_num() -> dict:
     return RedisClient().subs_info()
 
 
+def apis_admin_get_entropy() -> list:
+    return RedisClient().get_driver().get(REDIS_SECRET_KEY.format("__entropy__")).split("$")
+
+
 if __name__ == '__main__':
-    print(apis_get_subs_num())
+    apis_admin_get_entropy()

@@ -263,8 +263,11 @@ class _ScaffoldGuider(object):
             except Exception as e:
                 logger.exception(e)
         else:
-            for host_ in __entropy__:
-                print(host_)
+            for i, host_ in enumerate(__entropy__):
+                print(f">>> [{i + 1}/{__entropy__.__len__()}]{host_['name']}")
+                print(f"注册链接: {host_['register_url']}")
+                print(f"存活周期: {host_['life_cycle']}天")
+                print(f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n")
 
     @staticmethod
     def _scaffold_packer():

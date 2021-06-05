@@ -120,7 +120,7 @@ ActionReCloud = {
     'register_url': "https://www.rerere.xyz/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": True},
+    'hyper_params': {'ssr': False, "v2ray": True},
     'email': '@gmail.com'
 }
 
