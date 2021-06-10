@@ -8,7 +8,7 @@ Flask==1.1.2
 gevent==21.1.2
 greenlet==1.0.0
 loguru==0.5.3
-Pillow==8.1.1
+Pillow>=8.2.0
 pycparser==2.20
 PyMySQL==1.0.2
 pyperclip==1.8.1
