@@ -136,4 +136,4 @@ def apis_admin_get_subs_v2_debug(entropy_name: str = None, _debug=True) -> dict:
 
 
 if __name__ == '__main__':
-    apis_admin_get_entropy()
+    print(apis_admin_get_subs_v2_debug(entropy_name="r"))

@@ -37,7 +37,7 @@ class SliderValidation(object):
 
     def _debug_printer(self, msg):
         if self.debug:
-            print(f"{time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))} | {msg}")
+            print(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))} | {msg}")
 
     @staticmethod
     def _save_base64img(data_str, save_name):

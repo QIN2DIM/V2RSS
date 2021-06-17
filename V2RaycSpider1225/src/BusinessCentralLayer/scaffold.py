@@ -1,4 +1,4 @@
-__all__ = ['scaffold']
+__all__ = ['scaffold', 'command_set']
 
 from gevent import monkey
 
@@ -255,11 +255,11 @@ class _ScaffoldGuider(object):
 
     @staticmethod
     def _scaffold_entropy(_debug=False):
-        from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__, test_entropy_queue
+        from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__, chunk_entropy
 
         if _debug:
             try:
-                test_entropy_queue(entropy_name=None, silence=True)
+                chunk_entropy(entropy_name=None, silence=True)
             except Exception as e:
                 logger.exception(e)
         else:

@@ -16,8 +16,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
 from src.BusinessCentralLayer.setting import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
-from src.BusinessLogicLayer.plugins.faker_info import get_header
 from src.BusinessLogicLayer.plugins.defensive_counter import SliderValidation
+from src.BusinessLogicLayer.plugins.faker_info import get_header
 
 _ACTION_DEBUG = False
 

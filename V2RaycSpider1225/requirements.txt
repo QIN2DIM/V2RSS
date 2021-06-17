@@ -1,3 +1,4 @@
+paramiko
 PyInstaller
 APScheduler==3.7.0
 beautifulsoup4==4.9.3
@@ -18,4 +19,4 @@ redis==3.5.3
 requests==2.25.1
 schedule==0.6.0
 selenium==3.141.0
-tqdm==4.56.0
+

@@ -249,8 +249,3 @@ def select_subs_to_admin(select_netloc: str = None, _debug=False) -> dict:
                         threading.Thread(target=detach, kwargs={"subscribe": subscribe, 'beat_sync': True}).start()
         # 无库存或误码
         return {'msg': "failed", "netloc": select_netloc, "info": "指令错误或不存在该类型订阅", "status": mapping_subs_status}
-
-
-if __name__ == '__main__':
-    s = select_subs_to_admin(select_netloc="sss", _debug=True)
-    print(s)
