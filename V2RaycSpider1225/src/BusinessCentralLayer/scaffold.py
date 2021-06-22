@@ -30,6 +30,8 @@ command_set = {
     "launcher": "返回采集器的单步启动接口",
     "entropy": "打印采集队列",
     "exile": "执行队列运维脚本（高饱和强阻塞任务）",
+    "ash": "[for Windows]一键清洗订阅池,并将所有类型订阅转换为Clash yaml配置文件,"
+           "借由URL Scheme自动打开Clash并下载配置文件",
     # ---------------------------------------------
     # 调用示例
     # ---------------------------------------------
@@ -313,6 +315,26 @@ class _ScaffoldGuider(object):
         _ScaffoldGuider._scaffold_entropy()
         _ScaffoldGuider._scaffold_remain()
         logger.success("<ScaffoldGuider> Exile[Mission Completed] || exile")
+
+    @staticmethod
+    @logger.catch()
+    def _scaffold_ash():
+        """
+        无尽套娃
+        """
+        from src.BusinessLogicLayer.apis import scaffold_ash
+        logger.info(f"<ScaffoldGuider> ash | Clash订阅堆一键生成脚本")
+
+        # --------------------------------------------------
+        # 参数清洗
+        # --------------------------------------------------
+        if 'win' not in platform:
+            return
+
+        # --------------------------------------------------
+        # 运行脚本
+        # --------------------------------------------------
+        return scaffold_ash.api.run(debug=True, decouple=True)
 
 
 scaffold = _ScaffoldGuider()

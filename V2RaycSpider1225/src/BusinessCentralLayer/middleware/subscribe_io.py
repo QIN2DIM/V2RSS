@@ -125,7 +125,7 @@ def set_task2url_cache(task_name, register_url, subs):
         logger.error(f"<CharMap> {task_name} || {e}")
 
 
-def detach(subscribe, beat_sync=False):
+def detach(subscribe:str, beat_sync=False):
     """
 
     @param subscribe:

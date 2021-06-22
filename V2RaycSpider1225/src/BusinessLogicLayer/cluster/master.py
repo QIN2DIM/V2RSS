@@ -94,14 +94,17 @@ class BaseAction(object):
         # 设置中文
         options.add_argument('lang=zh_CN.UTF-8')
 
-        options.add_experimental_option('excludeSwitches', ['enable-automation'])
-
         # 更换头部
         options.add_argument(f'user-agent={get_header()}')
+
+        options.add_argument('--disable-blink-features=AutomationControlled')
 
         # 静默启动
         if self.silence is True:
             options.add_argument('--headless')
+
+        options.add_experimental_option('useAutomationExtension', False)
+        options.add_experimental_option('excludeSwitches', ['enable-automation'])
 
         # 无反爬虫机制：高性能启动，禁止图片加载及js动画渲染，加快selenium页面切换效率
         def load_anti_module():
@@ -121,9 +124,18 @@ class BaseAction(object):
             return load_anti_module()
         else:
             # 有反爬虫/默认：一般模式启动
-            return Chrome(options=options, executable_path=CHROMEDRIVER_PATH)
+            _api = Chrome(options=options, executable_path=CHROMEDRIVER_PATH)
+            _api.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+                "source": """
+                Object.defineProperty(navigator, 'webdriver', {
+                  get: () => undefined
+                })
+              """
+            })
+            return _api
 
-    def get_html_handle(self, api: Chrome, url, wait_seconds: int = 15):
+    @staticmethod
+    def get_html_handle(api: Chrome, url, wait_seconds: int = 15):
         api.set_page_load_timeout(time_to_wait=wait_seconds)
         api.get(url)
 
