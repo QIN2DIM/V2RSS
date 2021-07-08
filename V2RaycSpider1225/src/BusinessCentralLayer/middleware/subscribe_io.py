@@ -125,7 +125,7 @@ def set_task2url_cache(task_name, register_url, subs):
         logger.error(f"<CharMap> {task_name} || {e}")
 
 
-def detach(subscribe:str, beat_sync=False):
+def detach(subscribe: str, beat_sync=False):
     """
 
     @param subscribe:
@@ -249,3 +249,4 @@ def select_subs_to_admin(select_netloc: str = None, _debug=False) -> dict:
                         threading.Thread(target=detach, kwargs={"subscribe": subscribe, 'beat_sync': True}).start()
         # 无库存或误码
         return {'msg': "failed", "netloc": select_netloc, "info": "指令错误或不存在该类型订阅", "status": mapping_subs_status}
+

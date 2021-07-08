@@ -25,12 +25,10 @@ command_set = {
     "force_run": "强制执行采集任务",
     "remain": "读取剩余订阅数量",
     "ping": "测试数据库连接",
-    "panel": "打开桌面前端面板",
-    "packer": "打包生成桌面客户端（windows可用）",
-    "launcher": "返回采集器的单步启动接口",
+    "panel": "[for Windows] 打开桌面前端面板",
     "entropy": "打印采集队列",
     "exile": "执行队列运维脚本（高饱和强阻塞任务）",
-    "ash": "[for Windows]一键清洗订阅池,并将所有类型订阅转换为Clash yaml配置文件,"
+    "ash": "[for Windows] 一键清洗订阅池,并将所有类型订阅转换为Clash yaml配置文件,"
            "借由URL Scheme自动打开Clash并下载配置文件",
     # ---------------------------------------------
     # 调用示例
@@ -242,8 +240,11 @@ class _ScaffoldGuider(object):
 
     @staticmethod
     def _scaffold_remain():
-        from src.BusinessCentralLayer.middleware.redis_io import RedisClient
-        logger.info(f"<ScaffoldGuider> Remain || {RedisClient().subs_info()}")
+        from src.BusinessCentralLayer.middleware.subscribe_io import select_subs_to_admin
+        tracer = [f"{tag[0]}\n采集类型：{info_[0]}\n存活数量：{tag[-1]}" for info_ in
+                  select_subs_to_admin(select_netloc=None, _debug=False)['info'].items() for tag in info_[-1].items()]
+        for i, tag in enumerate(tracer):
+            print(f">>> [{i + 1}/{tracer.__len__()}]{tag}")
 
     @staticmethod
     def _scaffold_ping():
@@ -270,21 +271,6 @@ class _ScaffoldGuider(object):
                 print(f"注册链接: {host_['register_url']}")
                 print(f"存活周期: {host_['life_cycle']}天")
                 print(f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n")
-
-    @staticmethod
-    def _scaffold_packer():
-        pass
-        # packer()
-
-    @staticmethod
-    def _scaffold_launcher(name: str = None) -> dict:
-        from src.BusinessLogicLayer.cluster.slavers import actions
-        from src.BusinessLogicLayer.apis.ghost_filler import gevent_ghost_filler
-        response = {"entropy": actions.__entropy__, "actions": actions}
-        if name is None:
-            return response
-        else:
-            gevent_ghost_filler(docker=eval("actions.name"), silence=True)
 
     @staticmethod
     def _scaffold_exile(task_sequential=4):
@@ -338,36 +324,3 @@ class _ScaffoldGuider(object):
 
 
 scaffold = _ScaffoldGuider()
-
-
-def packer(ico_path: str = None, output_dir=None, py_panel=None):
-    """
-    打包panel
-    :param ico_path:
-    :param output_dir:
-    :param py_panel:
-    :return:
-    """
-    # ----------------------------
-    # 参数整理
-    # ----------------------------
-    if ico_path is None:
-        ico_path = join(PANEL_DIR_ROOT, 'logo.ico')
-    if output_dir is None:
-        output_dir = join(PANEL_DIR_ROOT, 'bin')
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
-    if py_panel is None:
-        py_panel = join(PANEL_DIR_ROOT, 'panel.py')
-    # ----------------------------
-    # 根据不同的操作系统选择不同的打包方案
-    # > Windows:Pyinstaller
-    # https://pyinstaller.readthedocs.io/en/stable/usage.html#options
-    # ----------------------------
-
-    if platform.startswith('win'):
-        pass
-    elif platform.startswith('linux'):
-        pass
-    elif platform.startswith('darwin'):
-        pass

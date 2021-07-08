@@ -245,7 +245,8 @@ class ActionMasterGeneral(BaseAction):
 
     def __init__(self, register_url: str, silence: bool = True, anti_slider: bool = False, email: str = '@gmail.com',
                  life_cycle: int = 1, hyper_params: dict = None, beat_sync: bool = True,
-                 action_name: str = 'ActionMasterGeneral', sync_class: dict = None, debug=False):
+                 action_name: str = 'ActionMasterGeneral', sync_class: dict = None, debug=False,
+                 timeout_retry_time: float = 3):
         """
 
         @param register_url: 机场注册网址，STAFF原生register接口
@@ -294,6 +295,7 @@ class ActionMasterGeneral(BaseAction):
         self.work_clock_utils = self.work_clock_global
         # 作业生命周期(秒)
         self.work_clock_max_wait = 60
+        self.timeout_retry_time = timeout_retry_time
 
         # 调试模式: 只能运行一个实例，否则打印信息非常混乱
         if debug or _ACTION_DEBUG:
@@ -387,8 +389,8 @@ class ActionMasterGeneral(BaseAction):
                 api.find_element_by_xpath("//button[contains(@class,'confirm')]").click()
                 return True
             except NoSuchElementException:
-                logger.debug('{}验证超时，3s 后重试'.format(self.action_name))
-                time.sleep(3)
+                logger.debug(f'[{x + 1} / 3]{self.action_name}验证超时，{self.timeout_retry_time}s后重试')
+                time.sleep(self.timeout_retry_time)
                 continue
         raise TimeoutException
 

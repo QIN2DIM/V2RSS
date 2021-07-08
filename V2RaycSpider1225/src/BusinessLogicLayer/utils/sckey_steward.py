@@ -55,54 +55,51 @@ class _SecretSteward(object):
             f.write(stream)
 
 
-def _change_format_of_sckey(weak_password: str) -> str:
-    if not isinstance(weak_password, bytes):
-        weak_password = bytes(weak_password, 'utf-8')
-    m = hashlib.md5()
-    m.update(weak_password)
-    m.update(m.digest())
-    m.update(bytes(str(base64.encodebytes(m.digest()), encoding='utf-8').replace('\n', ''), 'utf-8'))
-    return m.hexdigest()
+class _Interface(object):
 
+    def __init__(self, password: str, cache_path: str = None):
+        _sckey: str = self._change_format_of_sckey(weak_password=password)
+        self.ss = _SecretSteward(sckey=_sckey)
 
-def api(mode: str, password: str, message: str = None, cache_path: str = None):
-    """
-    mode : encrypt or decrypt
-    """
-    _sckey: str = _change_format_of_sckey(weak_password=password)
-    ss = _SecretSteward(sckey=_sckey)
+        if cache_path is None or cache_path == '':
+            self.cache_path = self.ss.base_pem
 
-    if cache_path is None or cache_path == '':
-        cache_path = ss.base_pem
+    @staticmethod
+    def _change_format_of_sckey(weak_password: str) -> str:
+        if not isinstance(weak_password, bytes):
+            weak_password = bytes(weak_password, 'utf-8')
+        m = hashlib.md5()
+        m.update(weak_password)
+        m.update(m.digest())
+        m.update(bytes(str(base64.encodebytes(m.digest()), encoding='utf-8').replace('\n', ''), 'utf-8'))
+        return m.hexdigest()
 
-    if mode == 'encrypt':
+    def encrypt(self, message: str = None):
+
         if message is None or message == '':
             print(">>> Message is None. Please pass in the plaintext that needs to be encrypted.")
             return None
-        cipher_text: str = ss.encrypt(message=message)
-        ss.capture_stream(stream=cipher_text, path=cache_path)
-        print(f">>> Data encryption succeeded! SCKEY file storage path:{cache_path}")
-    elif mode == 'decrypt':
+        cipher_text: str = self.ss.encrypt(message=message)
+        self.ss.capture_stream(stream=cipher_text, path=self.cache_path)
+        print(f">>> Data encryption succeeded! SCKEY file storage path:{self.cache_path}")
+
+    def decrypt(self, message: str = None):
+
         if message:
-            return ss.decrypt(cipher_text=message)
+            return self.ss.decrypt(cipher_text=message)
         else:
-            if not os.path.exists(cache_path):
+            if not os.path.exists(self.cache_path):
                 print(">>> Message is None. Please pass in the data to be decrypted.")
-                print(f">>> The path of the file to be decrypted cannot be found({cache_path}).")
+                print(f">>> The path of the file to be decrypted cannot be found({self.cache_path}).")
                 return None
-            with open(cache_path, 'r', encoding='utf-8') as f:
+            with open(self.cache_path, 'r', encoding='utf-8') as f:
                 message = f.read()
             try:
-                result = ss.decrypt(message)
+                result = self.ss.decrypt(message)
                 print(">>> Decrypt success!")
                 return result
             except UnicodeDecodeError:
                 print(">>> Password Error！Please try again.")
-    else:
-        print(f">>> Wrong parameter({mode})! Try this ---> |decrypt|encrypt|")
 
 
-if __name__ == '__main__':
-    message_ = "192.168.0.1$443$root$!(A-RAI.DM)"
-    # api(mode='encrypt', password='V2RayCloudSpider', message=message_, cache_path="_Cipher.v2raycs")
-    s = api(mode='decrypt', password='V2RayCloudSpider', cache_path='_Cipher.v2raycs')
+api = _Interface

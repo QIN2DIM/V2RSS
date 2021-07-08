@@ -6,6 +6,7 @@ import os
 
 import requests
 import yaml
+
 from src.BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE_CACHE
 
 
@@ -263,7 +264,7 @@ class _ClashAdaptationInterface(object):
         return
 
 
-class Interface(object):
+class _Interface(object):
 
     @staticmethod
     def run(subscribe: list or str, debug=False) -> dict:
@@ -290,4 +291,4 @@ class Interface(object):
             return {"msg": "failed"}
 
 
-api = Interface()
+api = _Interface()

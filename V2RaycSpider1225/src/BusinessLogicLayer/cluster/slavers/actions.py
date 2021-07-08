@@ -19,7 +19,7 @@ ActionOhrCloud = {
 # =============================================
 ActionKakCloud = {
     'name': "ActionKakCloud",
-    'register_url': "https://www.kakayun.cyou/auth/register",
+    'register_url': "https://www.kaikaiyun.icu/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
     'hyper_params': {'ssr': False, "v2ray": True},
@@ -242,6 +242,7 @@ ActionThunderCloud = {
 # - intro: 7day 100G
 # - change log:
 #   -2021-06-16 [停用]新增点击人机验证
+#   -2021-07-08 [剔除]框架更换且不提供免费节点
 # =============================================
 ActionBitEbCloud = {
     'name': "ActionBitEbCloud",
@@ -292,6 +293,28 @@ Action7ccCloud = {
     'hyper_params': {'ssr': False, 'v2ray': True},
     'email': "@qq.com"
 }
+# =============================================
+# ActionPPCloud
+# - change log:
+#   -2021-07-18 [Create] 更新实例
+# =============================================
+ActionPPForV2rayCloud = {
+    'name': "ActionPPForV2rayCloud",
+    'register_url': "https://www.ppyun.fun/auth/register",
+    'life_cycle': 2,
+    'anti_slider': True,
+    'hyper_params': {'ssr': False, 'v2ray': True},
+    'email': "@gmail.com"
+}
+ActionPPForSSRCloud = {
+    'name': "ActionPPForV2rayCloud",
+    'register_url': "https://www.ppyun.fun/auth/register",
+    'life_cycle': 2,
+    'anti_slider': True,
+    'hyper_params': {'ssr': True, 'v2ray': False},
+    'email': "@gmail.com"
+}
+
 __entropy__ = [
     # ---------------------
     # [启动] 无障碍
@@ -310,6 +333,10 @@ __entropy__ = [
 
     ActionJssForV2rayCloud,  # v2ray
 
+    ActionPPForV2rayCloud,  # v2ray
+
+    ActionPPForSSRCloud,  # ssr
+
     # ---------------------
     # [停用] 公益节点
     # ---------------------
@@ -318,7 +345,7 @@ __entropy__ = [
     # ---------------------
     # [停用] 需要其他类型验证
     # ---------------------
-    # ActionBitEbCloud,
+
     # ActionGsouCloud,
     # Action7ccCloud,
 
@@ -339,7 +366,7 @@ __entropy__ = [
     # [剔除] 框架更换
     # ---------------------
     # ActionThunderCloud,
-
+    # ActionBitEbCloud,
     # ---------------------
     # [剔除] 其他
     # ---------------------
@@ -372,8 +399,14 @@ def chunk_entropy(entropy_name=None, silence: bool = False, power: int = 1):
         return gevent_ghost_filler(docker=__entropy__, silence=silence, power=__entropy__.__len__())
 
 
+def check_action(action_name: dict, silence=False, timeout_retry_time=3):
+    from src.BusinessLogicLayer.apis.shunt_cluster import api
+    api.generate_entity(atomic=action_name, silence=silence, beat_sync=True, timeout_retry_time=timeout_retry_time)()
+
+
 if __name__ == '__main__':
-    chunk_entropy(
-        entropy_name=Action7ccCloud,
-        silence=True,
+    check_action(
+        action_name=ActionPPForSSRCloud,
+        silence=False,
+        timeout_retry_time=10
     )

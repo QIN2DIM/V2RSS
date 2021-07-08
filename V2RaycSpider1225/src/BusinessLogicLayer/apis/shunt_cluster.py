@@ -4,7 +4,7 @@
 #   if 该机场不具备该类型链接的采集权限，剔除。
 #   elif 该机场同时具备其他类型的采集权限，权限收缩（改写），实例入队。
 #   else 该机场仅具备该类型任务的采集权限，实例入队。
-__all__ = ['ActionShunt']
+__all__ = ['ActionShunt', 'api']
 
 from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE
 from src.BusinessLogicLayer.cluster.master import ActionMasterGeneral
@@ -72,3 +72,25 @@ class ActionShunt(object):
             entity_ = self.generate_entity(atomic=atomic, silence=self.silence, beat_sync=self.beat_sync)
             # 将实例化任务加入待执行队列
             self.shunt_seq.append(entity_)
+
+
+class _Interface(object):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def generate_entity(atomic: dict, silence=True, beat_sync=True, timeout_retry_time=3):
+        return ActionMasterGeneral(
+            silence=silence,
+            beat_sync=beat_sync,
+            action_name=atomic['name'],
+            register_url=atomic['register_url'],
+            anti_slider=atomic['anti_slider'],
+            life_cycle=atomic['life_cycle'],
+            email=atomic['email'],
+            hyper_params=atomic['hyper_params'],
+            timeout_retry_time=timeout_retry_time
+        ).run
+
+
+api = _Interface()

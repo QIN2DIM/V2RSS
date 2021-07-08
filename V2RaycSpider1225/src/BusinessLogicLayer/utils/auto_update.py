@@ -134,6 +134,12 @@ class _AutoUpdater(object):
                 pass
 
 
+class _Interface(object):
+
+    def __init__(self):
+        pass
+
+
 def _guider_shell_sckey_setting(hostname, port, username, password, cache_path, _sckey=None, mode: str = 'signup'):
     exec("import time\ntime.sleep(1.5)")
 
@@ -167,7 +173,7 @@ def _guider_shell_sckey_setting(hostname, port, username, password, cache_path, 
                         continue
                     break
 
-            return sckey_steward.api(mode='encrypt', password=_sckey, message=stream, cache_path=cache_path)
+            return sckey_steward.api(password=_sckey, cache_path=cache_path).encrypt(message=stream)
 
 
 def _guider_easygui_sckey_setting():
@@ -175,7 +181,7 @@ def _guider_easygui_sckey_setting():
 
 
 def _load_server_info_from_cache(_sckey, cache_path):
-    stream: str = sckey_steward.api(mode='decrypt', password=_sckey, cache_path=cache_path)
+    stream: str = sckey_steward.api(password=_sckey, cache_path=cache_path).decrypt()
     hostname, port, username, password = stream.split('$')
     port = int(port)
     return hostname, port, username, password

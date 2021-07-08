@@ -145,7 +145,7 @@ class SliderValidation(object):
         """
         track = []
         current = 0
-        mid = distance * 3.724481 / 4
+        mid = distance * 3.824481 / 4
         t = 1.4414
         v = 0
         while current < distance:

@@ -1,4 +1,4 @@
-# TODO 请在运行程序前确保已正确config.py运行参数
+# TODO 请在运行程序前确保已正确配置config.py运行参数
 from sys import argv
 
 from src.BusinessCentralLayer.scaffold import scaffold

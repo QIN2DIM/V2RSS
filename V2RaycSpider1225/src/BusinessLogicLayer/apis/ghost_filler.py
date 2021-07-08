@@ -1,5 +1,5 @@
 # TODO :demand：测试机场是否符合staff标准（use gevent） 用于单步调试机场任务的接口
-__all__ = ['GhostFiller', 'gevent_ghost_filler']
+__all__ = ['gevent_ghost_filler']
 
 from src.BusinessCentralLayer.coroutine_engine import CoroutineSpeedup
 
@@ -76,3 +76,4 @@ def gevent_ghost_filler(docker: dict or list, silence: bool, power: int = 1):
         # 建立多核工作栈，使用弹性分发控件对服务器进行边缘压力测试
         elif power == -1:
             return True
+

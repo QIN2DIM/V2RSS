@@ -1,3 +1,4 @@
+# for windows scaffold ash
 __all__ = ['app']
 
 from flask import Flask
