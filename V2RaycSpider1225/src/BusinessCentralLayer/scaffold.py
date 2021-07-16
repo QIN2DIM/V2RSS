@@ -21,13 +21,18 @@ command_set = {
     # ---------------------------------------------
     "decouple": "立即唤醒一次subs_ddt链接解耦任务",
     "overdue": "立即执行一次过时链接清洗任务",
-    "run": "立即执行一次采集任务（强制使用协程加速）",
+    "run": "[请使用spawn命令替代]立即执行一次采集任务（强制使用协程加速）",
     "force_run": "强制执行采集任务",
     "remain": "读取剩余订阅数量",
     "ping": "测试数据库连接",
-    "panel": "[for Windows] 打开桌面前端面板",
     "entropy": "打印采集队列",
     "exile": "执行队列运维脚本（高饱和强阻塞任务）",
+    "spawn": "并发执行所有在列的采集任务",
+    "mining": "启动一次针对STAFF host的SEO全站挖掘任务",
+    # ---------------------------------------------
+    # Windows 功能接口
+    # ---------------------------------------------
+    "panel": "[for Windows] 打开桌面前端面板",
     "ash": "[for Windows] 一键清洗订阅池,并将所有类型订阅转换为Clash yaml配置文件,"
            "借由URL Scheme自动打开Clash并下载配置文件",
     # ---------------------------------------------
@@ -213,6 +218,17 @@ class _ScaffoldGuider(object):
         app.ddt()
 
     @staticmethod
+    def _scaffold_spawn():
+        if not os.path.exists(CHROMEDRIVER_PATH):
+            logger.error(f"<ScaffoldGuider> ForceRun || ChromedriverNotFound ||"
+                         f" 未查找到chromedriver驱动，请根据技术文档正确配置\n"
+                         f">>> https://github.com/QIN2DIM/V2RayCloudSpider")
+            return False
+        logger.info(f"<ScaffoldGuider> Spawn || MainCollector")
+        from src.BusinessLogicLayer.cluster.slavers.actions import chunk_entropy
+        chunk_entropy(silence=True)
+
+    @staticmethod
     def _scaffold_run():
         if not os.path.exists(CHROMEDRIVER_PATH):
             logger.error(f"<ScaffoldGuider> ForceRun || ChromedriverNotFound ||"
@@ -321,6 +337,31 @@ class _ScaffoldGuider(object):
         # 运行脚本
         # --------------------------------------------------
         return scaffold_ash.api.run(debug=True, decouple=True)
+
+    @staticmethod
+    def _scaffold_mining():
+        """
+        “国外”服务器：直接运行
+        大陆主机：开启代理后运行
+        :return:
+        """
+        from src.BusinessLogicLayer.apis.staff_mining import staff_api
+        use_collector = staff_api.is_first_run()
+        classify_dir, staff_info = staff_api.go(
+            debug=False,
+            silence=True,
+            power=os.cpu_count() * 2,
+            identity_recaptcha=False,
+            use_collector=use_collector,
+            use_checker=True,
+            use_generator=False,
+        )
+        staff_api.refresh_cache(mode='de-dup')
+        print(f"\n\nSTAFF INFO\n{'_' * 32}")
+        for element in staff_info.items():
+            for i, tag in enumerate(element[-1]):
+                print(f">>> [{i + 1}/{len(element[-1])}]{element[0]}: {tag}")
+        print(f">>> 文件导出目录: {classify_dir}")
 
 
 scaffold = _ScaffoldGuider()

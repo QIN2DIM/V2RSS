@@ -76,4 +76,3 @@ def gevent_ghost_filler(docker: dict or list, silence: bool, power: int = 1):
         # 建立多核工作栈，使用弹性分发控件对服务器进行边缘压力测试
         elif power == -1:
             return True
-

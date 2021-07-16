@@ -214,7 +214,7 @@ ActionGsouCloud = {
 # ActionDuosCloud
 # - intro: 1day 2G
 # - change log:
-#   -
+#   -2021.07.14 [停用]流量不达标
 # =============================================
 ActionDuosCloud = {
     'name': "ActionDuosCloud",
@@ -260,12 +260,12 @@ ActionBitEbCloud = {
 # 国内代理 www.jssrvpn.xyz
 # - intro: 2day 50G
 # - change log:
-#   -
+#   - 2021.07.14 [观察] 决绝注册
 # =============================================
 ActionJssForSSRCloud = {
     'name': "ActionJssForSSRCloud",
     'register_url': "https://www.jssr.cc/auth/register",
-    'life_cycle': 2,
+    'life_cycle': 1,
     'anti_slider': True,
     'hyper_params': {'ssr': True, 'v2ray': False},
     'email': "@gmail.com"
@@ -274,7 +274,7 @@ ActionJssForSSRCloud = {
 ActionJssForV2rayCloud = {
     'name': "ActionJssForV2rayCloud",
     'register_url': "https://www.jssr.cc/auth/register",
-    'life_cycle': 2,
+    'life_cycle': 1,
     'anti_slider': True,
     'hyper_params': {'ssr': False, 'v2ray': True},
     'email': "@gmail.com"
@@ -307,7 +307,7 @@ ActionPPForV2rayCloud = {
     'email': "@gmail.com"
 }
 ActionPPForSSRCloud = {
-    'name': "ActionPPForV2rayCloud",
+    'name': "ActionPPForSSRCloud",
     'register_url': "https://www.ppyun.fun/auth/register",
     'life_cycle': 2,
     'anti_slider': True,
@@ -323,7 +323,6 @@ __entropy__ = [
     # ---------------------
     # [启动] 需要滑动验证
     # ---------------------
-    ActionDuosCloud,  # v2ray
 
     ActionReCloud,  # v2ray
 
@@ -357,6 +356,7 @@ __entropy__ = [
     # ActionMiTaoCloud,
     # ActionMxCloud,
     # ActionJfCloud,
+    # ActionDuosCloud,  # v2ray
 
     # 无免费节点
     # ActionJdSuCloud,
@@ -384,7 +384,7 @@ __entropy__ = [
 ]
 
 
-def chunk_entropy(entropy_name=None, silence: bool = False, power: int = 1):
+def chunk_entropy(entropy_name=None, silence: bool = True, power: int = 1):
     from gevent import monkey
 
     monkey.patch_all()
@@ -405,8 +405,9 @@ def check_action(action_name: dict, silence=False, timeout_retry_time=3):
 
 
 if __name__ == '__main__':
-    check_action(
-        action_name=ActionPPForSSRCloud,
-        silence=False,
-        timeout_retry_time=10
-    )
+    # check_action(
+    #     action_name=ActionJssForV2rayCloud,
+    #     silence=False,
+    #     timeout_retry_time=10
+    # )
+    chunk_entropy(entropy_name=ActionJssForV2rayCloud, silence=True, power=16)

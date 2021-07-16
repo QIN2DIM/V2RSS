@@ -294,7 +294,7 @@ class ActionMasterGeneral(BaseAction):
         self.work_clock_global = time.time()
         self.work_clock_utils = self.work_clock_global
         # 作业生命周期(秒)
-        self.work_clock_max_wait = 60
+        self.work_clock_max_wait = 180
         self.timeout_retry_time = timeout_retry_time
 
         # 调试模式: 只能运行一个实例，否则打印信息非常混乱
@@ -362,7 +362,7 @@ class ActionMasterGeneral(BaseAction):
 
         api.find_element_by_id('repasswd').send_keys(self.password)
 
-        time.sleep(0.5)
+        time.sleep(1)
 
         # ======================================
         # 依据实体抽象特征，选择相应的解决方案

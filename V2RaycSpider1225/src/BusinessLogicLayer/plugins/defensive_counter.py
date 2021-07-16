@@ -145,12 +145,12 @@ class SliderValidation(object):
         """
         track = []
         current = 0
-        mid = distance * 3.824481 / 4
-        t = 1.4414
+        mid = distance * 3.324481 / 4
+        t = 0.7323
         v = 0
         while current < distance:
             if current < mid:
-                a = random.uniform(0.7012, 0.812)
+                a = random.uniform(1.8712, 2.912)
             else:
                 a = -random.uniform(0.11, 0.13)
             v0 = v
