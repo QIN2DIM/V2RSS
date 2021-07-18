@@ -12,9 +12,7 @@
 >
 > 3. 禁止任何人使用本项目及其分支提供任何形式的收费代理服务。
 
-- 针对全球范围内基于[STAFF原生架构](https://github.com/Anankke/SSPanel-Uim)产出的机场进行垂直挖掘；
-- 从`Youtube`、`SONA-TechnologyForum` 等平台获取`RegisteUrl & HitTarget`；
-- 综合`LifeCycle`、`RemainingFlow `、`NodeQuality`等参数进行联合采集；
+- 针对全球范围内基于[sspanel架构](https://github.com/Anankke/SSPanel-Uim)产出的机场进行垂直挖掘；
 - 理论上支持所有类型订阅的采集；
 
 ##  :airplane:快速上手
