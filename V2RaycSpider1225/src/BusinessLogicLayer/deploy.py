@@ -1,3 +1,6 @@
+"""
+采集服务的定时任务管理模块
+"""
 __all__ = ['GeventSchedule']
 
 import time

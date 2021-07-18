@@ -7,9 +7,9 @@ from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.middleware.work_io import Middleware
 from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE, REDIS_SECRET_KEY, SINGLE_TASK_CAP, ENABLE_DEPLOY, \
     SINGLE_DEPLOYMENT, logger
-from src.BusinessLogicLayer.apis.shunt_cluster import ActionShunt
-from src.BusinessLogicLayer.apis.vulcan_ash import ShuntRelease
+from src.BusinessLogicLayer.cluster.cook import ActionShunt
 from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__
+from src.BusinessLogicLayer.plugins.accelerator import ShuntRelease
 
 
 def _is_overflow(task_name: str, rc=None):

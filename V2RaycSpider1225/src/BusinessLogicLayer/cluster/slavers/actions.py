@@ -265,7 +265,7 @@ ActionBitEbCloud = {
 ActionJssForSSRCloud = {
     'name': "ActionJssForSSRCloud",
     'register_url': "https://www.jssr.cc/auth/register",
-    'life_cycle': 1,
+    'life_cycle': 2,
     'anti_slider': True,
     'hyper_params': {'ssr': True, 'v2ray': False},
     'email': "@gmail.com"
@@ -274,7 +274,7 @@ ActionJssForSSRCloud = {
 ActionJssForV2rayCloud = {
     'name': "ActionJssForV2rayCloud",
     'register_url': "https://www.jssr.cc/auth/register",
-    'life_cycle': 1,
+    'life_cycle': 2,
     'anti_slider': True,
     'hyper_params': {'ssr': False, 'v2ray': True},
     'email': "@gmail.com"
@@ -384,30 +384,35 @@ __entropy__ = [
 ]
 
 
-def chunk_entropy(entropy_name=None, silence: bool = True, power: int = 1):
-    from gevent import monkey
-
-    monkey.patch_all()
-    from src.BusinessLogicLayer.apis.ghost_filler import gevent_ghost_filler
+def chunk_entropy(entropy_name=None, silence: bool = True, power: int = 1, assault=False):
+    from src.BusinessLogicLayer.plugins.accelerator import booster
 
     if entropy_name:
         try:
-            return gevent_ghost_filler(docker=entropy_name, silence=silence, power=power)
+            return booster(docker=entropy_name, silence=silence, power=power, assault=assault)
         except TypeError:
             pass
     else:
-        return gevent_ghost_filler(docker=__entropy__, silence=silence, power=__entropy__.__len__())
+        return booster(docker=__entropy__, silence=silence, power=__entropy__.__len__(), assault=assault)
 
 
 def check_action(action_name: dict, silence=False, timeout_retry_time=3):
-    from src.BusinessLogicLayer.apis.shunt_cluster import api
-    api.generate_entity(atomic=action_name, silence=silence, beat_sync=True, timeout_retry_time=timeout_retry_time)()
+    from src.BusinessLogicLayer.cluster.cook import api
+    api.generate_entity(
+        atomic=action_name,
+        silence=silence,
+        beat_sync=True,
+        timeout_retry_time=timeout_retry_time
+    )()
 
 
 if __name__ == '__main__':
+    from gevent import monkey
+
+    monkey.patch_all()
     # check_action(
     #     action_name=ActionJssForV2rayCloud,
     #     silence=False,
     #     timeout_retry_time=10
     # )
-    chunk_entropy(entropy_name=ActionJssForV2rayCloud, silence=True, power=16)
+    chunk_entropy(entropy_name=ActionJssForV2rayCloud, silence=False, power=1, assault=True)

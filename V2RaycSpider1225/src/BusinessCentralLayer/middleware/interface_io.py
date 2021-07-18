@@ -8,8 +8,7 @@ from src.BusinessCentralLayer.setting import ENABLE_COROUTINE, REDIS_SECRET_KEY,
 from src.BusinessLogicLayer.cluster import sailor
 from src.BusinessLogicLayer.cluster.slavers import actions
 from src.BusinessLogicLayer.deploy import GeventSchedule
-from src.BusinessLogicLayer.plugins.ddt_subs import SubscribesCleaner
-from src.BusinessLogicLayer.plugins.noticer import send_email
+from src.BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
 from src.BusinessViewLayer.myapp.app import app
 
 # ----------------------------------------
@@ -176,7 +175,6 @@ class _SystemEngine(object):
                 process_.join()
         except TypeError or AttributeError as e:
             logger.exception(e)
-            send_email(f"[程序异常终止]{str(e)}", to_='self')
         except KeyboardInterrupt:
             # FIXME 确保进程间不产生通信的情况下终止
             logger.debug('<SystemProcess> Received keyboard interrupt signal')

@@ -1,0 +1,1 @@
+# [Document] Scaffold mining

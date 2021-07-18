@@ -16,8 +16,8 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
 from src.BusinessCentralLayer.setting import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
-from src.BusinessLogicLayer.plugins.defensive_counter import SliderValidation
-from src.BusinessLogicLayer.plugins.faker_info import get_header
+from src.BusinessLogicLayer.plugins.armour import SliderValidation
+from src.BusinessLogicLayer.plugins.armour import get_header
 
 _ACTION_DEBUG = False
 
@@ -25,12 +25,12 @@ _ACTION_DEBUG = False
 class BaseAction(object):
     """针对STAFF机场的基准行为"""
 
-    def __init__(self, silence=True, anti=True, beat_sync=True,
+    def __init__(self, silence=True, assault=True, beat_sync=True,
                  action_name: str = 'BaseAction', email_class='@qq.com', life_cycle=1) -> None:
         """
         设定登陆选项，初始化登陆器
         @param silence: 静默启动；为True时静默访问<linux 必须启用>
-        @param anti: 目标是否有反爬虫措施；默认为True BaseAction将根据目标是否具备反爬虫措施做出不同的行为
+        @param assault: 目标是否有反爬虫措施；默认为True BaseAction将根据目标是否具备反爬虫措施做出不同的行为
         @param email_class: register页面显示的默认邮箱；常见为 @qq.com or @gmail.com
         @param life_cycle: 会员试用时长 trail time；
         """
@@ -42,7 +42,7 @@ class BaseAction(object):
         self.subscribe = ''
 
         # 初始化浏览器
-        self.silence, self.anti = silence, anti
+        self.silence, self.rush_mode = silence, assault
 
         self.register_url = ''
 
@@ -120,7 +120,7 @@ class BaseAction(object):
                 desired_capabilities=d_c
             )
 
-        if self.anti is False:
+        if self.rush_mode:
             return load_anti_module()
         else:
             # 有反爬虫/默认：一般模式启动
@@ -246,7 +246,7 @@ class ActionMasterGeneral(BaseAction):
     def __init__(self, register_url: str, silence: bool = True, anti_slider: bool = False, email: str = '@gmail.com',
                  life_cycle: int = 1, hyper_params: dict = None, beat_sync: bool = True,
                  action_name: str = 'ActionMasterGeneral', sync_class: dict = None, debug=False,
-                 timeout_retry_time: float = 3):
+                 timeout_retry_time: float = 3, assault: bool = False):
         """
 
         @param register_url: 机场注册网址，STAFF原生register接口
@@ -256,7 +256,7 @@ class ActionMasterGeneral(BaseAction):
         @param life_cycle: 会员试用时长 trail time；
         @param hyper_params: 模型超级参数
         """
-        super(ActionMasterGeneral, self).__init__(silence=silence, anti=True, email_class=email,
+        super(ActionMasterGeneral, self).__init__(silence=silence, assault=assault, email_class=email,
                                                   life_cycle=life_cycle, beat_sync=beat_sync)
 
         self.action_name = action_name
@@ -293,8 +293,8 @@ class ActionMasterGeneral(BaseAction):
         # 作业开始时间点
         self.work_clock_global = time.time()
         self.work_clock_utils = self.work_clock_global
-        # 作业生命周期(秒)
-        self.work_clock_max_wait = 180
+        # 处理反爬虫作业的生命周期(秒)
+        self.work_clock_max_wait = 120
         self.timeout_retry_time = timeout_retry_time
 
         # 调试模式: 只能运行一个实例，否则打印信息非常混乱
@@ -308,28 +308,36 @@ class ActionMasterGeneral(BaseAction):
             print(f"{time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time()))} | {self.action_name} | {msg}")
 
     def _utils_slider(self, api):
-        # 更新作业时间
-        self.work_clock_utils = time.time()
         # 生成缓存路径
         full_bg_path = join(SERVER_DIR_CACHE_BGPIC, f'fbg_{self.action_name}.{self.work_clock_utils}.png')
         bg_path = join(SERVER_DIR_CACHE_BGPIC, f'bg_{self.action_name}.{self.work_clock_utils}.png')
         try:
-            # 调用滑块验证模块
-            work_success = SliderValidation(driver=api, debug=self.debug).run(full_bg_path, bg_path, retry_num=2)
-            # 执行成功，结束重试循环，返回true
-            if work_success:
-                # 更新作业时间
-                self.work_clock_utils = time.time()
-                return True
-        # 网络不给力 刷新当前网页
-        except WebDriverException:
             # 更新作业时间
             self.work_clock_utils = time.time()
+            # 调用滑块验证模块
+            work_success = SliderValidation(
+                driver=api,
+                debug=self.debug,
+                business_name=self.action_name
+            ).run(full_bg_path, bg_path)
+            # 执行成功
+            if work_success:
+                return True
+            # 执行失败
+            else:
+                return False
+        # 网络不给力 刷新当前网页
+        except WebDriverException:
             return False
+        finally:
+            # 更新作业时间
+            self.work_clock_utils = time.time()
 
     def _is_timeout(self):
         """任务超时简易判断"""
+        # debug模式下打印当前任务耗时
         self._debug_printer(self.work_clock_utils - self.work_clock_global)
+        # True：当前任务超时 False：当前任务未超时
         if self.work_clock_utils - self.work_clock_global > self.work_clock_max_wait:
             return True
         else:
@@ -342,57 +350,60 @@ class ActionMasterGeneral(BaseAction):
         @param api:
         @return:
         """
-        # ======================================
-        # 紧急制动，本次行为释放宣告失败，拉闸撤退！！
-        # ======================================
-        if self._is_timeout():
-            raise TimeoutException
+        # 任务超时则弹出协程句柄 终止任务进行
+        while True:
+            # ======================================
+            # 紧急制动，本次行为释放宣告失败，拉闸撤退！！
+            # ======================================
+            # 若任务超时 主动抛出异常
+            if self._is_timeout():
+                raise TimeoutException
 
-        # ======================================
-        # 填充注册数据
-        # ======================================
+            # ======================================
+            # 填充注册数据
+            # ======================================
+            time.sleep(0.5)
 
-        WebDriverWait(api, 15) \
-            .until(expected_conditions.presence_of_element_located((By.ID, 'name'))) \
-            .send_keys(self.username)
+            WebDriverWait(api, 20) \
+                .until(expected_conditions.presence_of_element_located((By.ID, 'name'))) \
+                .send_keys(self.username)
 
-        api.find_element_by_id('email').send_keys(self.email)
+            api.find_element_by_id('email').send_keys(self.email)
 
-        api.find_element_by_id('passwd').send_keys(self.password)
+            api.find_element_by_id('passwd').send_keys(self.password)
 
-        api.find_element_by_id('repasswd').send_keys(self.password)
+            api.find_element_by_id('repasswd').send_keys(self.password)
 
-        time.sleep(1)
+            time.sleep(1)
 
-        # ======================================
-        # 依据实体抽象特征，选择相应的解决方案
-        # ======================================
+            # ======================================
+            # 依据实体抽象特征，选择相应的解决方案
+            # ======================================
+            # 滑动验证 TODO 引入STAFF API 自适应识别参数
+            if self.anti_slider:
+                # 打开工具箱
+                response = self._utils_slider(api=api)
+                # 执行失败刷新页面并重试N次
+                if not response:
+                    self.work_clock_utils = time.time()
+                    api.refresh()
+                    continue
 
-        # 滑动验证
-        if self.anti_slider:
-            # 打开工具箱
-            response = self._utils_slider(api=api)
-            # 执行失败刷新页面并重试N次
-            if not response:
-                self.work_clock_utils = time.time()
-                api.refresh()
-                return self.sign_up(api)
-
-        # ======================================
-        # 提交注册数据，完成注册任务
-        # ======================================
-        api.find_element_by_id('register-confirm').click()
-
-        for x in range(3):
-            try:
-                time.sleep(1.5)
-                api.find_element_by_xpath("//button[contains(@class,'confirm')]").click()
-                return True
-            except NoSuchElementException:
-                logger.debug(f'[{x + 1} / 3]{self.action_name}验证超时，{self.timeout_retry_time}s后重试')
-                time.sleep(self.timeout_retry_time)
-                continue
-        raise TimeoutException
+            # ======================================
+            # 提交注册数据，完成注册任务
+            # ======================================
+            # 点击注册按键
+            api.find_element_by_id('register-confirm').click()
+            # 重试N轮 等待[注册成功]界面的加载
+            for x in range(3):
+                try:
+                    time.sleep(1.5)
+                    api.find_element_by_xpath("//button[contains(@class,'confirm')]").click()
+                    return True
+                except NoSuchElementException:
+                    logger.debug(f'[{x + 1} / 3]{self.action_name}验证超时，{self.timeout_retry_time}s后重试')
+                    time.sleep(self.timeout_retry_time)
+                    continue
 
     # TODO 当sync_class 参数可用时，使用if-if 结构发起任务；否则使用if-elif，该操作防止链接溢出
     def run(self):
@@ -408,13 +419,13 @@ class ActionMasterGeneral(BaseAction):
         try:
             # 跳转网页
             # 设置超时（堡垒机/Cloudflare/WebError/流量劫持/IP防火墙）引发TimeoutException
-            self.get_html_handle(api=api, url=self.register_url, wait_seconds=15)
+            self.get_html_handle(api=api, url=self.register_url, wait_seconds=45)
 
             # 注册账号
             self.sign_up(api)
 
             # 等待核心元素加载/渲染
-            self.wait(api, 20, "//div[@class='card-body']")
+            self.wait(api, 40, "//div[@class='card-body']")
 
             # 捕获各类型订阅
             if self.hyper_params['v2ray']:

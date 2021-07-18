@@ -238,6 +238,9 @@ version = "5.1.0"
 TIME_ZONE_CN = pytz.timezone("Asia/Shanghai")
 TIME_ZONE_NY = pytz.timezone("America/New_York")
 
+# 采集器默认并发数
+DEFAULT_POWER = os.cpu_count()
+
 # 任务开关
 if not ENABLE_DEPLOY['global']:
     for reset_ in ENABLE_DEPLOY['tasks'].items():

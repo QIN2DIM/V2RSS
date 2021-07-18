@@ -208,7 +208,7 @@ class _ScaffoldGuider(object):
     @staticmethod
     def _scaffold_decouple():
         logger.info(f"<ScaffoldGuider> Decouple || General startup")
-        from src.BusinessLogicLayer.plugins.ddt_subs import SubscribesCleaner
+        from src.BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
         SubscribesCleaner(debug=True).interface()
 
     @staticmethod
@@ -251,7 +251,7 @@ class _ScaffoldGuider(object):
 
         logger.info(f"<ScaffoldGuider> ForceRun || MainCollector")
         from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE
-        from src.BusinessLogicLayer.apis.vulcan_ash import ForceRunRelease
+        from src.BusinessLogicLayer.plugins.accelerator import ForceRunRelease
         ForceRunRelease(task_docker=CRAWLER_SEQUENCE).interface()
 
     @staticmethod

@@ -67,8 +67,6 @@ def admin_get_subs(command_):
 # ----------------------------------
 # 获取指定netloc/domain的订阅 v1
 # ----------------------------------
-
-
 @app.route(f"/super_admin/{uuid4()}/debug/<_entropy_name>", methods=['GET'])
 def admin_get_subs_v2_debug(_entropy_name):
     """获取/debug"""

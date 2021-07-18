@@ -1,8 +1,12 @@
-# TODO 请在运行程序前确保已正确配置config.py运行参数
+# -*- coding: utf-8 -*-
+# Time    : 2021/3/7 18:04
+# Author  : QIN2DIM
+# Github  : https://github.com/QIN2DIM
+# Description: Welcome to use V2RayCloudSpider
+
 from sys import argv
 
 from src.BusinessCentralLayer.scaffold import scaffold
 
-"""欢迎使用V2Ray云彩姬"""
 if __name__ == '__main__':
     scaffold.startup(driver_command_set=argv)
