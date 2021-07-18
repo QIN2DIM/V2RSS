@@ -26,7 +26,8 @@
     - 软件使用：运行`V2Ray云彩姬` 启动本体 -- [<V2Ray云彩姬使用说明>](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/V2Ray%E4%BA%91%E5%BD%A9%E5%A7%AC%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
 
 - **【方案二】开发者**
-- Clone项目，根据[技术文档](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/技术文档(demo).md)合理配置`config.py`以及服务端环境后使用脚手架调试或部署项目。
+
+    ​	Clone项目，根据[技术文档](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/技术文档(demo).md)合理配置`config.py`以及服务端环境后使用脚手架调试或部署项目。
 
 
 ## :ocean: 网上冲浪 
