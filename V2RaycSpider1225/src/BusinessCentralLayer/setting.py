@@ -1,6 +1,6 @@
 """TODO 服务器后端配置"""
 
-from os.path import join, dirname
+from os.path import join, dirname, exists
 
 from loguru import logger
 
@@ -43,6 +43,9 @@ if "win" in platform:
 else:
     CHROMEDRIVER_PATH = dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver"
     SERVER_DIR_PROJECT = f"/qinse/V2RaycSpider{project_num}"
+# 若不存在CHROMEDRIVER_PATH指定的路径则尝试从环境变量中查找chromedriver文件
+if not exists(CHROMEDRIVER_PATH):
+    CHROMEDRIVER_PATH = None
 # ---------------------------------------------------
 # TODO 配置文件默认路径（.yaml）
 # 默认位于根目录下

@@ -86,7 +86,7 @@ class StaffCollector(object):
         with open(self.cache_path, 'a', encoding='utf8') as f:
             for host in hosts:
                 try:
-                    f.write(f"https://{host.text.split(' ')[0].strip()}/auth/register\n")
+                    f.write(f"{host.text.split(' ')[0].strip()}/auth/register\n")
                 except Exception as e:
                     warnings.warn(
                         f"{e}",
