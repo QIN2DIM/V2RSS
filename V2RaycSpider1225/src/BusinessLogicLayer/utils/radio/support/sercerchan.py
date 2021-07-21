@@ -1,9 +1,9 @@
-def server_chan(title: str = None, message: str = None, server_chan_sckey: str = None):
+def server_chan(title: str = None, message: str = None, serverchan_sckey: str = None):
     """
 
     :param title: 标题最大256
     :param message: 正文，支持markdown，最大64kb
-    :param server_chan_sckey:
+    :param serverchan_sckey:
     :return:
     """
     if not isinstance(title, str) or not isinstance(message, str):
@@ -11,8 +11,7 @@ def server_chan(title: str = None, message: str = None, server_chan_sckey: str =
 
     import requests
 
-    SERVER_CHAN_SCKEY = server_chan_sckey
-    url = f"http://sc.ftqq.com/{SERVER_CHAN_SCKEY}.send"
+    url = f"http://sc.ftqq.com/{serverchan_sckey}.send"
     params = {
         'text': title,
         'desp': message

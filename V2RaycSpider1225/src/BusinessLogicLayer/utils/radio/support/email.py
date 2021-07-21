@@ -19,9 +19,8 @@ def send_email(msg, to_: List[str] or str or set, smtp_account: dict, headers: s
     :return: 默认为'<V2Ray云彩姬>运维日志'
     """
     headers = headers if headers else '<V2Ray云彩姬>运维日志'
-    SMTP_ACCOUNT = smtp_account
-    sender = SMTP_ACCOUNT.get('email')
-    password = SMTP_ACCOUNT.get('sid')
+    sender = smtp_account.get('email')
+    password = smtp_account.get('sid')
     smtp_server = 'smtp.qq.com'
     message = MIMEText(msg, 'plain', 'utf-8')
     message['From'] = Header('ARAI.DM', 'utf-8')  # 发送者

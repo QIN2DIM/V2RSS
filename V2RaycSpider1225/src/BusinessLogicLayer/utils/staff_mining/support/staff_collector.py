@@ -4,7 +4,7 @@ import random
 import time
 import warnings
 
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.keys import Keys
@@ -88,10 +88,7 @@ class StaffCollector(object):
                 try:
                     f.write(f"{host.text.split(' ')[0].strip()}/auth/register\n")
                 except Exception as e:
-                    warnings.warn(
-                        f"{e}",
-                        category=Exception
-                    )
+                    warnings.warn(f"{e}")
 
     def set_spider_options(self) -> Chrome:
         options = ChromeOptions()
@@ -121,19 +118,24 @@ class StaffCollector(object):
         options.add_experimental_option('useAutomationExtension', False)
         options.add_experimental_option('excludeSwitches', ['enable-automation'])
 
-        # 有反爬虫/默认：一般模式启动
-        if self.CHROMEDRIVER_PATH:
-            _api = Chrome(options=options, executable_path=self.CHROMEDRIVER_PATH)
-        else:
-            _api = Chrome(options=options)
-        _api.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": """
-                       Object.defineProperty(navigator, 'webdriver', {
-                         get: () => undefined
-                       })
-                     """
-        })
-        return _api
+        try:
+            # 有反爬虫/默认：一般模式启动
+            if self.CHROMEDRIVER_PATH:
+                _api = Chrome(options=options, executable_path=self.CHROMEDRIVER_PATH)
+            else:
+                _api = Chrome(options=options)
+            _api.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+                "source": """
+                           Object.defineProperty(navigator, 'webdriver', {
+                             get: () => undefined
+                           })
+                         """
+            })
+            return _api
+        except WebDriverException as e:
+            if "chromedriver" in str(e):
+                print(f">>> 指定目录下缺少chromedriver {self.CHROMEDRIVER_PATH}")
+                exit()
 
     def run(self, page_num: int = 26, sleep_node: int = 5):
         # API 实例化

@@ -1,14 +1,15 @@
 __all__ = ['scaffold', 'command_set']
 
-from gevent import monkey
-
-monkey.patch_all()
-import time
 import csv
-import gevent
+import time
 from typing import List
 
+import gevent
+from gevent import monkey
+
 from src.BusinessCentralLayer.setting import *
+
+monkey.patch_all()
 
 command_set = {
 
@@ -202,20 +203,20 @@ class _ScaffoldGuider(object):
     @staticmethod
     def _scaffold_deploy():
         logger.info(f"<ScaffoldGuider> Deploy || MainProcess")
-        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface as app
-        app.run(deploy_=True)
+        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
+        SystemInterface.run(deploy_=True)
 
     @staticmethod
     def _scaffold_decouple():
         logger.info(f"<ScaffoldGuider> Decouple || General startup")
         from src.BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
-        SubscribesCleaner(debug=True).interface()
+        SubscribesCleaner(debug=True).interface(power=DEFAULT_POWER)
 
     @staticmethod
     def _scaffold_overdue():
         logger.info(f"<ScaffoldGuider> Overdue || Redis DDT")
-        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface as app
-        app.ddt()
+        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
+        SystemInterface.ddt()
 
     @staticmethod
     def _scaffold_spawn():
@@ -237,8 +238,8 @@ class _ScaffoldGuider(object):
             return False
 
         logger.info(f"<ScaffoldGuider> Run || MainCollector")
-        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface as app
-        app.run(deploy_=False)
+        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
+        SystemInterface.run(deploy_=False)
 
     @staticmethod
     def _scaffold_force_run():

@@ -11,6 +11,8 @@ from collections import Counter
 from urllib.parse import urlparse
 from uuid import uuid4
 
+from faker import Faker
+
 from src.BusinessCentralLayer.middleware.flow_io import FlowTransferStation
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.middleware.work_io import Middleware
@@ -132,7 +134,6 @@ def detach(subscribe: str, beat_sync=False):
     @param beat_sync: 是否立即删除， True：立即删除，False:节拍同步，随ddt删除
     @return:
     """
-    from faker import Faker
     from urllib.parse import urlparse
 
     # 清洗出订阅中的token

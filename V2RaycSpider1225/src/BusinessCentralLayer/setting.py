@@ -2,6 +2,7 @@
 
 from os.path import join, dirname, exists
 
+import colorama
 from loguru import logger
 
 from src.config import *
@@ -102,6 +103,9 @@ logger.add(
     rotation="1 week",
     encoding="utf8",
 )
+# 开启调试台彩色输出模式
+colorama.init()
+Fore = colorama.Fore
 # ---------------------------------------------------
 # TODO Nginx映射路径
 # ---------------------------------------------------

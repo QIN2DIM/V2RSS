@@ -415,4 +415,4 @@ if __name__ == '__main__':
     #     silence=False,
     #     timeout_retry_time=10
     # )
-    chunk_entropy(entropy_name=ActionJssForV2rayCloud, silence=False, power=1, assault=True)
+    chunk_entropy(entropy_name=ActionJssForSSRCloud, silence=False, power=1, assault=True)

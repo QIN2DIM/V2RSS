@@ -6,15 +6,16 @@
 """
 __all__ = ['staff_api']
 
-from gevent import monkey
-
-monkey.patch_all()
 import os
+
+from gevent import monkey
 
 from src.BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE, CHROMEDRIVER_PATH
 from src.BusinessLogicLayer.utils.staff_mining import StaffChecker, StaffCollector, IdentifyRecaptcha, \
     StaffEntropyGenerator
 from src.BusinessLogicLayer.utils.staff_mining.common.exceptions import *
+
+monkey.patch_all()
 
 
 class _Interface(object):
@@ -154,7 +155,7 @@ class _Interface(object):
         return self._cache_dir_classifier, _classifier
 
     @logger.catch()
-    def is_reCAPTCHA(self, urls, silence=True):
+    def is_recaptcha(self, urls, silence=True):
         """
 
         :param urls:
@@ -271,13 +272,16 @@ class _Interface(object):
                 logic can be designed to close the collector to improve the operating efficiency of the module
 
         :param use_checker: Whether to use the checker
-            True: Start the checker to clean the staff-host layer by layer and save the output to the corresponding cache directory
-            False: not enabled
-            - It is recommended to open the whole process
-                STAFF Checker is used to clean, filter, test, and update the system collection queue.
-            - The case of not opening: when debugging the program
+            - True: Start the checker to clean the staff-host layer by layer
+        and save the output to the corresponding cache directory
+            - False: not enabled - It is recommended to open the
+        whole process STAFF Checker is used to clean, filter, test, and update the system collection queue. - The
+        case of not opening: when debugging the program
+
         :param identity_recaptcha:
+
         :param use_generator: Generate system collection queue.
+
         :return:
         """
         # 启动STAFF采集器
@@ -309,7 +313,7 @@ class _Interface(object):
                 urls = self.sc_.queue_staff_arch_pending
             # 若有可供识别的站点实体，则执行决策器，否则输出警告日志
             if urls:
-                self.is_reCAPTCHA(urls=set(urls), silence=True)
+                self.is_recaptcha(urls=set(urls), silence=True)
             else:
                 logger.warning("No identifiable site instance.")
         # 启动STAFF生成器

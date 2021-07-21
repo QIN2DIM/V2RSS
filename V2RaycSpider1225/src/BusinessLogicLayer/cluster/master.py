@@ -16,7 +16,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 
 from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
 from src.BusinessCentralLayer.setting import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
-from src.BusinessLogicLayer.plugins.armour import SliderValidation
+from src.BusinessLogicLayer.plugins.armour import GeeTest3
 from src.BusinessLogicLayer.plugins.armour import get_header
 
 _ACTION_DEBUG = False
@@ -315,11 +315,13 @@ class ActionMasterGeneral(BaseAction):
             # 更新作业时间
             self.work_clock_utils = time.time()
             # 调用滑块验证模块
-            work_success = SliderValidation(
+            work_success = GeeTest3(
                 driver=api,
                 debug=self.debug,
-                business_name=self.action_name
-            ).run(full_bg_path, bg_path)
+                business_name=self.action_name,
+                full_img_path=full_bg_path,
+                notch_img_path=bg_path
+            ).run()
             # 执行成功
             if work_success:
                 return True
