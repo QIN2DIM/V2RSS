@@ -82,6 +82,7 @@ class GeeTest3(SliderValidator):
         """
         button_text2 = self.api.find_element_by_class_name('geetest_success_radar_tip_content')
         text2 = button_text2.text
+
         if text2 == '验证成功':
             return True
         return False
@@ -121,13 +122,18 @@ class GeeTest3(SliderValidator):
             track=track,
             slider=slider,
             position=position,
+            boundary=boundary,
             use_imitate=True,
             is_hold=False,
             momentum_convergence=False
         )
         # 执行成功，结束重试循环
         if self.is_success():
+            if self.debug:
+                print(f"--->{self.business_name}：验证成功")
             return True
         # 元素加载超时，捕获失败
         else:
+            if self.debug:
+                print(f"--->{self.business_name}：验证失败")
             return False

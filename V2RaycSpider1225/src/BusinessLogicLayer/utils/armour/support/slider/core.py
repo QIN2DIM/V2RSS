@@ -186,11 +186,35 @@ class SliderValidator(object):
         # 显示图片
         boundary_notch.show()
 
-    def drag_slider(self, track, slider, position: int, use_imitate=True, is_hold=False, momentum_convergence=False):
+    @staticmethod
+    def de_dark(x, halt):
+        time.sleep(halt)
+        return x, abs(round(x / halt, 2))
+
+    @staticmethod
+    def shock(step_num: int = 9, alpha=0.3, beta=0.5):
+        pending_step = []
+        for _ in range(step_num):
+            correct_step = random.choice([-1, 0, 0, 1])
+            if correct_step == 0 and random.uniform(0, 1) > alpha:
+                if random.uniform(0, 1) <= beta:
+                    correct_step = 1
+                else:
+                    correct_step = -1
+            pending_step.append(correct_step)
+        return pending_step
+
+    def drag_slider(
+            self, track, slider, position: int, boundary: int,
+            use_imitate=True,
+            is_hold=False,
+            momentum_convergence=False
+    ):
         """
 
         :param position: 滑块走完轨迹后与boundary预测值的相对位置，position > 0在右边，反之在左边
         :param is_hold: 是否已拖住滑块，用于兼容不同的验证触发方式
+        :param boundary:
         :param slider:
         :param track:
         :param use_imitate:仿生旋转。对抗geetest-v3务必开启。
@@ -211,84 +235,95 @@ class SliderValidator(object):
         else:
             time.sleep(0.5)
             ActionChains(self.api).click_and_hold(slider).perform()
-        # 回旋因子，曲化步长，消除物理算子统计学意义
-        rotation_factor = round(random.uniform(2.0, 2.5), 1)
-        # 此处catwalk__len__应为奇数
-        step_num = 9
-        # 震荡收敛步伐
-        catwalk = [random.randint(-1, 1) for _ in range(step_num)]
+        # 震荡收敛步伐初始化
+        catwalk = []
         # 参数表
         debugger_map = {'position': position, }
         # ====================================
         # 执行核心逻辑
         # ====================================
-
         # step1: 根据轨迹拖动滑块，使滑块逼近boundary附近
         for step in track:
             ActionChains(self.api).move_by_offset(xoffset=step, yoffset=0).perform()
         # step2.1: operator于一维空间中的位置回衡 基于仿生学
         if use_imitate:
-            # step1完成后拼图完全拼合缺口 -> 震荡收敛
+            step_num = 9
+            # 拼图与boundary重合 -> 震荡收敛
             if position == 0:
+                catwalk = self.shock(step_num=step_num, alpha=0.3, beta=0.5)
+                # 执行步态
                 for step in catwalk:
                     ActionChains(self.api).move_by_offset(xoffset=step, yoffset=0).perform()
-                    time.sleep(random.uniform(0.06, 1))
+                # 姿态回衡
                 if abs(sum(catwalk)) >= int(step_num / 2):
                     ActionChains(self.api).move_by_offset(xoffset=-sum(catwalk) + 1, yoffset=0).perform()
-                debugger_map.update({'catwalk': catwalk})
-            # step1完成后拼图位于boundary右方 -> 回落
-            elif position > 0:
-                position = position if position > 1 else 2
-                fallback_num = int(position * rotation_factor)
-                for x in range(fallback_num):
-                    imitate = ActionChains(self.api).move_by_offset(xoffset=-1, yoffset=0)
-                    # 进一步曲化operator行为
-                    imitate.perform()
-                    time.sleep(random.uniform(0.1, 1))
-                ActionChains(self.api).move_by_offset(xoffset=position, yoffset=0).perform()
-                debugger_map.update({'rotation_factor': rotation_factor})
-            # step1完成后拼图未抵达boundary -> 补偿
             else:
-                position = abs(position)
-                forward_num = int(position * rotation_factor)
-                for x in range(forward_num):
-                    imitate = ActionChains(self.api).move_by_offset(xoffset=1, yoffset=0)
-                    # 进一步曲化operator行为
-                    imitate.perform()
-                    time.sleep(random.uniform(0.2, 1))
-                # 二阶补偿
-                fallback_step = abs(forward_num - position)
-                if fallback_step <= 2:
-                    ActionChains(self.api).move_by_offset(xoffset=-2, yoffset=0).perform()
-                elif 3 <= fallback_step <= 6:
-                    for x in range(2):
-                        ActionChains(self.api).move_by_offset(xoffset=-2, yoffset=0).perform()
-                        time.sleep(random.uniform(0.6, 1))
-                # N阶补偿
+                if position > 0:
+                    # 拼图位于boundary右方 -> 回落
+                    # 修正后落于区间 ∈ [-2,1,2,3,4,5,6]
+                    emergency_braking = -int((position / 2)) if -int((position / 2)) != 0 else -2
                 else:
-                    for x in range(position):
-                        ActionChains(self.api).move_by_offset(xoffset=random.randint(-2, -1), yoffset=0).perform()
-                        time.sleep(random.uniform(0.06, 0.1))
-                debugger_map.update({'rotation_factor': rotation_factor})
+                    # 拼图位于boundary左方 -> 补偿
+                    # 修正后落于区间 ∈ [3, 4, 5, 6, 7...]
+                    emergency_braking = abs(position) + 2
+
+                # 向左抖动
+                pending_step = self.shock(step_num=step_num, alpha=0.3, beta=0.2)
+
+                # 一级步态修正
+                ActionChains(self.api).move_by_offset(xoffset=emergency_braking, yoffset=0).perform()
+                catwalk.append(emergency_braking)
+                for step in pending_step:
+                    if random.uniform(0, 1) < 0.2:
+                        time.sleep(0.5)
+                    ActionChains(self.api).move_by_offset(xoffset=step, yoffset=0).perform()
+                    catwalk.append(step)
+
+                # 二级步态修正
+                stance = sum(catwalk) + position
+                while abs(stance) > 3 and position != 0:
+                    # 踏出对抗步伐
+                    step = - (position / abs(position))
+                    ActionChains(self.api).move_by_offset(xoffset=step, yoffset=0).perform()
+                    # 更新参数
+                    catwalk.append(step)
+                    position += step
+                    stance = sum(catwalk) + position
+            debugger_map.update({'catwalk': catwalk})
         # step2.2: operator于一维空间中的位置回衡 基于极限收敛
         if momentum_convergence:
+            # 通过强化学习拟合出的收敛区间
             convergence_region = list(range(-9, -2))
+            low_confidence_region = list(range(47, 52))
+            # 补偿算子初始化，作为momentum收敛后的单步步长回衡姿态
             inertial = 0
-            if position not in convergence_region:
+            # 当算子处于低置信度空间内，使用手工调平的方法回衡
+            # 当boundary落在此区间内时，缺口识别有极大概率出现偏差，使用手工调平的方法回衡姿态
+            # 若出现遮挡，回衡成功率较高
+            # 若识别错误，回衡成功率必然为0
+            if boundary in low_confidence_region:
+                if abs(position) < 1.1:
+                    inertial = random.randint(-5, -2)
+                elif abs(position) <= 5:
+                    inertial = random.randint(-8, -5)
+                else:
+                    inertial = -8
+            # 当算子处于收敛空间外时，使用运动补偿的方法回落姿态
+            elif position not in convergence_region:
                 if position < convergence_region[0]:
                     inertial = random.randint(convergence_region[0] - position, convergence_region[-1] - position)
                 else:
                     inertial = -random.randint(position - convergence_region[-1], position - convergence_region[0])
-                ActionChains(self.api).move_by_offset(xoffset=inertial, yoffset=0).perform()
-            if self.boundary in [48, 49, ]:
-                ActionChains(self.api).move_by_offset(xoffset=random.randint(-5, -2), yoffset=0).perform()
+            # 将补偿算子inertial作为单步像素距离移动
+            ActionChains(self.api).move_by_offset(xoffset=inertial, yoffset=0).perform()
             debugger_map.update({'inertial': inertial})
         # 打印参数表
         if self.debug:
             print(f"{self.business_name}: {debugger_map}")
-        # 放开圆球
+        # 松开滑块 统计通过率
         ActionChains(self.api).release(slider).perform()
         time.sleep(1.5)
+        return debugger_map
 
     def is_try_again(self):
         """

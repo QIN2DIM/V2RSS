@@ -82,6 +82,7 @@ class GeeTest2(SliderValidator):
             track=track,
             slider=slider,
             position=position,
+            boundary=boundary,
             use_imitate=False,
             is_hold=True,
             momentum_convergence=True
