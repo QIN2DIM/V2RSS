@@ -96,7 +96,6 @@ def init_project():
     print("---> Remove irrelevant information")
     os.system(f"rm -rf {PROJECT_NAME}")
     os.system("rm -rf chromedriver_linux64.zip")
-    os.system(f"rm -rf {SCRIPT_NAME}")
     os.system(f"rm -rf google-chrome-stable_current_x86_64.rpm")
     print("---> Project initialization completed")
     os.system("clear")
@@ -106,10 +105,13 @@ def init_project():
     os.system('python main.py')
     print(f"---> Please replace the configuration file  {os.path.abspath(THIS_WALK)}/src/config.yaml")
     print(f"---> If you have any questions, please visit the project homepage.See {GITHUB_REPO}")
-    input("---> Please press any key to exit.")
+    print("---> Please press any key to exit.")
+    os.system(f"rm -rf {SCRIPT_NAME}")
 
 
 def run():
+    are_you_ready()
+
     this_file_is_empty()
     pull_project()
     set_google_chrome_on_centos7()

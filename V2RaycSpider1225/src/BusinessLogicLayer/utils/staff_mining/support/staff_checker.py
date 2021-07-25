@@ -6,14 +6,11 @@ from urllib.parse import urlparse
 import gevent
 import requests
 from bs4 import BeautifulSoup
-from gevent import monkey
 from gevent.queue import Queue
 from tqdm import tqdm
 
 from ..common.exceptions import NoSuchElementException
 from ..support.staff_collector import StaffCollector
-
-monkey.patch_all()
 
 
 class StaffChecker(object):
