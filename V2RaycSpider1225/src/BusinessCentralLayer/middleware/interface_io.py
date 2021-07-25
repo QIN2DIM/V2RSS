@@ -1,7 +1,9 @@
 __all__ = ['SystemInterface']
 
 import multiprocessing
+
 import gevent
+
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.setting import ENABLE_COROUTINE, REDIS_SECRET_KEY, CRAWLER_SEQUENCE, SINGLE_TASK_CAP, \
     API_DEBUG, API_PORT, API_THREADED, ENABLE_DEPLOY, ENABLE_SERVER, OPEN_HOST, logger, platform
@@ -47,8 +49,6 @@ class _ContainerDegradation(object):
         # TODO v5.4.r 版本更新
         # 将“采集器指令发起”定时任务改为无阻塞发动，尝试解决定时器任务“赶不上趟”的问题
         # --------------------------------------------------------------
-        from gevent import monkey
-        monkey.patch_all(ssl=False)
         task_queue = []
         for task_name in self.deploy_cluster:
             task = gevent.spawn(sailor.manage_task, class_=task_name)

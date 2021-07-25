@@ -34,7 +34,7 @@ def _is_overflow(task_name: str, rc=None):
 
     # 判断任务队列是否达到满载状态或已溢出
     if storage_remain >= cap:
-        logger.warning(f'<TaskManager> OverFlow || 任务溢出<{task_name}>({storage_remain}/{cap})')
+        # logger.warning(f'<TaskManager> OverFlow || 任务溢出<{task_name}>({storage_remain}/{cap})')
         return 'stop'
 
     # 判断缓冲队列是否已达单机采集极限
@@ -42,7 +42,7 @@ def _is_overflow(task_name: str, rc=None):
     # x = 1 if signal collector else x = 1/sum (Number of processes)
     elif storage_remain + cache_size > round(cap * 0.8):
         # 若已达或超过单机采集极限，则休眠任务
-        logger.info(f'<TaskManager> BeatPause || 节拍停顿<{task_name}>({storage_remain + cache_size}/{cap})')
+        # logger.info(f'<TaskManager> BeatPause || 节拍停顿<{task_name}>({storage_remain + cache_size}/{cap})')
         return 'offload'
 
     # 否则可以继续同步任务

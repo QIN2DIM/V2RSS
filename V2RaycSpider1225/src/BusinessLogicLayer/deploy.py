@@ -3,6 +3,7 @@
 """
 __all__ = ['GeventSchedule']
 
+import logging
 import time
 
 import schedule
@@ -10,6 +11,8 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 from src.BusinessCentralLayer.setting import logger, LAUNCH_INTERVAL
+
+logging.getLogger('apscheduler').setLevel(logging.DEBUG)
 
 
 # FIXME
@@ -23,24 +26,31 @@ class GeventSchedule(object):
         """
 
         # 同步定时间隔参数
-        self.interval_ = self._sync_launch_interval()
+        self.interval_ = self.sync_launch_interval()
         # 实例化调度器
         self.scheduler_ = BlockingScheduler()
         # 任务容器 存储全局任务标识及标识指向的业务模块
         self.dockers = dockers
+        self.jobs = []
         # 自动初始化 任务解包->读取->部署
-        self._deploy_jobs()
+        self.deploy_jobs()
 
-    def _deploy_jobs(self):
+    def deploy_jobs(self):
         try:
             for docker in self.dockers:
                 # 添加任务
-                self.scheduler_.add_job(
+                job = self.scheduler_.add_job(
                     func=docker['api'],
                     trigger=IntervalTrigger(seconds=self.interval_[docker['name']]),
                     id=docker['name'],
-                    jitter=5
+                    # 定時抖動
+                    jitter=5,
+                    # 定任务设置最大实例并行数
+                    max_instances=16,
+                    # 把多个排队执行的同一个哑弹任务变成一个
+                    coalesce=True,
                 )
+                self.jobs.append(job)
                 # 打印日志
                 logger.info(
                     f'<BlockingScheduler> Add job -- <{docker["name"]}>'
@@ -49,12 +59,13 @@ class GeventSchedule(object):
             # 启动任务
             self.scheduler_.start()
         except KeyboardInterrupt:
+            self.scheduler_.shutdown(wait=False)
             logger.warning("<BlockingScheduler> The admin forcibly terminated the scheduled task")
         except Exception as err:
             logger.exception(f'<BlockingScheduler>||{err}')
 
     @staticmethod
-    def _sync_launch_interval() -> dict:
+    def sync_launch_interval() -> dict:
         # 读取配置文件
         launch_interval = LAUNCH_INTERVAL
         # 检查配置并返回修正过后的任务配置
@@ -77,6 +88,11 @@ class GeventSchedule(object):
                 launch_interval.update({task_name: 60})
         else:
             return launch_interval
+
+
+class SpawnBoosterScheduler(GeventSchedule):
+    def __init__(self, dockers):
+        super(SpawnBoosterScheduler, self).__init__(dockers=dockers)
 
 
 def quick_deploy_(docker=GeventSchedule, interface: str = 'interface', crontab_seconds: int = 100):

@@ -14,7 +14,7 @@ from ..common.exceptions import CollectorSwitchError
 
 
 class StaffCollector(object):
-    def __init__(self, cache_path: str, chromedriver_path: str, silence: bool = True, debug: bool = False, ):
+    def __init__(self, cache_path: str, chromedriver_path: str, silence: bool = True, debug: bool = False):
         """
 
         :param cache_path:

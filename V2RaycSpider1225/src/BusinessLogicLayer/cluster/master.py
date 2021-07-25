@@ -143,8 +143,9 @@ class BaseAction(object):
 
     def set_spider_option(self, header=None) -> Chrome:
         """
-        ChromeDriver settings
-        @return:
+
+        :param header:
+        :return:
         """
         # 实例化Chrome可选参数
         options = ChromeOptions()
@@ -156,6 +157,9 @@ class BaseAction(object):
         options.add_argument('--disk-cache-')
         # 设置中文
         options.add_argument('lang=zh_CN.UTF-8')
+        # 禁用 DevTools listening
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        options.add_argument('--log-level=3')
         # 更换头部
         if header:
             options.add_argument(f"user-agent={header}")
@@ -164,6 +168,8 @@ class BaseAction(object):
         # 静默启动
         if self.silence is True:
             options.add_argument('--headless')
+            options.add_argument('--disable-gpu')
+            options.add_argument("--disable-software-rasterizer")
         # 抑制自动化控制特征
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option('useAutomationExtension', False)
@@ -173,7 +179,6 @@ class BaseAction(object):
             chrome_pref = {"profile.default_content_settings": {"Images": 2, 'javascript': 2},
                            "profile.managed_default_content_settings": {"Images": 2}}
             options.experimental_options['prefs'] = chrome_pref
-            options.add_experimental_option('excludeSwitches', ['enable-automation'])
             d_c = DesiredCapabilities.CHROME
             d_c['pageLoadStrategy'] = 'none'
             _api = Chrome(
@@ -183,7 +188,7 @@ class BaseAction(object):
             )
         else:
             _api = Chrome(options=options, executable_path=CHROMEDRIVER_PATH)
-        # 简单消除操作指令头，增加隐蔽性
+        # 进一步消除操作指令头，增加隐蔽性
         _api.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
             "source": """
             Object.defineProperty(navigator, 'webdriver', {
@@ -198,8 +203,20 @@ class BaseAction(object):
         api.set_page_load_timeout(time_to_wait=wait_seconds)
         api.get(url)
 
-    def sign_in(self, api: Chrome):
+    def sign_in(self, api: Chrome, email=None, password=None):
         """登录行为"""
+        email = self.email if email is None else email
+        password = self.password if password is None else password
+        self.wait(api, timeout=5, tag_xpath_str="//button")
+
+        api.find_element_by_id("email").send_keys(email)
+        api.find_element_by_id("password").send_keys(password)
+        api.find_element_by_tag_name("button").click()
+        try:
+            api.find_element_by_xpath("//h2[@id='swal2-title']")
+            logger.error("FAILED Incorrect account or password.")
+        except NoSuchElementException:
+            pass
 
     def sign_up(self, api: Chrome):
         """

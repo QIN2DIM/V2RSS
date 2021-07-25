@@ -389,5 +389,4 @@ if __name__ == '__main__':
     monkey.patch_all()
 
     from src.BusinessLogicLayer.plugins.accelerator import booster
-
     booster(docker=__entropy__, silence=True, power=4, assault=True)
