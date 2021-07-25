@@ -1,80 +1,80 @@
 """
-- 核心功能：
-    - 测试机场是否符合staff标准
-    - 用于actions单步调试机场任务
+核心功能：单步调试actions-entropy任务
 """
+
+from src.BusinessLogicLayer.cluster.cook import ActionShunt
 from src.BusinessLogicLayer.plugins.accelerator.core import CoroutineSpeedup
 
 
-class ActionBooster(CoroutineSpeedup):
-    def __init__(self, docker: dict, silence: bool = False, assault=False):
+class SpawnBooster(CoroutineSpeedup):
+    def __init__(self, docker: dict or list, silence: bool = False, assault=False):
         """
-
-        @param docker: 需要测试或快速填充的抽象步态字典，既仅从cluster-actions中读取
-        @param silence: 是否静默启动
-        @return:
+        :param docker: 需要测试的抽象步态字典，针对__entropy__实体测试使用
+        :param silence: 是否静默启动
+        :param assault:
         """
-        super(ActionBooster, self).__init__()
+        super(SpawnBooster, self).__init__()
 
-        # ====================================================
-        # 参数初始化
-        # ====================================================
-        self.docker = docker
-        self.silence = silence
+        # 当仅测试1枚实例时设置self.power=1既单例启动，否则将self.power置为None
+        # 当self.power = None时，实际的采集功率将由弹性协程接口自动计算
+        self.power = 1 if isinstance(docker, dict) else None
+
+        # 将单例视为容量为1的sequence
+        # 允许sequence中出现重复的任务
+        self.docker = docker if isinstance(docker, list) else [docker, ]
+
+        # 其他SpawnBooster参数
         self.debug_logger = False
         self.run = self.interface
 
-        # ====================================================
-        # 根据步态特征获取实例化任务
-        # ====================================================
-        from src.BusinessLogicLayer.cluster.cook import ActionShunt
-        # entity: ActionMaster 的行为抽象，此处为原子化操作，实体数仅为1
-        self.entity_ = ActionShunt.generate_entity(atomic=docker, silence=silence, assault=assault)
+        # silence：driver静默启动设置
+        self.silence = silence
+        # assault：driver加速渲染设置
+        self.assault = assault
 
     def offload_task(self):
-        self.work_q.put_nowait(self.entity_)
+        # 根据步态特征获取实例化任务
+        for mirror_image in self.docker:
+            # entity: ActionMaster 的行为抽象，此处为原子化操作，实体数仅为1
+            entity_ = ActionShunt.generate_entity(atomic=mirror_image, silence=self.silence, assault=self.assault)
+            # 将运行实体加入任务队列
+            self.work_q.put_nowait(entity_)
 
     def control_driver(self, entity_):
-        try:
-            # 将高度抽象（压缩）的行为（Function）解压执行
-            entity_()
-        except Exception as e:
-            print(e)
-            return False
+        # 将高度抽象（压缩）的行为（Function）解压执行
+        # 考虑到本例仅在人机调试时使用，故不采用任何exception捕获方案，期望错误弹出
+        entity_()
 
 
 def booster(docker: dict or list, silence: bool, power: int = 1, assault=False):
-    import gevent
+    """
 
-    task_list = []
+    :param docker:
+    :param silence:
+    :param power:
+    :param assault:
+    :return:
+    """
 
-    if isinstance(docker, list) and docker.__len__() == 1 and isinstance(docker[0], dict):
-        docker = docker[0]
-
-    # 对单个实体进行行为测试
+    # 对单个实体进行power次测试，当power>=2时使用gevent完成任务
     if isinstance(docker, dict):
-        # 默认对该实体发起一次行为测试
+        # 对该实体发起一次行为测试
         if power == 1:
-            ActionBooster(docker=docker, silence=silence, assault=assault).run()
+            ActionShunt.generate_entity(atomic=docker, silence=silence, assault=assault)()
         # 对该实体发起power次并发的行为测试[使用gevent]
         elif power > 1:
-            for _ in range(power):
-                task = gevent.spawn(ActionBooster(docker=docker, silence=silence, assault=assault).run)
-                task_list.append(task)
-            gevent.joinall(task_list)
+            SpawnBooster(docker=[docker, ] * power, silence=silence, assault=assault).run(power)
 
-    # 对多个实体进行行为测试（length of entity_set >= 2）
+    # 该方法针对scaffold_spawn 实现相关接口，经典用法为灌入__entropy__
+    # 此时认为docker_list.__len__()>=2，否则将会被识别为单个实体分流至其他业务模块
     elif isinstance(docker, list):
         # 每个实体的行为测试被依次发起
         if power == 1:
-            for i in range(docker.__len__()):
-                ActionBooster(docker=docker[i], silence=silence, assault=assault).run()
-        # 建立协程空间，分发实体行为测试任务[use gevent]
-        elif power == docker.__len__():
-            for i in range(docker.__len__()):
-                task = gevent.spawn(ActionBooster(docker=docker[i], silence=silence, assault=assault).run)
-                task_list.append(task)
-            gevent.joinall(task_list)
+            for mirror_image in docker:
+                ActionShunt.generate_entity(atomic=mirror_image, silence=silence, assault=assault)()
         # 建立多核工作栈，使用弹性分发控件对服务器进行边缘压力测试
         elif power == -1:
             return True
+        # 建立协程空间，分发实体行为测试任务[use gevent]
+        else:
+            SpawnBooster(docker=docker, silence=silence, assault=assault).run(power)

@@ -93,7 +93,11 @@ class _ConfigQuarantine(object):
                     logger.exception(ep)
 
     @staticmethod
-    def check_config():
+    def check_config(call_driver: bool = False):
+        chromedriver_not_found_error = f"<ScaffoldGuider> ForceRun || ChromedriverNotFound ||" \
+                                       f"未查找到chromedriver驱动，请根据技术文档正确配置\n" \
+                                       f">>> https://github.com/QIN2DIM/V2RayCloudSpider"
+
         if not all(SMTP_ACCOUNT.values()):
             logger.warning('您未正确配置<通信邮箱>信息(SMTP_ACCOUNT)')
         if not SERVER_CHAN_SCKEY:
@@ -103,6 +107,12 @@ class _ConfigQuarantine(object):
         if not all([REDIS_MASTER.get("host"), REDIS_MASTER.get("password")]):
             logger.error("您未正确配置<Redis-Master> 此配置为“云彩姬”的核心组件，请配置后重启项目！")
             exit()
+
+        # 当需要调用的接口涉及到driver操作时抛出
+        if call_driver:
+            if not os.path.exists(CHROMEDRIVER_PATH):
+                logger.error(chromedriver_not_found_error)
+                exit()
 
     def run(self):
         try:
@@ -220,36 +230,23 @@ class _ScaffoldGuider(object):
 
     @staticmethod
     def _scaffold_spawn():
-        if not os.path.exists(CHROMEDRIVER_PATH):
-            logger.error(f"<ScaffoldGuider> ForceRun || ChromedriverNotFound ||"
-                         f" 未查找到chromedriver驱动，请根据技术文档正确配置\n"
-                         f">>> https://github.com/QIN2DIM/V2RayCloudSpider")
-            return False
+        _ConfigQuarantine.check_config(call_driver=True)
         logger.info(f"<ScaffoldGuider> Spawn || MainCollector")
-        from src.BusinessLogicLayer.cluster.slavers.actions import chunk_entropy
-        chunk_entropy(silence=True)
+        from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__
+        from src.BusinessLogicLayer.plugins.accelerator import booster
+        from src.BusinessCentralLayer.setting import DEFAULT_POWER
+        booster(docker=__entropy__, silence=True, power=DEFAULT_POWER, assault=True)
 
     @staticmethod
     def _scaffold_run():
-        if not os.path.exists(CHROMEDRIVER_PATH):
-            logger.error(f"<ScaffoldGuider> ForceRun || ChromedriverNotFound ||"
-                         f" 未查找到chromedriver驱动，请根据技术文档正确配置\n"
-                         f">>> https://github.com/QIN2DIM/V2RayCloudSpider")
-            return False
-
+        _ConfigQuarantine.check_config(call_driver=True)
         logger.info(f"<ScaffoldGuider> Run || MainCollector")
         from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
         SystemInterface.run(deploy_=False)
 
     @staticmethod
     def _scaffold_force_run():
-
-        if not os.path.exists(CHROMEDRIVER_PATH):
-            logger.error(f"<ScaffoldGuider> ForceRun || ChromedriverNotFound ||"
-                         f" 未查找到chromedriver驱动，请根据技术文档正确配置\n"
-                         f">>> https://github.com/QIN2DIM/V2RayCloudSpider")
-            return False
-
+        _ConfigQuarantine.check_config(call_driver=True)
         logger.info(f"<ScaffoldGuider> ForceRun || MainCollector")
         from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE
         from src.BusinessLogicLayer.plugins.accelerator import ForceRunRelease
@@ -275,19 +272,12 @@ class _ScaffoldGuider(object):
 
     @staticmethod
     def _scaffold_entropy(_debug=False):
-        from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__, chunk_entropy
-
-        if _debug:
-            try:
-                chunk_entropy(entropy_name=None, silence=True)
-            except Exception as e:
-                logger.exception(e)
-        else:
-            for i, host_ in enumerate(__entropy__):
-                print(f">>> [{i + 1}/{__entropy__.__len__()}]{host_['name']}")
-                print(f"注册链接: {host_['register_url']}")
-                print(f"存活周期: {host_['life_cycle']}天")
-                print(f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n")
+        from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__
+        for i, host_ in enumerate(__entropy__):
+            print(f">>> [{i + 1}/{__entropy__.__len__()}]{host_['name']}")
+            print(f"注册链接: {host_['register_url']}")
+            print(f"存活周期: {host_['life_cycle']}天")
+            print(f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n")
 
     @staticmethod
     def _scaffold_exile(task_sequential=4):
@@ -325,7 +315,7 @@ class _ScaffoldGuider(object):
         """
         无尽套娃
         """
-        from src.BusinessLogicLayer.apis import scaffold_ash
+        from src.BusinessLogicLayer.apis import scaffold_api
         logger.info(f"<ScaffoldGuider> ash | Clash订阅堆一键生成脚本")
 
         # --------------------------------------------------
@@ -337,7 +327,7 @@ class _ScaffoldGuider(object):
         # --------------------------------------------------
         # 运行脚本
         # --------------------------------------------------
-        return scaffold_ash.api.run(debug=True, decouple=True)
+        return scaffold_api.ash(debug=True, decouple=True)
 
     @staticmethod
     def _scaffold_mining():

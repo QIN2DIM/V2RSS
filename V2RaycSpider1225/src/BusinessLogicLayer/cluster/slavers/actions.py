@@ -332,9 +332,9 @@ __entropy__ = [
 
     ActionJssForV2rayCloud,  # v2ray
 
-    ActionPPForV2rayCloud,  # v2ray
-
-    ActionPPForSSRCloud,  # ssr
+    # ActionPPForV2rayCloud,  # v2ray
+    #
+    # ActionPPForSSRCloud,  # ssr
 
     # ---------------------
     # [停用] 公益节点
@@ -383,36 +383,11 @@ __entropy__ = [
 
 ]
 
-
-def chunk_entropy(entropy_name=None, silence: bool = True, power: int = 1, assault=False):
-    from src.BusinessLogicLayer.plugins.accelerator import booster
-
-    if entropy_name:
-        try:
-            return booster(docker=entropy_name, silence=silence, power=power, assault=assault)
-        except TypeError:
-            pass
-    else:
-        return booster(docker=__entropy__, silence=silence, power=__entropy__.__len__(), assault=assault)
-
-
-def check_action(action_name: dict, silence=False, timeout_retry_time=3):
-    from src.BusinessLogicLayer.cluster.cook import api
-    api.generate_entity(
-        atomic=action_name,
-        silence=silence,
-        beat_sync=True,
-        timeout_retry_time=timeout_retry_time
-    )()
-
-
 if __name__ == '__main__':
     from gevent import monkey
 
     monkey.patch_all()
-    # check_action(
-    #     action_name=ActionJssForV2rayCloud,
-    #     silence=False,
-    #     timeout_retry_time=10
-    # )
-    chunk_entropy(entropy_name=ActionJssForSSRCloud, silence=False, power=1, assault=True)
+
+    from src.BusinessLogicLayer.plugins.accelerator import booster
+
+    booster(docker=__entropy__, silence=True, power=4, assault=True)

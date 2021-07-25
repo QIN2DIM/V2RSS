@@ -54,10 +54,10 @@ def _update_entropy(rc=None):
     # 组合entropy标注数据
     try:
         atomic_queue = []
-        for i in __entropy__:
-            work_filed = [f"{j[0].upper()}" for j in i['hyper_params'].items() if j[-1]]
+        for entity_ in __entropy__:
+            work_filed = [f"{j[0].upper()}" for j in entity_['hyper_params'].items() if j[-1]]
             work_filed = "&".join(work_filed).strip()
-            atomic_item = f"|{work_filed}| {i['name']}"
+            atomic_item = f"|{work_filed}| {entity_['name']}"
             atomic_queue.append(atomic_item)
         # 更新列表
         if rc is None:
@@ -94,26 +94,24 @@ def _sync_actions(
     # ================================================
     # 更新任务信息
     # ================================================
+    # 公示即将发动的采集任务数据
     _update_entropy(rc=rc)
-
+    # 通由工厂读取映射表批量生产采集器运行实体
     sync_queue: list = ActionShunt(class_, silence=True, beat_sync=beat_sync).shunt()
+    # 打乱任务序列
     random.shuffle(sync_queue)
 
     # ================================================
     # $执行核心业务
     # ================================================
     if mode_sync == 'upload':
-
         # fixme:临时方案:解决链接溢出问题
         if round(rc.__len__(REDIS_SECRET_KEY.format(class_)) * 1.25) > SINGLE_TASK_CAP:
             logger.warning("<TaskManager> UploadHijack -- 连接池任务即将溢出，上传任务被劫持")
             return None
-
         # 持续实例化采集任务
         for _ in range(sync_queue.__len__()):
-
             rc.sync_message_queue(mode='upload', message=class_)
-
             # 节拍同步线程锁
             if only_sync:
                 logger.warning("<TaskManager> OnlySync -- 触发节拍同步线程锁，仅上传一枚原子任务")
@@ -121,55 +119,47 @@ def _sync_actions(
         logger.success("<TaskManager> UploadTasks -- 任务上传完毕")
     elif mode_sync == 'download':
         async_queue: list = []
-
         while True:
-
             # 获取原子任务
             atomic = rc.sync_message_queue(mode='download')
-
             # 若原子有效则同步数据
             if atomic and atomic in CRAWLER_SEQUENCE:
-
                 # 判断同步状态
                 # 防止过载。当本地缓冲任务即将突破容载极限时停止同步
                 # _state 状态有三，continue/offload/stop
                 _state = _is_overflow(task_name=atomic, rc=rc)
                 if _state != 'continue':
                     return _state
-
                 if async_queue.__len__() == 0:
                     async_queue = ActionShunt(atomic, silence=True, beat_sync=beat_sync).shunt()
                     random.shuffle(async_queue)
-
-                # 将执行语句推送至Poseidon本机消息队列
+                # 将采集器实体推送至Poseidon本机消息队列
                 Middleware.poseidon.put_nowait(async_queue.pop())
-
                 logger.info(f'<TaskManager> offload atomic<{atomic}>({Middleware.poseidon.qsize()})')
-
                 # 节拍同步线程锁
                 if only_sync:
                     logger.warning(f"<TaskManager> OnlySync -- <{atomic}>触发节拍同步线程锁，仅下载一枚原子任务")
                     return 'offload'
-
-            # 否则打印警告日志并提前退出同步
             else:
-                # logger.warning(f"<TaskManager> SyncFinish -- <{atomic}>无可同步任务")
                 return 'offload'
     elif mode_sync == 'force_run':
         for slave_ in sync_queue:
-
+            # ================================================================================================
+            # TODO v5.4.r 版本新增特性 scaffold spawn
+            # 1. 之前版本中通由scaffold 无论运行 run 还是 force-run 指令都无法在队列满载的情况下启动采集任务
+            # 主要原因在于如下几行代码加了锁
+            # 2. 通过新增的spawn指令可绕过此模块通由SpawnBooster直接编译底层代码启动采集器
+            # ================================================================================================
             # force_run ：适用于单机部署或单步调试下
             # 需要确保无溢出风险，故即使是force_run的启动模式，任务执行数也不应逾越任务容载数
             _state = _is_overflow(task_name=class_, rc=rc)
             if _state != 'continue':
                 return _state
 
-            # 将执行语句推送至Poseidon本机消息队列
+            # 将采集器实体推送至Poseidon本机消息队列
             Middleware.poseidon.put_nowait(slave_)
 
-            # 在force_run模式下仍制约于节拍同步线程锁
-            # 此举服务于主机的订阅补充操作
-            # 优先级更高，不受队列可用容载影响强制中断同步操作
+            # 节拍同步线程锁
             if only_sync:
                 logger.warning(f"<TaskManager> OnlySync -- <{class_}>触发节拍同步线程锁，仅下载一枚原子任务")
                 return 'stop'
@@ -181,14 +171,14 @@ def _sync_actions(
 def manage_task(
         class_: str = 'v2ray',
         only_sync=False,
-        startup=None,
+        run_collector=None,
         beat_sync=True,
         force_run=None
 ) -> bool:
     """
     加载任务
     @param force_run: debug模式下的强制运行，可逃逸队列满载检测
-    @param startup:创建协程工作空间，并开始并发执行队列任务。
+    @param run_collector:创建协程工作空间，并开始并发执行队列任务。
     @param only_sync:节拍同步线程锁。当本机任务数大于0时，将1枚原子任务推送至Poseidon协程空间。
     @param class_: 任务类型,必须在 crawler seq内,如 ssr,v2ray or trojan。
     @param beat_sync:
@@ -198,18 +188,15 @@ def manage_task(
     # ----------------------------------------------------
     # 参数审查与转译
     # ----------------------------------------------------
-
-    # 检查输入
     # 若申请执行的任务类型不在本机授权范围内则结束本次任务
-    if class_ not in CRAWLER_SEQUENCE or not isinstance(class_, str):
+    if class_ not in CRAWLER_SEQUENCE:
         return False
 
-    # 检查采集器权限
-    # 审核采集权限，允许越权传参。当手动指定参数时，可授予本机采集权限，否则使用配置权限
-    local_work: bool = startup if startup else ENABLE_DEPLOY.get('tasks').get('collector')
+    # collector_permission 审核采集权限，允许越权传参。当手动指定参数时，可授予本机采集权限，否则使用配置权限
+    collector_permission: bool = ENABLE_DEPLOY.get('tasks').get('collector') if run_collector is None else run_collector
 
-    # 强制运行：指定参数优先级更高，若不指定则以是否单机部署模式决定运行force_run是否开启
-    # 默认单机模式下开启force_run
+    # force_run 强制运行，若不指定该参数，则以“是否单机部署”决定“是否运行force_run”
+    # 既默认单机模式下开启force_run
     # 若未传参时也未定义部署形式（null），则默认不使用force_run
     force_run = force_run if force_run else SINGLE_DEPLOYMENT
 
@@ -217,16 +204,16 @@ def manage_task(
     # 解析同步模式
     # ----------------------------------------------------
     # 以本机是否有采集权限来区分download 以及upload两种同步模式
-    mode_sync = "download" if local_work else "upload"
+    mode_sync = "download" if collector_permission is True else "upload"
 
     # 以更高优先级的`force_run` 替代传统同步模式，执行强制采集方案
-    mode_sync = "force_run" if force_run else mode_sync
+    mode_sync = "force_run" if force_run is True else mode_sync
 
     # ----------------------------------------------------
     # 同步消息（任务）队列
     # ----------------------------------------------------
-    # 当本机可采集时，将任务同步至本机执行，若消息队列为空则
-    # 若本机不可采集，则生成任务加入消息队列
+    # IF 本机具备采集权限，将任务同步至本机执行，在单机部署情况下任务自产自销。
+    # ELSE 负责将生成的任务加入消息队列
     response: str or bool = _sync_actions(
         class_=class_,
         only_sync=only_sync,
@@ -237,20 +224,19 @@ def manage_task(
     # ----------------------------------------------------
     # 初始化协程空间（执行任务）
     # ----------------------------------------------------
-
     # 若本机开启了采集器权限则创建协程空间
     # 若从control-deploy进入此函数，则说明本机必定具备创建协程空间权限
     if force_run:
-        if response == 'offload' and Middleware.poseidon.qsize() > 0:
+        if (response == 'offload') and (Middleware.poseidon.qsize() > 0):
             logger.info(f'<TaskManager> ForceRun || <{class_}>采集任务启动')
             ShuntRelease(work_queue=Middleware.poseidon).interface()
         logger.success(f'<TaskManager> ForceWorkFinish || <{class_}>采集任务结束')
         return True
 
     # if 'force_run' is False and the node has the permissions of collector
-    if local_work:
+    if collector_permission:
         # if task queue can be work
-        if response == 'offload' and Middleware.poseidon.qsize() > 0:
+        if (response == 'offload') and (Middleware.poseidon.qsize() > 0):
             logger.info(f'<TaskManager> Run || 采集任务启动')
             ShuntRelease(work_queue=Middleware.poseidon).interface()
         logger.success(f'<TaskManager> Finish || 采集任务结束')
@@ -258,9 +244,3 @@ def manage_task(
     else:
         # logger.warning(f"<TaskManager> Hijack<{class_}> || 当前节点不具备采集权限")
         return False
-
-
-if __name__ == '__main__':
-    # _sync_actions('ssr', only_sync=True, mode_sync='upload')
-    # manage_task('v2ray')
-    _update_entropy()

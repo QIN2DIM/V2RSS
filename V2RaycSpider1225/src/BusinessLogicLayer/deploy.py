@@ -24,20 +24,14 @@ class GeventSchedule(object):
 
         # 同步定时间隔参数
         self.interval_ = self._sync_launch_interval()
-
         # 实例化调度器
         self.scheduler_ = BlockingScheduler()
-
+        # 任务容器 存储全局任务标识及标识指向的业务模块
         self.dockers = dockers
-
+        # 自动初始化 任务解包->读取->部署
         self._deploy_jobs()
 
     def _deploy_jobs(self):
-        """
-
-        @return:
-        """
-
         try:
             for docker in self.dockers:
                 # 添加任务
@@ -54,25 +48,33 @@ class GeventSchedule(object):
                 )
             # 启动任务
             self.scheduler_.start()
-        except KeyboardInterrupt as err:
-            logger.stop('Forced stop ||{}'.format(err))
+        except KeyboardInterrupt:
+            logger.warning("<BlockingScheduler> The admin forcibly terminated the scheduled task")
         except Exception as err:
             logger.exception(f'<BlockingScheduler>||{err}')
 
     @staticmethod
     def _sync_launch_interval() -> dict:
-        # 热读取配置文件
+        # 读取配置文件
         launch_interval = LAUNCH_INTERVAL
-        for check in launch_interval.items():
-            if not check[-1] or check[-1] <= 1:
-                logger.critical(f"<launch_interval>--{check[0]}设置出现致命错误，即将熔断线程。间隔为空或小于1")
+        # 检查配置并返回修正过后的任务配置
+        for task_name, task_interval in launch_interval.items():
+            # 未填写或填写异常数字
+            if (not task_interval) or (task_interval <= 1):
+                logger.critical(f"<launch_interval>--{task_name}设置出现致命错误，即将熔断线程。间隔为空或小于1")
                 raise Exception
-            if not isinstance(check[-1], int):
-                logger.warning(f"<launch_interval>--{check[0]}任务间隔应为整型int，参数已拟合")
-                launch_interval.update({check[0]: round(check[-1])})
-            if check[-1] < 60:
-                logger.warning(f"<launch_interval>--{check[0]}任务频次过高，应不少于60/次,参数已拟合")
-                launch_interval.update({check[0]: 60})
+            # 填写浮点数
+            if not isinstance(task_interval, int):
+                logger.warning(f"<launch_interval>--{task_name}任务间隔应为整型int，参数已拟合")
+                # 尝试类型转换若不中则赋一个默认值 60s
+                try:
+                    launch_interval.update({task_name: int(task_interval)})
+                except TypeError:
+                    launch_interval.update({task_name: 60})
+            # 填写过小的任务间隔数，既设定的发动频次过高，主动拦截并修正为最低容错 60s/run
+            if task_interval < 60:
+                logger.warning(f"<launch_interval>--{task_name}任务频次过高，应不少于60/次,参数已拟合")
+                launch_interval.update({task_name: 60})
         else:
             return launch_interval
 

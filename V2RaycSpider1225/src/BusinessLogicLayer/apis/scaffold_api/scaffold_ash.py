@@ -1,4 +1,4 @@
-__all__ = ['api']
+__all__ = ['api', 'ash']
 
 import multiprocessing
 import time
@@ -84,3 +84,7 @@ class _Interface(object):
 
 
 api = _Interface()
+
+
+def ash(debug: bool = True, decouple: bool = True):
+    return _ClashTaskAsh(debug=debug, decouple=decouple).startup()
