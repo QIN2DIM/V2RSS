@@ -2,14 +2,12 @@ __all__ = ['SystemInterface']
 
 import multiprocessing
 
-import gevent
-
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
+from redis.exceptions import ConnectionError
 from src.BusinessCentralLayer.setting import ENABLE_COROUTINE, REDIS_SECRET_KEY, CRAWLER_SEQUENCE, SINGLE_TASK_CAP, \
-    API_DEBUG, API_PORT, API_THREADED, ENABLE_DEPLOY, ENABLE_SERVER, OPEN_HOST, logger, platform
-from src.BusinessLogicLayer.cluster import sailor
-from src.BusinessLogicLayer.cluster.slavers import actions
-from src.BusinessLogicLayer.deploy import GeventSchedule
+    API_DEBUG, API_PORT, API_THREADED, ENABLE_DEPLOY, ENABLE_SERVER, OPEN_HOST, logger, platform, LAUNCH_INTERVAL
+from src.BusinessLogicLayer.cluster import sailor, slavers
+from src.BusinessLogicLayer.deploy import TasksScheduler, CollectorScheduler
 from src.BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
 from src.BusinessViewLayer.myapp.app import app
 
@@ -28,6 +26,31 @@ class _ContainerDegradation(object):
         # 热加载配置文件 载入越权锁
         self.deploy_cluster, self.cap = CRAWLER_SEQUENCE, SINGLE_TASK_CAP
         self.go = enable_coroutine
+
+    @staticmethod
+    def sync_launch_interval() -> dict:
+        # 读取配置文件
+        launch_interval = LAUNCH_INTERVAL
+        # 检查配置并返回修正过后的任务配置
+        for task_name, task_interval in launch_interval.items():
+            # 未填写或填写异常数字
+            if (not task_interval) or (task_interval <= 1):
+                logger.critical(f"<launch_interval>--{task_name}设置出现致命错误，即将熔断线程。间隔为空或小于1")
+                raise Exception
+            # 填写浮点数
+            if not isinstance(task_interval, int):
+                logger.warning(f"<launch_interval>--{task_name}任务间隔应为整型int，参数已拟合")
+                # 尝试类型转换若不中则赋一个默认值 60s
+                try:
+                    launch_interval.update({task_name: int(task_interval)})
+                except TypeError:
+                    launch_interval.update({task_name: 60})
+            # 填写过小的任务间隔数，既设定的发动频次过高，主动拦截并修正为最低容错 60s/run
+            if task_interval < 60:
+                logger.warning(f"<launch_interval>--{task_name}任务频次过高，应不少于60/次,参数已拟合")
+                launch_interval.update({task_name: 60})
+        else:
+            return launch_interval
 
     @staticmethod
     def startup_ddt_decouple(debug: bool = False, power: int = 12):
@@ -49,13 +72,13 @@ class _ContainerDegradation(object):
         # TODO v5.4.r 版本更新
         # 将“采集器指令发起”定时任务改为无阻塞发动，尝试解决定时器任务“赶不上趟”的问题
         # --------------------------------------------------------------
-        task_queue = []
-        for task_name in self.deploy_cluster:
-            task = gevent.spawn(sailor.manage_task, class_=task_name)
-            task_queue.append(task)
-        gevent.joinall(task_queue)
+        # task_queue = []
         # for task_name in self.deploy_cluster:
-        #     sailor.manage_task(class_=task_name)
+        #     task = gevent.spawn(sailor.manage_task, class_=task_name)
+        #     task_queue.append(task)
+        # gevent.joinall(task_queue)
+        for task_name in self.deploy_cluster:
+            sailor.manage_task(class_=task_name)
 
 
 _cd = _ContainerDegradation()
@@ -64,24 +87,13 @@ _cd = _ContainerDegradation()
 class _SystemEngine(object):
 
     def __init__(self) -> None:
-        logger.info(f'<系统初始化> SystemEngine -> {platform}')
-
-        # 读取配置序列
-        logger.info(f'<定位配置> check_sequence:{CRAWLER_SEQUENCE}')
-
-        # 默认linux下自动部署
-        logger.info(f'<部署设置> enable_deploy:{ENABLE_DEPLOY}')
-
-        # 协程加速配置
-        logger.info(f"<协程加速> Coroutine:{enable_coroutine}")
-
-        # 解压接口容器
-        logger.info("<解压容器> DockerEngineInterface")
-
-        # 初始化进程
-        logger.info(f'<加载队列> IndexQueue:{actions.__entropy__}')
-
-        logger.success('<Gevent> 工程核心准备就绪 任务即将开始')
+        logger.info(f'<SystemInitialization> SystemEngine -> {platform}')
+        logger.info(f'<RunConfiguration> check_sequence:{CRAWLER_SEQUENCE}')
+        logger.info(f'<DeploymentSettings> enable_deploy:{ENABLE_DEPLOY}')
+        logger.info(f"<CoroutineAcceleration> Coroutine:{enable_coroutine}")
+        logger.info("<UnzipTheContainer> DockerEngineInterface")
+        logger.info(f'<LoadQueue> IndexQueue:{slavers.__entropy__}')
+        logger.success('<SystemEngine> System core initialized successfully.')
 
     @staticmethod
     def run_server() -> None:
@@ -98,19 +110,35 @@ class _SystemEngine(object):
         @return:
         """
         try:
-            # 初始化任务对象
-            dockers = []
-
             # 载入定时任务权限配置
             tasks = ENABLE_DEPLOY['tasks']
+            # 初始化调度器
+            ts, cs = TasksScheduler(), CollectorScheduler()
+            # 清洗配置 使调度间隔更加合理
+            interval = _cd.sync_launch_interval()
+            # 添加任务
             for docker_name, permission in tasks.items():
-                if permission:
-                    dockers.append({"name": docker_name, "api": eval(f"_cd.startup_{docker_name}")})
-            # 无论有无权限都要装载采集器
-            if not tasks['collector']:
-                dockers.append({"name": 'collector', "api": _cd.startup_collector})
+                logger.info(f"[Job] {docker_name} -- interval: {interval[docker_name]}s -- run: {permission}")
+                # 若开启采集器则使用CollectorScheduler映射任务
+                # 使用久策略将此分流判断注释既可
+                if docker_name == "collector":
+                    cs.mapping_config({
+                        'interval': interval[docker_name],
+                        'permission': permission,
+                    })
+                    continue
+                elif permission:
+                    ts.add_job({
+                        "name": docker_name,
+                        "api": eval(f"_cd.startup_{docker_name}"),
+                        'interval': interval[docker_name],
+                        'permission': True
+                    })
             # 启动定时任务
-            GeventSchedule(dockers=dockers)
+            cs.deploy_jobs()
+            ts.deploy_jobs()
+        except ConnectionError:
+            logger.warning("<RedisIO> Network communication failure, please check the network connection.")
         except KeyError:
             logger.critical('config中枢层配置被篡改，ENABLE_DEPLOY 配置中无”tasks“键值对')
             exit()
@@ -184,15 +212,15 @@ class _SystemEngine(object):
             # 添加阻塞
             for process_ in process_list:
                 process_.join()
-        except TypeError or AttributeError as e:
-            logger.exception(e)
-        except KeyboardInterrupt:
+        except TypeError or AttributeError:
+            pass
+        except (KeyboardInterrupt, SystemExit):
             # FIXME 确保进程间不产生通信的情况下终止
-            logger.debug('<SystemProcess> Received keyboard interrupt signal')
+            logger.debug('<SystemProcess> Received keyboard interrupt signal.')
             for process_ in process_list:
                 process_.terminate()
         finally:
-            logger.success('<SystemProcess> End the V2RayCloudSpider')
+            logger.success('<SystemProcess> The system exits completely.')
 
 
 # ----------------------------------------

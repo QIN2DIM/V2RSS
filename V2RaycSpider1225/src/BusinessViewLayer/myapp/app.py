@@ -92,6 +92,5 @@ def admin_select_subs():
 def admin_get_entropy():
     return jsonify(apis_admin_get_entropy())
 
-
 # if __name__ == '__main__':
 #     app.run(host='0.0.0.0', port=6500, debug=True)

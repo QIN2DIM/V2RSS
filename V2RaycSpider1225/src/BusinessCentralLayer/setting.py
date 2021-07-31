@@ -91,20 +91,20 @@ SERVER_PATH_DATABASE_FETCH = join(SERVER_DIR_DATABASE, "CrawlFetchHistory.txt")
 SERVER_DIR_DATABASE_LOG = join(SERVER_DIR_DATABASE, "logs")
 
 logger.add(
-    join(SERVER_DIR_DATABASE_LOG, "runtime.log"),
+    sink=join(SERVER_DIR_DATABASE_LOG, "runtime.log"),
     level="DEBUG",
     rotation="1 day",
     retention="20 days",
     encoding="utf8",
 )
 logger.add(
-    join(SERVER_DIR_DATABASE_LOG, "error.log"),
+    sink=join(SERVER_DIR_DATABASE_LOG, "error.log"),
     level="ERROR",
     rotation="1 week",
     encoding="utf8",
 )
 # 开启调试台彩色输出模式
-colorama.init()
+colorama.init(autoreset=False)
 Fore = colorama.Fore
 # ---------------------------------------------------
 # TODO Nginx映射路径

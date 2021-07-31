@@ -301,7 +301,7 @@ Action7ccCloud = {
 ActionPPForV2rayCloud = {
     'name': "ActionPPForV2rayCloud",
     'register_url': "https://www.ppyun.fun/auth/register",
-    'life_cycle': 2,
+    'life_cycle': 1,
     'anti_slider': True,
     'hyper_params': {'ssr': False, 'v2ray': True},
     'email': "@gmail.com"
@@ -309,12 +309,25 @@ ActionPPForV2rayCloud = {
 ActionPPForSSRCloud = {
     'name': "ActionPPForSSRCloud",
     'register_url': "https://www.ppyun.fun/auth/register",
-    'life_cycle': 2,
+    'life_cycle': 1,
     'anti_slider': True,
     'hyper_params': {'ssr': True, 'v2ray': False},
     'email': "@gmail.com"
 }
-
+# =============================================
+# ActionPPCloud
+# - change log:
+#   -2021-07-18 [Create] 更新实例
+# =============================================
+ActionAaxCloud = {
+    'name': "ActionAaxCloud",
+    'register_url': "https://aaxc.club/auth/register",
+    'life_cycle': 1,
+    'anti_slider': False,
+    'hyper_params': {'ssr': False, 'v2ray': True},
+    'email': "@gmail.com",
+    'feature': 'hidden',
+}
 __entropy__ = [
     # ---------------------
     # [启动] 无障碍
@@ -328,13 +341,13 @@ __entropy__ = [
 
     ActionKakCloud,  # v2ray
 
-    ActionJssForSSRCloud,  # ssr
+    # ActionJssForSSRCloud,  # ssr
 
-    ActionJssForV2rayCloud,  # v2ray
-
-    # ActionPPForV2rayCloud,  # v2ray
+    # ActionJssForV2rayCloud,  # v2ray
     #
-    # ActionPPForSSRCloud,  # ssr
+    ActionPPForV2rayCloud,  # v2ray
+
+    ActionPPForSSRCloud,  # ssr
 
     # ---------------------
     # [停用] 公益节点
@@ -382,11 +395,3 @@ __entropy__ = [
     # ActionZuiSuCloud,
 
 ]
-
-if __name__ == '__main__':
-    from gevent import monkey
-
-    monkey.patch_all()
-
-    from src.BusinessLogicLayer.plugins.accelerator import booster
-    booster(docker=__entropy__, silence=True, power=4, assault=True)

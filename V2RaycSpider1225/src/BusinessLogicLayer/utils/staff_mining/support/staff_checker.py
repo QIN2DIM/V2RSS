@@ -48,6 +48,7 @@ class StaffChecker(object):
         self._path_cls_others = os.path.join(_classifier_dir, "other_arch.txt")
         self._path_cls_staff_arch_slider = os.path.join(_classifier_dir, "staff_arch_slider.txt")
         self._path_cls_staff_arch_general = os.path.join(_classifier_dir, "staff_arch_general.txt")
+        self._path_cls_staff_arch_inc = os.path.join(_classifier_dir, "staff_arch_inc.txt")
         # 用于进一步清洗reCAPTCHA的缓存容器
         self.queue_staff_arch_pending = []
 
@@ -102,8 +103,12 @@ class StaffChecker(object):
                 # classify: 无验证的STAFF ARCH
                 else:
                     self.queue_staff_arch_pending.append(url)
-                    with open(self._path_cls_staff_arch_general, 'a', encoding="utf8") as f:
-                        f.write(f"{url}\n")
+                    if "邀请码" in res.text:
+                        with open(self._path_cls_staff_arch_inc, 'a', encoding="utf8") as f:
+                            f.write(f"{url}\n")
+                    else:
+                        with open(self._path_cls_staff_arch_general, 'a', encoding="utf8") as f:
+                            f.write(f"{url}\n")
             # classify: 基于其他解决方案的源
             else:
                 self.queue_staff_arch_pending.append(url)

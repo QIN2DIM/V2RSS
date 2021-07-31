@@ -232,7 +232,7 @@ class _ScaffoldGuider(object):
     def _scaffold_spawn():
         _ConfigQuarantine.check_config(call_driver=True)
         logger.info(f"<ScaffoldGuider> Spawn || MainCollector")
-        from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__
+        from src.BusinessLogicLayer.cluster.slavers import __entropy__
         from src.BusinessLogicLayer.plugins.accelerator import booster
         from src.BusinessCentralLayer.setting import DEFAULT_POWER
         booster(docker=__entropy__, silence=True, power=DEFAULT_POWER, assault=True)
@@ -272,7 +272,7 @@ class _ScaffoldGuider(object):
 
     @staticmethod
     def _scaffold_entropy(_debug=False):
-        from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__
+        from src.BusinessLogicLayer.cluster.slavers import __entropy__
         for i, host_ in enumerate(__entropy__):
             print(f">>> [{i + 1}/{__entropy__.__len__()}]{host_['name']}")
             print(f"注册链接: {host_['register_url']}")

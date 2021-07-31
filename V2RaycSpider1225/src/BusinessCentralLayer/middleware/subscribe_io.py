@@ -6,6 +6,7 @@ __all__ = [
     'select_subs_to_admin',
 ]
 
+from datetime import datetime
 import threading
 from collections import Counter
 from urllib.parse import urlparse
@@ -16,7 +17,8 @@ from faker import Faker
 from src.BusinessCentralLayer.middleware.flow_io import FlowTransferStation
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.middleware.work_io import Middleware
-from src.BusinessCentralLayer.setting import logger, REDIS_SECRET_KEY, CRAWLER_SEQUENCE, NGINX_SUBSCRIBE, SQLITE3_CONFIG
+from src.BusinessCentralLayer.setting import logger, REDIS_SECRET_KEY, CRAWLER_SEQUENCE, NGINX_SUBSCRIBE, \
+    SQLITE3_CONFIG, TIME_ZONE_CN
 
 
 class FlexibleDistribute(object):
@@ -211,20 +213,21 @@ def select_subs_to_admin(select_netloc: str = None, _debug=False) -> dict:
     mapping_subs_status = {}
     # 链接-类型映射表
     mapping_subs_type = {}
+    rc = RedisClient()
     # 清洗数据
     for filed in CRAWLER_SEQUENCE:
         # 提取池内对应类型的所有订阅链接
-        filed_sbus: list = RedisClient().sync_remain_subs(REDIS_SECRET_KEY.format(filed))
+        filed_subs: list = RedisClient().sync_remain_subs(REDIS_SECRET_KEY.format(filed))
         # 更新汇总队列
-        remain_subs += filed_sbus
+        remain_subs += filed_subs
         # 提取subs netloc映射区间
-        urls = [urlparse(i[0]).netloc for i in filed_sbus]
+        urls = [urlparse(i[0]).netloc for i in filed_subs]
         # 更新映射表
         mapping_subs_status.update({filed: dict(Counter(urls))})
-        mapping_subs_type.update(zip([i[0] for i in filed_sbus], [filed, ] * len(filed_sbus)))
-
+        mapping_subs_type.update(zip([i[0] for i in filed_subs], [filed, ] * len(filed_subs)))
     # 初始化状态下，返回订阅池状态
     if not select_netloc:
+        rc.update_api_status(api_name="search", date_format=str(datetime.now(TIME_ZONE_CN)))
         return {'msg': 'success', 'info': mapping_subs_status}
     # 指定netloc状态下，分发对应netloc的subscribe
     else:
@@ -233,7 +236,8 @@ def select_subs_to_admin(select_netloc: str = None, _debug=False) -> dict:
             subscribe, end_life = tag[0], tag[-1]
             # 存在对应netloc的链接并可存活至少beyond小时
             if select_netloc in urlparse(subscribe).netloc and not RedisClient().is_stale(end_life, beyond=6):
-                logger.debug("<SuperAdmin> -- 获取订阅")
+                logger.debug("<SubscribeIO> -- GET SUBSCRIPTION")
+                rc.update_api_status(api_name="get", date_format=str(datetime.now(TIME_ZONE_CN)))
                 try:
                     return {
                         'msg': "success",

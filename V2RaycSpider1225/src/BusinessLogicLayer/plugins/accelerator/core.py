@@ -68,6 +68,7 @@ class CoroutineSpeedup(object):
         power_ = self.power if self.power else power
         if self.max_queue_size != 0:
             power_ = self.max_queue_size if power_ > self.max_queue_size else power_
+        self.power = power_
         # 任务启动
         for x in range(power_):
             task = gevent.spawn(self.launch)

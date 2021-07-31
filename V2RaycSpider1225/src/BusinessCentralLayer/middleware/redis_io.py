@@ -3,7 +3,7 @@ __all__ = ['RedisClient', 'RedisDataDisasterTolerance']
 from typing import List, Tuple
 
 import redis
-
+from redis.exceptions import ConnectionError
 from src.BusinessCentralLayer.setting import REDIS_MASTER, REDIS_SECRET_KEY, TIME_ZONE_CN, CRAWLER_SEQUENCE, logger
 
 REDIS_CLIENT_VERSION = redis.__version__
@@ -149,6 +149,13 @@ class RedisClient(object):
 
     def get_driver(self) -> redis.StrictRedis:
         return self.db
+
+    def update_api_status(self, api_name, date_format):
+        if api_name not in ['select', 'get', 'search', 'decouple', 'reset']:
+            return False
+        api_secret_key = REDIS_SECRET_KEY.format("apis")
+        self.db.rpush(f"{api_secret_key}:{api_name}", date_format)
+        self.db.incr(f"{api_secret_key}:{api_name}_num")
 
     def sync_remain_subs(self, key_name) -> List[Tuple]:
         """

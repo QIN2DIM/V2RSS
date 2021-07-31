@@ -4,7 +4,7 @@
     - 加速器性能释放
 """
 from src.BusinessCentralLayer.setting import logger, DEFAULT_POWER
-from src.BusinessLogicLayer.plugins.accelerator.core import CoroutineSpeedup
+from .core import CoroutineSpeedup
 
 
 class ShuntRelease(CoroutineSpeedup):

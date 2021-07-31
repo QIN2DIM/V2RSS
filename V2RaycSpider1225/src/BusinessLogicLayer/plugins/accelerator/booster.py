@@ -3,7 +3,7 @@
 """
 
 from src.BusinessLogicLayer.cluster.cook import ActionShunt
-from src.BusinessLogicLayer.plugins.accelerator.core import CoroutineSpeedup
+from .core import CoroutineSpeedup
 
 
 class SpawnBooster(CoroutineSpeedup):
@@ -22,6 +22,7 @@ class SpawnBooster(CoroutineSpeedup):
         # 将单例视为容量为1的sequence
         # 允许sequence中出现重复的任务
         self.docker = docker if isinstance(docker, list) else [docker, ]
+        self.jobs = []
 
         # 其他SpawnBooster参数
         self.debug_logger = False
@@ -39,6 +40,7 @@ class SpawnBooster(CoroutineSpeedup):
             entity_ = ActionShunt.generate_entity(atomic=mirror_image, silence=self.silence, assault=self.assault)
             # 将运行实体加入任务队列
             self.work_q.put_nowait(entity_)
+            self.jobs.append(entity_)
 
     def control_driver(self, entity_):
         # 将高度抽象（压缩）的行为（Function）解压执行

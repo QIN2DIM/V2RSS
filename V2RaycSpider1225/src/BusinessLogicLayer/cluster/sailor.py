@@ -7,9 +7,9 @@ from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.middleware.work_io import Middleware
 from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE, REDIS_SECRET_KEY, SINGLE_TASK_CAP, ENABLE_DEPLOY, \
     SINGLE_DEPLOYMENT, logger
-from src.BusinessLogicLayer.cluster.cook import ActionShunt
-from src.BusinessLogicLayer.cluster.slavers.actions import __entropy__
-from src.BusinessLogicLayer.plugins.accelerator import ShuntRelease
+from .cook import ActionShunt
+from .slavers import __entropy__
+from ..plugins.accelerator import ShuntRelease
 
 
 def _is_overflow(task_name: str, rc=None):
@@ -50,11 +50,11 @@ def _is_overflow(task_name: str, rc=None):
         return 'continue'
 
 
-def _update_entropy(rc=None):
+def _update_entropy(rc=None, entropy=None):
     # 组合entropy标注数据
     try:
         atomic_queue = []
-        for entity_ in __entropy__:
+        for entity_ in entropy.copy():
             work_filed = [f"{j[0].upper()}" for j in entity_['hyper_params'].items() if j[-1]]
             work_filed = "&".join(work_filed).strip()
             atomic_item = f"|{work_filed}| {entity_['name']}"
@@ -67,7 +67,7 @@ def _update_entropy(rc=None):
         logger.exception(e)
 
 
-def _sync_actions(
+def sync_actions(
         class_: str,
         mode_sync: str = None,
         only_sync=False,
@@ -95,7 +95,7 @@ def _sync_actions(
     # 更新任务信息
     # ================================================
     # 公示即将发动的采集任务数据
-    _update_entropy(rc=rc)
+    _update_entropy(rc=rc, entropy=__entropy__)
     # 通由工厂读取映射表批量生产采集器运行实体
     sync_queue: list = ActionShunt(class_, silence=True, beat_sync=beat_sync).shunt()
     # 打乱任务序列
@@ -214,7 +214,7 @@ def manage_task(
     # ----------------------------------------------------
     # IF 本机具备采集权限，将任务同步至本机执行，在单机部署情况下任务自产自销。
     # ELSE 负责将生成的任务加入消息队列
-    response: str or bool = _sync_actions(
+    response: str or bool = sync_actions(
         class_=class_,
         only_sync=only_sync,
         beat_sync=beat_sync,

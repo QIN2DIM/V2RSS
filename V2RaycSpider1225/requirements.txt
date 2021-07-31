@@ -13,8 +13,8 @@ pytz==2020.5
 PyYAML==5.4.1
 redis==3.5.3
 requests==2.25.1
-schedule==0.6.0
 selenium==3.141.0
 tqdm~=4.56.0
 colorama~=0.4.4
 faker~=5.8.0
+urllib3~=1.25.11
