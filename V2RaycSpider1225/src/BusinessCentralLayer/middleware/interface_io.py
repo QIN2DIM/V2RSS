@@ -2,8 +2,9 @@ __all__ = ['SystemInterface']
 
 import multiprocessing
 
-from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from redis.exceptions import ConnectionError
+
+from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.setting import ENABLE_COROUTINE, REDIS_SECRET_KEY, CRAWLER_SEQUENCE, SINGLE_TASK_CAP, \
     API_DEBUG, API_PORT, API_THREADED, ENABLE_DEPLOY, ENABLE_SERVER, OPEN_HOST, logger, platform, LAUNCH_INTERVAL
 from src.BusinessLogicLayer.cluster import sailor, slavers

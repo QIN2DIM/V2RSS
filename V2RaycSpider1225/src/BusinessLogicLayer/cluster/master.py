@@ -6,13 +6,14 @@ from datetime import datetime, timedelta
 from os.path import join
 from string import printable
 from urllib.parse import urlparse
-from urllib3.exceptions import *
+
 from selenium.common.exceptions import *
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
+from urllib3.exceptions import *
 
 from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
 from src.BusinessCentralLayer.setting import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
@@ -334,13 +335,13 @@ class BaseAction(object):
                     # 根据不同的beat_sync形式持久化数据
                     FlexibleDistribute(docker=docker, beat_sync=self.beat_sync)
                     # 数据存储成功后结束循环
-                    logger.success(">> GET <{}> -> {}:{}".format(self.action_name, class_, self.subscribe))
+                    logger.success(">> GET <{}> --> [{}] {}".format(self.action_name, class_, self.subscribe))
                     # TODO ADD v5.1.0更新特性，记录机场域名-订阅域名映射缓存
                     # set_task2url_cache(task_name=self.__class__.__name__, register_url=self.register_url,
                     #                    subs=self.subscribe)
                     break
                 except Exception as e:
-                    logger.debug(">> FAILED <{}> -> {}:{}".format(self.action_name, class_, e))
+                    logger.debug(">> FAILED <{}> --> {}:{}".format(self.action_name, class_, e))
                     time.sleep(1)
                     continue
             # 若没有成功存储，返回None
@@ -445,7 +446,7 @@ class ActionMasterGeneral(BaseAction):
         # elif self.hyper_params['qtl']: ...
 
     def run(self, api=None):
-        logger.info("DO -- <{}>:beat_sync:{}".format(self.action_name, self.beat_sync))
+        logger.debug(f">> RUN <{self.action_name}> --> beat_sync[{self.beat_sync}] feature[General]")
         # 获取任务设置
         api = self.set_spider_option() if api is None else api
         # 执行核心业务逻辑

@@ -9,8 +9,8 @@ from datetime import datetime
 from typing import List
 from urllib.parse import urlparse
 
-from redis.exceptions import ResponseError,ConnectionError
 import requests
+from redis.exceptions import ResponseError, ConnectionError
 
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.setting import REDIS_SECRET_KEY, CRAWLER_SEQUENCE, logger, Fore

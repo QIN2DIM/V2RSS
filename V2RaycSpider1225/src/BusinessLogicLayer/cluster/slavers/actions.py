@@ -326,7 +326,7 @@ ActionAaxCloud = {
     'anti_slider': False,
     'hyper_params': {'ssr': False, 'v2ray': True},
     'email': "@gmail.com",
-    'feature': 'hidden',
+    'feature': 'prism',
 }
 __entropy__ = [
     # ---------------------
@@ -341,10 +341,12 @@ __entropy__ = [
 
     ActionKakCloud,  # v2ray
 
+    ActionAaxCloud,  # v2ray
+
     # ActionJssForSSRCloud,  # ssr
 
     # ActionJssForV2rayCloud,  # v2ray
-    #
+
     ActionPPForV2rayCloud,  # v2ray
 
     ActionPPForSSRCloud,  # ssr

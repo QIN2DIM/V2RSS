@@ -3,7 +3,7 @@ __all__ = ['RedisClient', 'RedisDataDisasterTolerance']
 from typing import List, Tuple
 
 import redis
-from redis.exceptions import ConnectionError
+
 from src.BusinessCentralLayer.setting import REDIS_MASTER, REDIS_SECRET_KEY, TIME_ZONE_CN, CRAWLER_SEQUENCE, logger
 
 REDIS_CLIENT_VERSION = redis.__version__

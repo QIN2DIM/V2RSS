@@ -5,6 +5,7 @@
 #   elif 该机场同时具备其他类型的采集权限，权限收缩（改写），实例入队。
 #   else 该机场仅具备该类型任务的采集权限，实例入队。
 __all__ = ['ActionShunt', 'devil_king_armed', 'reset_task']
+
 from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE, CHROMEDRIVER_PATH
 from .master import ActionMasterGeneral
 from .slavers import __entropy__

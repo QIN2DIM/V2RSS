@@ -4,16 +4,20 @@
 __all__ = ['TasksScheduler', 'CollectorScheduler']
 
 from datetime import datetime, timedelta
+
 import gevent
+from apscheduler.events import *
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.schedulers.gevent import GeventScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from apscheduler.events import *
+from gevent import monkey
 from gevent.queue import Queue
 
 from src.BusinessCentralLayer.setting import logger
 from src.BusinessLogicLayer.cluster.cook import devil_king_armed, reset_task
-from src.BusinessLogicLayer.cluster.slavers import __entropy__
+from src.BusinessLogicLayer.cluster.prism import Prism
+
+monkey.patch_all()
 
 
 class TasksScheduler(object):
@@ -247,7 +251,6 @@ class CollectorScheduler(TasksScheduler):
 
     def offload_task(self, instances: list) -> bool:
         # TODO 此处需要进行一轮收益计算，调整任务权重
-
         # 复制实体团
         pending_tasks = instances.copy()
         # 无待解压实体（未分发任务）
@@ -271,7 +274,11 @@ class CollectorScheduler(TasksScheduler):
         :param atomic:
         :return:
         """
-        alice = devil_king_armed(atomic, beat_sync=True, assault=True, silence=True)
+        # 根据特征选择不同的解决方案
+        if atomic.get("feature") == 'prism':
+            alice = Prism(atomic, assault=True, silence=True)
+        else:
+            alice = devil_king_armed(atomic, assault=True, silence=True)
         # 创建运行实体配置
         api = alice.set_spider_option()
         # 标记运行实体
@@ -301,6 +308,6 @@ class CollectorScheduler(TasksScheduler):
             try:
                 # :)签退下班
                 self.running_jobs.pop(alice_id)
-                logger.debug(f">> Detach <{alice_name}> --> session_id:{alice_id}")
+                logger.debug(f">> Detach <{alice_name}> --> [session_id] {alice_id}")
             except (KeyError,):
                 pass
