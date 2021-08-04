@@ -212,9 +212,10 @@ ActionGsouCloud = {
 }
 # =============================================
 # ActionDuosCloud
-# - intro: 1day 2G
+# - intro: 1day 10G
 # - change log:
 #   -2021.07.14 [停用]流量不达标
+#   -2021.08.04 [启用]
 # =============================================
 ActionDuosCloud = {
     'name': "ActionDuosCloud",
@@ -343,6 +344,8 @@ __entropy__ = [
 
     ActionAaxCloud,  # v2ray
 
+    ActionDuosCloud,  # v2ray
+
     # ActionJssForSSRCloud,  # ssr
 
     # ActionJssForV2rayCloud,  # v2ray
@@ -371,7 +374,6 @@ __entropy__ = [
     # ActionMiTaoCloud,
     # ActionMxCloud,
     # ActionJfCloud,
-    # ActionDuosCloud,  # v2ray
 
     # 无免费节点
     # ActionJdSuCloud,

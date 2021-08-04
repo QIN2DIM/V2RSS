@@ -153,9 +153,8 @@ class RedisClient(object):
     def update_api_status(self, api_name, date_format):
         if api_name not in ['select', 'get', 'search', 'decouple', 'reset']:
             return False
-        api_secret_key = REDIS_SECRET_KEY.format("apis")
-        self.db.rpush(f"{api_secret_key}:{api_name}", date_format)
-        self.db.incr(f"{api_secret_key}:{api_name}_num")
+        self.db.rpush(f"v2rayc_apis:{api_name}", date_format)
+        self.db.incr(f"v2rayc_apis:{api_name}_num")
 
     def sync_remain_subs(self, key_name) -> List[Tuple]:
         """

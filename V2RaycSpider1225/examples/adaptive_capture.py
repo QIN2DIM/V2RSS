@@ -2,7 +2,8 @@ import random
 
 import gevent
 
-from src.BusinessLogicLayer.cluster.prism import PrismV2, ActionAaxCloud
+from src.BusinessLogicLayer.cluster.prism import PrismV2
+from src.BusinessLogicLayer.cluster.slavers.instances import ActionAaxCloud
 
 
 def prism():
@@ -15,7 +16,7 @@ def prism():
         input()
 
 
-def super_go(x=16, silence=True):
+def super_go(x=1, silence=True):
     from gevent import monkey
     monkey.patch_all()
     gevent.joinall([gevent.spawn(ActionAaxCloud(silence=silence).run) for _ in range(x)])

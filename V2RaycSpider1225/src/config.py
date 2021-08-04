@@ -149,6 +149,12 @@ API_THREADED: bool = True
 API_PORT: int = config_['API_PORT']
 OPEN_HOST: str = "127.0.0.1" if API_DEBUG or "win" in platform else "0.0.0.0"
 # ---------------------------------------------------
+# TODO (√)The domain name used to deploy the gardener
+# 园丁系统部署域名，当启动该项功能时，必须配置如: www.bbq.club
+# 由于性能受限，该域名必须为当前主机的域名
+# ---------------------------------------------------
+GARDENER_HOST: str = config_['GARDENER_HOST']
+# ---------------------------------------------------
 # 路由接口（公开）
 # ---------------------------------------------------
 ROUTE_API = {

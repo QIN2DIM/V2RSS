@@ -3,6 +3,7 @@
 """
 
 from src.BusinessLogicLayer.cluster.cook import ActionShunt
+from src.BusinessLogicLayer.cluster.prism import Prism
 from .core import CoroutineSpeedup
 
 
@@ -37,7 +38,10 @@ class SpawnBooster(CoroutineSpeedup):
         # 根据步态特征获取实例化任务
         for mirror_image in self.docker:
             # entity: ActionMaster 的行为抽象，此处为原子化操作，实体数仅为1
-            entity_ = ActionShunt.generate_entity(atomic=mirror_image, silence=self.silence, assault=self.assault)
+            if mirror_image.get("feature") == 'prism':
+                entity_ = Prism(atomic=mirror_image, silence=self.silence, assault=self.assault).run
+            else:
+                entity_ = ActionShunt.generate_entity(atomic=mirror_image, silence=self.silence, assault=self.assault)
             # 将运行实体加入任务队列
             self.work_q.put_nowait(entity_)
             self.jobs.append(entity_)

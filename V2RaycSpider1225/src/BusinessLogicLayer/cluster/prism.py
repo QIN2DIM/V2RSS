@@ -2,7 +2,7 @@
 # Time       : 2021/7/30 4:01
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
-# Description:
+# Description: Adaptive acquisition framework
 import time
 from urllib.parse import urlparse
 
@@ -32,7 +32,7 @@ class Prism(ActionMasterGeneral):
 
     def run(self, api=None):
         logger.debug(
-            f">> DO <{self.action_name}> --> beat_sync[{self.beat_sync}] feature[{self.atomic.get('feature')}]")
+            f">> RUN <{self.action_name}> --> beat_sync[{self.beat_sync}] feature[{self.atomic.get('feature')}]")
         api = self.set_spider_option() if api is None else api
         try:
             self.get_html_handle(api, self.register_url, 60)

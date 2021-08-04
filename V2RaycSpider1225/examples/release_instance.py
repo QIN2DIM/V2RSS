@@ -1,10 +1,22 @@
-import random
+from gevent import monkey
 
-from src.BusinessLogicLayer.cluster.slavers import __entropy__
-from src.BusinessLogicLayer.plugins.accelerator import booster
+monkey.patch_all(ssl=False)
+
+
+def demo1():
+    import random
+    from src.BusinessLogicLayer.cluster.slavers import __entropy__
+    from src.BusinessLogicLayer.plugins.accelerator import booster
+
+    booster(docker=random.choice(__entropy__), silence=True)
+
+
+def demo2():
+    from src.BusinessLogicLayer.cluster.slavers import ActionAaxCloud
+    from src.BusinessLogicLayer.plugins.accelerator import booster
+
+    booster(docker=ActionAaxCloud, silence=False, power=1, assault=True)
+
 
 if __name__ == '__main__':
-    from gevent import monkey
-
-    monkey.patch_all()
-    booster(docker=random.choice(__entropy__), silence=True, power=5, assault=True)
+    demo2()
