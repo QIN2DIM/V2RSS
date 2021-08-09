@@ -316,7 +316,7 @@ ActionPPForSSRCloud = {
     'email': "@gmail.com"
 }
 # =============================================
-# ActionPPCloud
+# ActionAaxCloud
 # - change log:
 #   -2021-07-18 [Create] 更新实例
 # =============================================
@@ -329,30 +329,45 @@ ActionAaxCloud = {
     'email': "@gmail.com",
     'feature': 'prism',
 }
+# =============================================
+# ActionJydCloud
+# - change log:
+#   -2021-07-18 [Create] 更新实例
+# =============================================
+ActionJydCloud = {
+    'name': "ActionJydCloud",
+    'register_url': "https://www.jiuyecaody.xyz/auth/register",
+    'life_cycle': 1,
+    'anti_slider': True,
+    'hyper_params': {'ssr': False, 'v2ray': True},
+    'email': "@gmail.com",
+}
+
 __entropy__ = [
     # ---------------------
     # [启动] 无障碍
     # ---------------------
+    ActionAaxCloud,  # v2ray
 
     # ---------------------
     # [启动] 需要滑动验证
     # ---------------------
 
-    ActionReCloud,  # v2ray
+    ActionReCloud,  # v2ray 1day10G
 
-    ActionKakCloud,  # v2ray
+    ActionJydCloud,  # v2ray 1day2G
 
-    ActionAaxCloud,  # v2ray
+    # ActionKakCloud,  # v2ray
 
-    ActionDuosCloud,  # v2ray
+    # ActionDuosCloud,  # v2ray
 
     # ActionJssForSSRCloud,  # ssr
 
     # ActionJssForV2rayCloud,  # v2ray
 
-    ActionPPForV2rayCloud,  # v2ray
+    ActionPPForV2rayCloud,  # v2ray 1day2G
 
-    ActionPPForSSRCloud,  # ssr
+    ActionPPForSSRCloud,  # ssr 1day2G
 
     # ---------------------
     # [停用] 公益节点

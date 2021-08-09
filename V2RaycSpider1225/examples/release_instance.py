@@ -15,7 +15,7 @@ def demo2():
     from src.BusinessLogicLayer.cluster.slavers import ActionAaxCloud
     from src.BusinessLogicLayer.plugins.accelerator import booster
 
-    booster(docker=ActionAaxCloud, silence=False, power=1, assault=True)
+    booster(docker=ActionAaxCloud, silence=True, power=1, assault=True)
 
 
 if __name__ == '__main__':
