@@ -10,7 +10,7 @@ import yaml
 from src.BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE_CACHE
 
 
-class _ClashAdaptationInterface(object):
+class _ClashAdaptationInterface:
     """https://docs.cfw.lbyczf.com/"""
 
     def __init__(self, subscribe: list = None, debug: bool = False):
@@ -27,7 +27,7 @@ class _ClashAdaptationInterface(object):
     def _load_local_config(self, path: str) -> dict:
         try:
             with open(path, 'r', encoding='utf8') as f:
-                local_config: dict = yaml.load(f.read(), Loader=yaml.FullLoader)
+                local_config: dict = yaml.safe_load(f.read())
             return local_config
         except FileNotFoundError:
             self._debug_printer('配置文件加载失败')
@@ -35,7 +35,7 @@ class _ClashAdaptationInterface(object):
     def _load_startup_config(self, url: str, path: str) -> dict:
         try:
             raw = requests.get(url, timeout=5, proxies=self._PROXIES).content.decode('utf-8')
-            template_config = yaml.load(raw, Loader=yaml.FullLoader)
+            template_config = yaml.safe_load(raw)
         except requests.exceptions.RequestException:
             self._debug_printer('网络获取规则配置失败,加载本地配置文件')
             template_config = self._load_local_config(path)
@@ -100,10 +100,13 @@ class _ClashAdaptationInterface(object):
             for key in list(obj.keys()):
                 if obj.get(key) is None:
                     del obj[key]
-            if obj.get('name'):
-                if not obj['name'].startswith('剩余流量') and not obj['name'].startswith('过期时间'):
-                    proxies['proxy_list'].append(obj)
-                    proxies['proxy_names'].append(obj['name'])
+            if (
+                    obj.get('name')
+                    and not obj['name'].startswith('剩余流量')
+                    and not obj['name'].startswith('过期时间')
+            ):
+                proxies['proxy_list'].append(obj)
+                proxies['proxy_names'].append(obj['name'])
         self._debug_printer('可用ssr节点{}个'.format(len(proxies['proxy_names'])))
         return proxies
 
@@ -169,6 +172,7 @@ class _ClashAdaptationInterface(object):
             proxy_list.append(proxy_dict)
         return proxy_list
 
+    @logger.catch()
     def _analyze_rss(self) -> dict:
         headers = {'User-Agent': 'Clash For Python'}
         proxy_list = {
@@ -233,7 +237,7 @@ class _ClashAdaptationInterface(object):
     def url_scheme(self, mode: str = 'download'):
         if mode == 'download':
             return self.CLASH_URL_SCHEME
-        elif mode == 'quick':
+        if mode == 'quick':
             return "clash://quit"
 
     def run(self) -> None:
@@ -267,7 +271,7 @@ class _ClashAdaptationInterface(object):
         return
 
 
-class _Interface(object):
+class _Interface:
 
     @staticmethod
     def run(subscribe: list or str, debug=False) -> dict:
@@ -290,8 +294,7 @@ class _Interface(object):
         path: str = _ClashAdaptationInterface().CLASH_CONFIG_YAML
         if os.path.exists(path):
             return {"msg": "success", 'info': path}
-        else:
-            return {"msg": "failed"}
+        return {"msg": "failed"}
 
 
 api = _Interface()

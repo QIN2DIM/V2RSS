@@ -44,8 +44,7 @@ class GeeTest3(SliderValidator):
             time.sleep(0.5)
         if contain_type:
             return bg_img
-        else:
-            return bg_img[bg_img.find(',') + 1:]
+        return bg_img[bg_img.find(',') + 1:]
 
     def capture_full_img(self):
         element_class_name = "geetest_canvas_fullbg geetest_fade geetest_absolute"
@@ -68,8 +67,8 @@ class GeeTest3(SliderValidator):
             except Exception as e:
                 print("{}:{}".format(self.__class__, e))
                 time.sleep(0.5)
-        else:
-            raise NoSuchElementException
+
+        raise NoSuchElementException
 
     def activate_validator(self):
         self.api.find_element_by_class_name('geetest_radar_tip').click()
@@ -132,8 +131,6 @@ class GeeTest3(SliderValidator):
             if self.debug:
                 print(f"--->{self.business_name}：验证成功")
             return True
-        # 元素加载超时，捕获失败
-        else:
-            if self.debug:
-                print(f"--->{self.business_name}：验证失败")
-            return False
+        if self.debug:
+            print(f"--->{self.business_name}：验证失败")
+        return False

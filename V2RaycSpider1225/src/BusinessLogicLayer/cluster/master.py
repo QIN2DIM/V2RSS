@@ -7,13 +7,13 @@ from os.path import join
 from string import printable
 from urllib.parse import urlparse
 
-from selenium.common.exceptions import *
+from selenium.common.exceptions import WebDriverException, NoSuchElementException, TimeoutException
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
-from urllib3.exceptions import *
+from urllib3.exceptions import HTTPError
 
 from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
 from src.BusinessCentralLayer.setting import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
@@ -21,7 +21,7 @@ from ..plugins.armour import GeeTestAdapter
 from ..plugins.armour import get_header
 
 
-class BaseAction(object):
+class BaseAction:
     """针对SSPanel-Uim机场的基准行为"""
 
     def __init__(self, silence=None, assault=None, beat_sync=True, debug=None,
@@ -103,9 +103,7 @@ class BaseAction(object):
             # 执行成功
             if work_success:
                 return True
-            # 执行失败
-            else:
-                return False
+            return False
         # 网络不给力 刷新当前网页
         except WebDriverException:
             return False
@@ -118,8 +116,7 @@ class BaseAction(object):
         # True：当前任务超时 False：当前任务未超时
         if self.work_clock_utils - self.work_clock_global > self.work_clock_max_wait:
             return True
-        else:
-            return False
+        return False
 
     @staticmethod
     def generate_account(email_class: str = '@qq.com') -> tuple:
@@ -319,7 +316,7 @@ class BaseAction(object):
         # 若对象可捕捉则解析数据并持久化数据
         if self.subscribe:
             # 失败重试3次
-            for x in range(3):
+            for _ in range(3):
                 # ['domain', 'subs', 'class_', 'end_life', 'res_time', 'passable','username', 'password', 'email']
                 try:
                     # 机场域名
@@ -485,11 +482,11 @@ class AdaptiveCapture(BaseAction):
         url = unknown_hosts.strip()
         if url.endswith("/auth/register") and url.startswith("https://"):
             return url
-        elif url.endswith("/auth/register") and not url.startswith("https://"):
+        if url.endswith("/auth/register") and not url.startswith("https://"):
             return f"https://{url}"
-        elif not url.endswith("auth/register") and url.startswith("https://"):
+        if not url.endswith("auth/register") and url.startswith("https://"):
             return f"{url}/auth/register"
-        elif not (url.endswith("auth/register") and url.startswith("https://")):
+        if not (url.endswith("auth/register") and url.startswith("https://")):
             return f"https://{url}/auth/register"
 
     @staticmethod

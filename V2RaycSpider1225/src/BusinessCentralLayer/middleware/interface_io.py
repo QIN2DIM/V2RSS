@@ -1,32 +1,33 @@
 __all__ = ['SystemInterface']
 
 import multiprocessing
+import sys
 
 from redis.exceptions import ConnectionError
 
-from src.BusinessCentralLayer.middleware.redis_io import RedisClient
-from src.BusinessCentralLayer.setting import ENABLE_COROUTINE, REDIS_SECRET_KEY, CRAWLER_SEQUENCE, SINGLE_TASK_CAP, \
-    API_DEBUG, API_PORT, API_THREADED, ENABLE_DEPLOY, ENABLE_SERVER, OPEN_HOST, logger, platform, LAUNCH_INTERVAL
+from src.BusinessCentralLayer.setting import REDIS_SECRET_KEY, CRAWLER_SEQUENCE, SINGLE_TASK_CAP, \
+    API_DEBUG, API_PORT, API_THREADED, ENABLE_DEPLOY, ENABLE_SERVER, OPEN_HOST, logger, LAUNCH_INTERVAL, terminal_echo
 from src.BusinessLogicLayer.cluster import sailor, slavers
 from src.BusinessLogicLayer.deploy import TasksScheduler, CollectorScheduler
 from src.BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
 from src.BusinessViewLayer.myapp.app import app
+from .redis_io import RedisClient
 
 # ----------------------------------------
 # 越权参数重置
 # ----------------------------------------
-enable_coroutine = ENABLE_COROUTINE
+
+ACTIONS_IO = [f'{[j[0] for j in i.get("hyper_params").items() if j[-1]]}{i.get("name")}' for i in slavers.__entropy__]
 
 
 # ----------------------------------------
 # 容器接口液化
 # ----------------------------------------
-class _ContainerDegradation(object):
+class _ContainerDegradation:
     def __init__(self):
         """config配置参数一次性读取之后系统不再响应配置变动，修改参数需要手动重启项目"""
         # 热加载配置文件 载入越权锁
         self.deploy_cluster, self.cap = CRAWLER_SEQUENCE, SINGLE_TASK_CAP
-        self.go = enable_coroutine
 
     @staticmethod
     def sync_launch_interval() -> dict:
@@ -50,8 +51,8 @@ class _ContainerDegradation(object):
             if task_interval < 60:
                 logger.warning(f"<launch_interval>--{task_name}任务频次过高，应不少于60/次,参数已拟合")
                 launch_interval.update({task_name: 60})
-        else:
-            return launch_interval
+
+        return launch_interval
 
     @staticmethod
     def startup_ddt_decouple(debug: bool = False, power: int = 12):
@@ -59,8 +60,8 @@ class _ContainerDegradation(object):
 
     def startup_ddt_overdue(self, task_name: str = None):
         if task_name is None:
-            for task_name in self.deploy_cluster:
-                RedisClient().refresh(key_name=REDIS_SECRET_KEY.format(task_name), cross_threshold=3)
+            for new_task in self.deploy_cluster:
+                RedisClient().refresh(key_name=REDIS_SECRET_KEY.format(new_task), cross_threshold=3)
         else:
             RedisClient().refresh(key_name=REDIS_SECRET_KEY.format(task_name), cross_threshold=3)
 
@@ -85,16 +86,16 @@ class _ContainerDegradation(object):
 _cd = _ContainerDegradation()
 
 
-class _SystemEngine(object):
+class _SystemEngine:
 
     def __init__(self) -> None:
-        logger.info(f'<SystemInitialization> SystemEngine -> {platform}')
-        logger.info(f'<RunConfiguration> check_sequence:{CRAWLER_SEQUENCE}')
-        logger.info(f'<DeploymentSettings> enable_deploy:{ENABLE_DEPLOY}')
-        logger.info(f"<CoroutineAcceleration> Coroutine:{enable_coroutine}")
-        logger.info("<UnzipTheContainer> DockerEngineInterface")
-        logger.info(f'<LoadQueue> IndexQueue:{slavers.__entropy__}')
-        logger.success('<SystemEngine> System core initialized successfully.')
+        terminal_echo(f"[SystemEngineIO] CONFIG_COLLECTOR_PERMISSION:{CRAWLER_SEQUENCE}", 1)
+        terminal_echo(f"[SystemEngineIO] CONFIG_ENABLE_DEPLOY:{ENABLE_DEPLOY}", 1)
+        terminal_echo("[SystemEngineIO] CONFIG_COROUTINE:True", 1)
+        for action_image in ACTIONS_IO:
+            terminal_echo(f"[SystemEngineIO] CONFIG_ACTIONS:{action_image}", 1)
+
+        logger.success("<SystemEngineIO> System core initialized successfully.")
 
     @staticmethod
     def run_server() -> None:
@@ -105,16 +106,23 @@ class _SystemEngine(object):
         app.run(host=OPEN_HOST, port=API_PORT, debug=API_DEBUG, threaded=API_THREADED)
 
     @staticmethod
+    @logger.catch()
     def run_deploy() -> None:
         """
         定时任务,建议使用if而非for构造任务线程池
         @return:
         """
+        # 载入定时任务权限配置
+        tasks = ENABLE_DEPLOY['tasks']
+        task2function = {
+            'ddt_decouple': _cd.startup_ddt_decouple,
+            'ddt_overdue': _cd.startup_ddt_overdue,
+        }
         try:
-            # 载入定时任务权限配置
-            tasks = ENABLE_DEPLOY['tasks']
+
             # 初始化调度器
-            ts, cs = TasksScheduler(), CollectorScheduler()
+            docker_of_based_scheduler = TasksScheduler()
+            docker_of_collector_scheduler = CollectorScheduler()
             # 清洗配置 使调度间隔更加合理
             interval = _cd.sync_launch_interval()
             # 添加任务
@@ -123,26 +131,26 @@ class _SystemEngine(object):
                 # 若开启采集器则使用CollectorScheduler映射任务
                 # 使用久策略将此分流判断注释既可
                 if docker_name == "collector":
-                    cs.mapping_config({
+                    docker_of_collector_scheduler.mapping_config({
                         'interval': interval[docker_name],
                         'permission': permission,
                     })
                     continue
-                elif permission:
-                    ts.add_job({
+                if permission:
+                    docker_of_based_scheduler.add_job({
                         "name": docker_name,
-                        "api": eval(f"_cd.startup_{docker_name}"),
+                        "api": task2function[docker_name],
                         'interval': interval[docker_name],
                         'permission': True
                     })
-            # 启动定时任务
-            cs.deploy_jobs()
-            ts.deploy_jobs()
+            # 启动定时任务 要求执行采集任务时必须至少携带另一种其他部署任务
+            docker_of_collector_scheduler.deploy_jobs()
+            docker_of_based_scheduler.deploy_jobs()
         except ConnectionError:
             logger.warning("<RedisIO> Network communication failure, please check the network connection.")
         except KeyError:
-            logger.critical('config中枢层配置被篡改，ENABLE_DEPLOY 配置中无”tasks“键值对')
-            exit()
+            logger.critical(f'config中枢层配置被篡改，ENABLE_DEPLOY 配置中无对应键值对{tasks}')
+            sys.exit()
         except NameError:
             logger.critical('eval()或exec()语法异常，检测变量名是否不一致。')
 
@@ -213,7 +221,7 @@ class _SystemEngine(object):
             # 添加阻塞
             for process_ in process_list:
                 process_.join()
-        except TypeError or AttributeError:
+        except (TypeError, AttributeError):
             pass
         except (KeyboardInterrupt, SystemExit):
             # FIXME 确保进程间不产生通信的情况下终止
@@ -227,16 +235,15 @@ class _SystemEngine(object):
 # ----------------------------------------
 # 外部接口
 # ----------------------------------------
-class SystemInterface(object):
-
+class SystemInterface:
     @staticmethod
     def system_panel() -> None:
         """
         该接口用于开启panel桌面前端
         @return:
         """
-        from src.BusinessViewLayer.panel.panel import V2RaycSpiderMasterPanel
-        v2raycs = V2RaycSpiderMasterPanel()
+        from src.BusinessViewLayer.panel.panel import PaneInterfaceIO
+        v2raycs = PaneInterfaceIO()
         v2raycs.home_menu()
 
     @staticmethod
@@ -255,7 +262,6 @@ class SystemInterface(object):
     @staticmethod
     def run(
             deploy_: bool = None,
-            coroutine_speed_up: bool = None,
             beat_sync: bool = True,
             force_run: bool = None
     ) -> None:
@@ -264,13 +270,8 @@ class SystemInterface(object):
         @param force_run:以debug身份强制运行采集器
         @param beat_sync:节拍同步
         @param deploy_: 部署 定时任务+flask web API
-        @param coroutine_speed_up:协程加速控件，在任何情况下默认启动
         @return:
         """
-        global enable_coroutine
-
-        # 手动传参优先级更高，修改系统权限
-        enable_coroutine = coroutine_speed_up if coroutine_speed_up else ENABLE_COROUTINE
 
         # 部署定时任务
         if deploy_:

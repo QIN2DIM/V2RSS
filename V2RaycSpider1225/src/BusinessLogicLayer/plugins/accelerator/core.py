@@ -4,7 +4,7 @@ import gevent
 from gevent.queue import Queue
 
 
-class CoroutineSpeedup(object):
+class CoroutineSpeedup:
     """轻量化的协程控件"""
 
     def __init__(self, work_q: Queue = None, task_docker=None, power: int = None, debug: bool = True,
@@ -70,7 +70,7 @@ class CoroutineSpeedup(object):
             power_ = self.max_queue_size if power_ > self.max_queue_size else power_
         self.power = power_
         # 任务启动
-        for x in range(power_):
+        for _ in range(power_):
             task = gevent.spawn(self.launch)
             task_list.append(task)
         gevent.joinall(task_list)

@@ -6,7 +6,7 @@ __all__ = ['TasksScheduler', 'CollectorScheduler']
 from datetime import datetime, timedelta
 
 import gevent
-from apscheduler.events import *
+from apscheduler.events import EVENT_JOB_SUBMITTED, EVENT_JOB_MAX_INSTANCES, EVENT_JOB_ERROR
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.schedulers.gevent import GeventScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -20,7 +20,7 @@ from src.BusinessLogicLayer.cluster.prism import Prism
 monkey.patch_all()
 
 
-class TasksScheduler(object):
+class TasksScheduler:
     def __init__(self):
         # 任务容器 存储全局任务标识及标识指向的业务模块
         self.dockers: list = []
@@ -240,7 +240,7 @@ class CollectorScheduler(TasksScheduler):
         # 配置launcher
         # ===========================
         task_list = []
-        for x in range(power_):
+        for _ in range(power_):
             task = gevent.spawn(self.launch)
             task_list.append(task)
         # ===========================

@@ -27,7 +27,7 @@ def _is_overflow(task_name: str, rc=None):
     cap: int = SINGLE_TASK_CAP
 
     # 获取当前仓库剩余
-    storage_remain: int = rc.__len__(REDIS_SECRET_KEY.format(f'{task_name}'))
+    storage_remain: int = rc.get_len(REDIS_SECRET_KEY.format(f'{task_name}'))
 
     # 获取本机任务缓存
     cache_size: int = Middleware.poseidon.qsize()
@@ -40,14 +40,11 @@ def _is_overflow(task_name: str, rc=None):
     # 判断缓冲队列是否已达单机采集极限
     # 未防止绝对溢出，此处限制单机任务数不可超过满载值的~x％
     # x = 1 if signal collector else x = 1/sum (Number of processes)
-    elif storage_remain + cache_size > round(cap * 0.8):
+    if storage_remain + cache_size > round(cap * 0.8):
         # 若已达或超过单机采集极限，则休眠任务
         # logger.info(f'<TaskManager> BeatPause || 节拍停顿<{task_name}>({storage_remain + cache_size}/{cap})')
         return 'offload'
-
-    # 否则可以继续同步任务
-    else:
-        return 'continue'
+    return 'continue'
 
 
 def _update_entropy(rc=None, entropy=None):
@@ -106,7 +103,7 @@ def sync_actions(
     # ================================================
     if mode_sync == 'upload':
         # fixme:临时方案:解决链接溢出问题
-        if round(rc.__len__(REDIS_SECRET_KEY.format(class_)) * 1.25) > SINGLE_TASK_CAP:
+        if round(rc.get_len(REDIS_SECRET_KEY.format(class_)) * 1.25) > SINGLE_TASK_CAP:
             logger.warning("<TaskManager> UploadHijack -- 连接池任务即将溢出，上传任务被劫持")
             return None
         # 持续实例化采集任务
@@ -237,10 +234,9 @@ def manage_task(
     if collector_permission:
         # if task queue can be work
         if (response == 'offload') and (Middleware.poseidon.qsize() > 0):
-            logger.info(f'<TaskManager> Run || 采集任务启动')
+            logger.info('<TaskManager> Run || 采集任务启动')
             ShuntRelease(work_queue=Middleware.poseidon).interface()
-        logger.success(f'<TaskManager> Finish || 采集任务结束')
+        logger.success('<TaskManager> Finish || 采集任务结束')
         return True
-    else:
-        # logger.warning(f"<TaskManager> Hijack<{class_}> || 当前节点不具备采集权限")
-        return False
+    # logger.warning(f"<TaskManager> Hijack<{class_}> || 当前节点不具备采集权限")
+    return False

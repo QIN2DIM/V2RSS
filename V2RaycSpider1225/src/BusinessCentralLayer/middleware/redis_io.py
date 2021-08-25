@@ -10,7 +10,7 @@ REDIS_CLIENT_VERSION = redis.__version__
 IS_REDIS_VERSION_2 = REDIS_CLIENT_VERSION.startswith('2.')
 
 
-class RedisClient(object):
+class RedisClient:
     def __init__(self, host=REDIS_MASTER['host'], port=REDIS_MASTER['port'], password=REDIS_MASTER['password'],
                  db=REDIS_MASTER['db'],
                  **kwargs) -> None:
@@ -66,9 +66,7 @@ class RedisClient(object):
                     # 若链接过期 -> loop next -> finally :db-del stale subscribe
                     if self.is_stale(end_life, beyond=3):
                         continue
-                    # 若链接可用 -> break off -> 分发 -> finally :db-del subscribe
-                    else:
-                        return self.subscribe
+                    return self.subscribe
                 # 出现该错误视为redis队列被击穿 无任何可用的链接分发，中断循环
                 except IndexError:
                     logger.critical("{}.get() IndexError".format(self.__class__.__name__))
@@ -91,14 +89,14 @@ class RedisClient(object):
 
         docker: dict = self.db.hgetall(key_name)
         # 管理员指令获取的链接
-        if self.__len__(key_name) != 0:
+        if self.get_len(key_name) != 0:
             for subscribe, end_life in docker.items():
                 if self.is_stale(end_life, cross_threshold):
                     logger.debug(f'del-({key_name})--{subscribe}')
                     self.db.hdel(key_name, subscribe)
-            logger.success('<{}> UPDATE - {}({})'.format(self.__class__.__name__, key_name, self.__len__(key_name)))
+            logger.success('<{}> UPDATE - {}({})'.format(self.__class__.__name__, key_name, self.get_len(key_name)))
         else:
-            logger.warning('<{}> EMPTY - {}({})'.format(self.__class__.__name__, key_name, self.__len__(key_name)))
+            logger.warning('<{}> EMPTY - {}({})'.format(self.__class__.__name__, key_name, self.get_len(key_name)))
 
     @staticmethod
     def is_stale(subs_expiration_time: str, beyond: int = None) -> bool:
@@ -120,11 +118,11 @@ class RedisClient(object):
 
             # 时间比对 并返回是否过期的响应 -> bool
             if beyond and isinstance(beyond, int):
-                return False if subs_end_time >= now_time + timedelta(hours=beyond) else True
-            elif beyond is None:
-                return False if subs_end_time >= now_time else True
+                return subs_end_time < (now_time + timedelta(hours=beyond))
+            if beyond is None:
+                return subs_end_time < now_time
 
-    def __len__(self, key_name) -> int:
+    def get_len(self, key_name) -> int:
         return self.db.hlen(key_name)
 
     def subs_info(self, class_: str = None) -> dict:
@@ -135,9 +133,9 @@ class RedisClient(object):
         response = {}
         if class_ is None:
             for key_ in CRAWLER_SEQUENCE:
-                response.update({key_: self.__len__(REDIS_SECRET_KEY.format(key_))})
+                response.update({key_: self.get_len(REDIS_SECRET_KEY.format(key_))})
         else:
-            response[class_] = self.__len__(REDIS_SECRET_KEY.format(class_))
+            response[class_] = self.get_len(REDIS_SECRET_KEY.format(class_))
         return response
 
     def kill(self) -> None:
@@ -162,7 +160,7 @@ class RedisClient(object):
         @param key_name: secret key
         @return:
         """
-        return [i for i in self.db.hgetall(key_name).items()]
+        return list(self.db.hgetall(key_name).items())
 
     def sync_message_queue(self, mode: str, message: str = None):
         """
@@ -180,15 +178,14 @@ class RedisClient(object):
                 self.db.lpush("Poseidon", message)
                 # logger.info(f"<RedisClient> UploadTask || message")
                 return True
-            else:
-                logger.warning(f"<RedisClient> EmptyTask || 要上传的消息载体为空")
-                return False
+            logger.warning("<RedisClient> EmptyTask || 要上传的消息载体为空")
+            return False
+
         # 同步任务队列，下载原子任务
-        elif mode == "download":
+        if mode == "download":
             if self.db.exists("Poseidon"):
                 return self.db.lpop("Poseidon")
-            else:
-                return False
+            return False
 
 
 class RedisDataDisasterTolerance(RedisClient):
@@ -237,6 +234,4 @@ class RedisDataDisasterTolerance(RedisClient):
         except redis.exceptions.DataError:
             logger.warning(f'({class_}):缓存可能被击穿或缓存为空，请系统管理员及时维护链接池！')
         except redis.exceptions.ConnectionError:
-            logger.error(f"redis-slave {self.redis_virtual} 可能宕机")
-        except Exception as e:
-            logger.exception(e)
+            logger.error(f"redis-slave {self.redis_virtual} 或宕机")

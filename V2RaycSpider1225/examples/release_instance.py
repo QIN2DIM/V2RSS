@@ -12,10 +12,10 @@ def demo1():
 
 
 def demo2():
-    from src.BusinessLogicLayer.cluster.slavers import ActionAaxCloud
+    from src.BusinessLogicLayer.cluster.slavers import ActionPPForSSRCloud
     from src.BusinessLogicLayer.plugins.accelerator import booster
 
-    booster(docker=ActionAaxCloud, silence=True, power=1, assault=True)
+    booster(docker=ActionPPForSSRCloud, silence=True, power=1, assault=True)
 
 
 if __name__ == '__main__':

@@ -11,4 +11,3 @@ class ActionAaxCloud(Prism):
 
     def __init__(self, silence=True, assault=True):
         super(ActionAaxCloud, self).__init__(atomic=ActionAaxCloud.atomic, silence=silence, assault=assault)
-

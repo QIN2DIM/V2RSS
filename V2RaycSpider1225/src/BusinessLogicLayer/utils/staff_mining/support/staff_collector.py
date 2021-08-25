@@ -1,8 +1,9 @@
+import sys
+
 __all__ = ['StaffCollector']
 
 import random
 import time
-import warnings
 
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver import Chrome, ChromeOptions
@@ -13,7 +14,7 @@ from tqdm import tqdm
 from ..common.exceptions import CollectorSwitchError
 
 
-class StaffCollector(object):
+class StaffCollector:
     def __init__(self, cache_path: str, chromedriver_path: str, silence: bool = True, debug: bool = False):
         """
 
@@ -32,7 +33,7 @@ class StaffCollector(object):
 
     @staticmethod
     def _down_to_api(api: Chrome, search_query: str):
-        """# 键入并跳转至相关页面"""
+        """ 键入并跳转至相关页面"""
         while True:
             try:
                 input_tag = api.find_element_by_xpath("//input[@name='q']")
@@ -47,6 +48,7 @@ class StaffCollector(object):
 
     @staticmethod
     def _page_switcher(api: Chrome, is_home_page: bool = False):
+        start_time = time.time()
         # 首页 -> 第二页
         if is_home_page:
             while True:
@@ -72,58 +74,55 @@ class StaffCollector(object):
                     next_page_bottom = page_switchers[-1]
                     next_page_bottom.click()
                     break
-                except NoSuchElementException:
+                except (NoSuchElementException, IndexError):
+                    time.sleep(0.5)
                     # 检测到到流量拦截 主动抛出异常并采取备用方案
                     if "sorry" in api.current_url:
                         raise CollectorSwitchError
-                    time.sleep(0.5)
+                    # 最后一页
+                    if time.time() - start_time > 5:
+                        break
                     continue
 
     def _capture_host(self, api: Chrome):
+        time.sleep(1)
         # hosts = api.find_elements_by_xpath("//span[@class='qXLe6d dXDvrc']//span[@class='fYyStc']")
         hosts = api.find_elements_by_xpath("//div[contains(@class,'NJjxre')]//cite[@class='iUh30 Zu0yb qLRx3b tjvcx']")
 
         with open(self.cache_path, 'a', encoding='utf8') as f:
             for host in hosts:
-                try:
-                    f.write(f"{host.text.split(' ')[0].strip()}/auth/register\n")
-                except Exception as e:
-                    warnings.warn(f"{e}")
+                f.write(f"{host.text.split(' ')[0].strip()}/auth/register\n")
 
     def set_spider_options(self) -> Chrome:
+        # 实例化Chrome可选参数
         options = ChromeOptions()
-
         # 最高权限运行
         options.add_argument('--no-sandbox')
-
         # 隐身模式
         options.add_argument('-incognito')
-
         # 无缓存加载
         options.add_argument('--disk-cache-')
-
         # 设置中文
         options.add_argument('lang=zh_CN.UTF-8')
-
+        # 禁用 DevTools listening
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        options.add_argument('--log-level=3')
         # 更换头部
-        options.add_argument(f"user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-                             f" AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36'")
-
-        options.add_argument('--disable-blink-features=AutomationControlled')
-
+        options.add_argument("user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                             "(KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36 Edg/92.0.902.78'")
         # 静默启动
         if self.silence is True:
             options.add_argument('--headless')
+            options.add_argument('--disable-gpu')
+            options.add_argument("--disable-software-rasterizer")
 
+        # 抑制自动化控制特征
+        options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option('useAutomationExtension', False)
         options.add_experimental_option('excludeSwitches', ['enable-automation'])
 
         try:
-            # 有反爬虫/默认：一般模式启动
-            if self.CHROMEDRIVER_PATH:
-                _api = Chrome(options=options, executable_path=self.CHROMEDRIVER_PATH)
-            else:
-                _api = Chrome(options=options)
+            _api = Chrome(options=options, executable_path=self.CHROMEDRIVER_PATH)
             _api.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
                 "source": """
                            Object.defineProperty(navigator, 'webdriver', {
@@ -135,7 +134,16 @@ class StaffCollector(object):
         except WebDriverException as e:
             if "chromedriver" in str(e):
                 print(f">>> 指定目录下缺少chromedriver {self.CHROMEDRIVER_PATH}")
-                exit()
+                sys.exit()
+
+    @staticmethod
+    def get_page_num(api: Chrome):
+        try:
+            result = api.find_element_by_xpath("//div[@id='result-stats']")
+            tag_num = result.text.strip().split(' ')[1]
+            print(tag_num)
+        except NoSuchElementException:
+            return None
 
     def run(self, page_num: int = 26, sleep_node: int = 5):
         # API 实例化
@@ -143,7 +151,7 @@ class StaffCollector(object):
         # 进度条 初始化
         loop_progress = tqdm(
             total=page_num,
-            desc=f"STAFF COLLECTOR",
+            desc="STAFF COLLECTOR",
             ncols=150,
             unit="piece",
             dynamic_ncols=False,
@@ -156,10 +164,11 @@ class StaffCollector(object):
             api.get(self.GOOGLE_SEARCH_API)
             self._down_to_api(api=api, search_query=self.SEARCH_QUERY)
 
+            self.get_page_num(api)
+
             # 获取page_num页的注册链接
             # 正常情况一页10个链接 既共获取page_num * 10个链接
             for x in range(page_num):
-
                 # ==============================================================
                 # 采集器
                 # ==============================================================

@@ -7,13 +7,12 @@ import gevent
 import requests
 from bs4 import BeautifulSoup
 from gevent.queue import Queue
-from tqdm import tqdm
 
 from ..common.exceptions import NoSuchElementException
 from ..support.staff_collector import StaffCollector
 
 
-class StaffChecker(object):
+class StaffChecker:
     def __init__(self, task_docker, work_q: Queue = None, output_dir: str = None, power: int = 16, debug: bool = False,
                  work_name: str = 'classify_urls'):
         # 任务容器：queue
@@ -30,15 +29,6 @@ class StaffChecker(object):
         self.work_name = work_name
         # 急救箱，用于搭配self._doctor模块实现任务重载/抢救
         self._first_aid_kit = {}
-        # 进度条参数配置
-        self.loop_progress = tqdm(
-            total=len(task_docker),
-            desc=f"STAFF {work_name.replace('_', ' ').upper()}",
-            ncols=150,
-            unit="piece",
-            dynamic_ncols=False,
-            leave=True
-        )
         # 运行模式
         self.debug = debug
         # 初始化生产路径
@@ -64,11 +54,13 @@ class StaffChecker(object):
         """
         headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
                                  " (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67"}
+        proxies = {"http": None, "https": None}
         # 剔除不安全站点
         if not url.startswith("https"):
             return True
         try:
-            res = requests.get(url, headers=headers, timeout=5)
+            # res = requests.get(url, headers=headers, timeout=20)
+            res = requests.get(url, headers=headers, timeout=20, proxies=proxies)
             soup = BeautifulSoup(res.text, 'html.parser')
 
             # ====================================================
@@ -81,7 +73,7 @@ class StaffChecker(object):
             # Function: filter_std_urls
             # ====================================================
             # 剔除拒绝注册的源
-            elif not soup.find_all("input"):
+            if not soup.find_all("input"):
                 return True
             # ====================================================
             # Function: classify_urls
@@ -116,11 +108,8 @@ class StaffChecker(object):
                     f.write(f"{url}\n")
         except requests.exceptions.RequestException:
             self._doctor(url)
-        except Exception as e:
-            warnings.warn(f"<StaffChecker> ||{self.work_name}||{e} -> {url}")
-        finally:
-            # 更新进度条
-            self.progress_updater(message=url, level="loop_progress")
+        # except Exception as e:
+        #     warnings.warn(f"<StaffChecker> ||{self.work_name}||{e} -> {url}")
 
     def go(self):
         """
@@ -136,17 +125,20 @@ class StaffChecker(object):
         if self.max_queue_size != 0:
             power_ = self.max_queue_size if power_ > self.max_queue_size else power_
         # 任务启动
-        for x in range(power_):
-            task = gevent.spawn(self._launch)
+        for _ in range(power_):
+            task = gevent.spawn(self.launcher)
             pending_queue.append(task)
         gevent.joinall(pending_queue)
+
+    def launcher(self):
+        while not self.work_q.empty():
+            url = self.work_q.get_nowait()
+            self.classify_urls(url)
+            print(f"loop[{self.max_queue_size - self.work_q.qsize()}/{self.max_queue_size}] --> {url}")
 
     # --------------------------------------------------
     # Private API
     # --------------------------------------------------
-    def _launch(self):
-        while not self.work_q.empty():
-            exec(f"self.{self.work_name}(self.work_q.get_nowait())")
 
     def _offload_task(self):
         """
@@ -177,21 +169,6 @@ class StaffChecker(object):
         else:
             pass
 
-    def progress_updater(self, message: str, level: str = 'loop_progress'):
-        """
-
-        :param message:
-        :param level:
-        :return:
-        """
-        level = level.lower()
-
-        # 更新进度条
-        if level == "loop_progress":
-            self.loop_progress.update(1)
-            self.loop_progress.set_postfix({f"url": message})
-            return True
-
 
 class IdentifyRecaptcha(StaffChecker):
     def __init__(
@@ -207,6 +184,7 @@ class IdentifyRecaptcha(StaffChecker):
         # Initialize the Selenium operation handle parameters.
         self._chromedriver_path = chromedriver_path
         self._silence = silence
+
         # Initialize decision parameters.
         self._is_recaptcha_dict = {}
         self._retry_num = 2
@@ -235,7 +213,7 @@ class IdentifyRecaptcha(StaffChecker):
         try:
             api.get(url)
             # Wait for it to load and set a reasonable number of retries.
-            for x in range(self._retry_num):
+            for _ in range(self._retry_num):
                 try:
                     time.sleep(1)
                     is_recaptcha = "recaptcha" in api.find_element_by_xpath("//div//iframe").get_attribute("src")
@@ -249,8 +227,13 @@ class IdentifyRecaptcha(StaffChecker):
             else:
                 self._is_recaptcha_dict.update({url: False})
         finally:
-            self.progress_updater(message=url, level="loop_progress")
             api.quit()
+
+    def launcher(self):
+        while not self.work_q.empty():
+            url = self.work_q.get_nowait()
+            self.is_recaptcha(url)
+            print(f"loop -->{url}")
 
 
 class StaffEntropyGenerator(StaffChecker):
@@ -292,3 +275,8 @@ class StaffEntropyGenerator(StaffChecker):
         ).set_spider_options()
         # Start the test process
         api.get(url)
+
+    def launcher(self):
+        while not self.work_q.empty():
+            url = self.work_q.get_nowait()
+            self.generate_entropy(url)

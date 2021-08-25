@@ -10,7 +10,7 @@ from .geetest_v2 import GeeTest2
 from .geetest_v3 import GeeTest3
 
 
-class GeeTestAdapter(object):
+class GeeTestAdapter:
     def __init__(self, driver: Chrome, debug=False, business_name=None, full_img_path=None, notch_img_path=None):
         self.api = driver
         self.debug = debug

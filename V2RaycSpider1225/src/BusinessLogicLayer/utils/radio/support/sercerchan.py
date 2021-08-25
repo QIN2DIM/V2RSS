@@ -1,4 +1,4 @@
-def server_chan(title: str = None, message: str = None, serverchan_sckey: str = None):
+def serverchan(title: str = None, message: str = None, serverchan_sckey: str = None):
     """
 
     :param title: 标题最大256

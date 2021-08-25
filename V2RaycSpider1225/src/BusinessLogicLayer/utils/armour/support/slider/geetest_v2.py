@@ -32,15 +32,14 @@ class GeeTest2(SliderValidator):
         ActionChains(self.api).click_and_hold(self.slider).perform()
 
     def is_success(self):
-        for x in range(2):
+        for _ in range(2):
             try:
                 label = self.api.find_element_by_class_name("gt_info_type")
                 if self.debug:
                     print(f"--->result: {label.text.strip()}\n")
                 if "通过" in label.text.strip():
                     return True
-                else:
-                    return False
+                return False
             except NoSuchElementException:
                 time.sleep(0.5)
                 continue
@@ -90,6 +89,4 @@ class GeeTest2(SliderValidator):
         # 验证通过
         if self.is_success():
             return True
-        # 验证失败 或 元素加载超时
-        else:
-            return False
+        return False
