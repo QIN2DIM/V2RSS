@@ -3,7 +3,8 @@ __all__ = ['app']
 from flask import request, Flask, jsonify, redirect
 
 from src.BusinessCentralLayer.setting import ROUTE_API
-from src.BusinessViewLayer.myapp.apis import *
+from src.BusinessViewLayer.myapp.apis import apis_capture_subscribe, apis_version_manager, apis_get_subs_num, \
+    apis_admin_get_subs, apis_admin_get_subs_v2, apis_admin_get_subs_v2_debug, apis_admin_get_entropy
 
 app = Flask(__name__)
 
@@ -34,7 +35,7 @@ def version_manager():
     """
     if request.method == 'GET':
         return jsonify(apis_version_manager())
-    elif request.method == 'POST':
+    if request.method == 'POST':
         return jsonify(apis_version_manager(usr_version=dict(request.form).get('local_version', False)))
 
 

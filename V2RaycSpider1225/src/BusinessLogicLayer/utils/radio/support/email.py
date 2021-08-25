@@ -48,8 +48,5 @@ def send_email(msg, to_: List[str] or str or set, smtp_account: dict, headers: s
             except smtplib.SMTPRecipientsRefused:
                 # logger.warning('邮箱填写错误或不存在->{}'.format(to))
                 return '邮箱填写错误或不存在->{}'.format(to)
-            except Exception as e:
-                # logger.error('>>> 发送失败 || {}'.format(e))
-                return '>>> 发送失败 || {}'.format(e)
     finally:
         server.quit()

@@ -5,15 +5,14 @@
 """
 import base64
 import warnings
-from datetime import datetime
 from typing import List
 from urllib.parse import urlparse
 
 import requests
-from redis.exceptions import ResponseError, ConnectionError
+from redis import exceptions as redis_error
 
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
-from src.BusinessCentralLayer.setting import REDIS_SECRET_KEY, CRAWLER_SEQUENCE, logger, Fore
+from src.BusinessCentralLayer.setting import REDIS_SECRET_KEY, CRAWLER_SEQUENCE, logger, terminal_echo
 from .core import CoroutineSpeedup
 
 
@@ -32,15 +31,14 @@ class SubscribesCleaner(CoroutineSpeedup):
             try:
                 for sub, _ in self.rc.hgetall(key_).items():
                     self.work_q.put_nowait([sub, key_])
-            except ResponseError:
+            except redis_error.ResponseError:
                 logger.critical("Link pool is broken down.")
 
     def _del_subs(self, key_: str, subs: str, err_) -> None:
         try:
             self.rc.hdel(key_, subs)
-            # logger.debug(f'>> Detach -> {subs} -- {err_}')
-            print(Fore.BLUE, f"[{datetime.now()}] detach -> {subs} {err_}")
-        except ConnectionError:
+            terminal_echo(f"detach -> {subs} {err_}", 3)
+        except redis_error.ConnectionError:
             logger.critical("<SubscribeCleaner> The local network communication is abnormal.")
 
     def control_driver(self, sub_info: List[str], threshold: int = 4):
@@ -50,6 +48,7 @@ class SubscribesCleaner(CoroutineSpeedup):
         :param threshold: 解耦置信阈值 小于或等于这个值的订阅将被剔除
         :return:
         """
+        super(SubscribesCleaner, self).control_driver(task=sub_info)
         try:
             # 针对指定订阅源进行清洗工作
             if self.kill_ and self.kill_ in sub_info[0]:
@@ -61,15 +60,14 @@ class SubscribesCleaner(CoroutineSpeedup):
                 if node_info['node'].__len__() <= threshold:
                     self._del_subs(sub_info[-1], sub_info[0], "decouple active removal")
                 elif self.debug:
-                    print(Fore.WHITE, f"[{datetime.now()}] valid -- {node_info['subs']} -- {len(node_info['node'])}")
-
+                    terminal_echo(f"valid -- {node_info['subs']} -- {len(node_info['node'])}", 1)
         except (UnicodeDecodeError, TypeError) as e:
             # 对于已标记“解析错误”的订阅 更新其请求次数
             if self.temp_cache.get(sub_info[0]):
                 self.temp_cache[sub_info[0]] += 1
             # 否则标记为“解析错误”的订阅
             else:
-                print(Fore.YELLOW, f"[{datetime.now()}] recheck -- {sub_info[0]}")
+                terminal_echo(f"recheck -- {sub_info[0]}", 2)
                 self.temp_cache[sub_info[0]] = 1
             # 若链接重试次数少于3次 重添加至任务队列尾部
             if self.temp_cache[sub_info[0]] <= 3:
@@ -88,11 +86,11 @@ class SubscribesCleaner(CoroutineSpeedup):
             logger.success("<SubscribesCleaner> --> decouple compete.")
 
 
-def subs2node(subs: str, timeout: int = None) -> dict:
+def subs2node(subscribe: str, timeout: int = None) -> dict:
     """
     将订阅链接解析成节点数据
     一般订阅解包后，两条信息分别用于描述“可用剩余时长”与"可用剩余流量"，其加密特征与节点完全不同
-    :param subs: any class_ subscribe 需要解析的订阅链接
+    :param subscribe: any class_ subscribe 需要解析的订阅链接
     :param timeout: 设置requests 超时时间
     :return: {'subs': subscribe, "node": info}
     """
@@ -109,27 +107,25 @@ def subs2node(subs: str, timeout: int = None) -> dict:
     }
     try:
         # 订阅解析
-        obj = urlparse(subs)
+        obj = urlparse(subscribe)
         # 类型粗识别
         if '1' in obj.query:
             class_ = 'ssr'
         elif '3' in obj.query:
             class_ = 'v2ray'
-
         obj_analyze = {'net': obj.netloc, 'token': obj.path.split('/')[-1], 'class_': class_}
         # 根据是否设置超时选择不同的请求方式
         if timeout:
-            res = requests.get(subs, headers=headers, timeout=timeout)
+            res = requests.get(subscribe, headers=headers, timeout=timeout)
         else:
-            # res = requests.get(subs, headers=headers)
-            res = requests.get(subs, headers=headers, proxies=proxies)
+            res = requests.get(subscribe, headers=headers, proxies=proxies)
         # 解码订阅链接所指向的服务器节点数据
         node_info = base64.decodebytes(res.content)
 
-        return {'subs': subs, 'info': obj_analyze, "node": [i for i in node_info.decode("utf8").split("\n") if i]}
+        return {'subs': subscribe, 'info': obj_analyze, "node": [i for i in node_info.decode("utf8").split("\n") if i]}
     # 捕获异常输入 剔除恶意链接或脏数据
     except requests.exceptions.MissingSchema:
-        print(f'{subs} -- 传入的subs格式有误或不是订阅链接')
+        print(f'{subscribe} -- 传入的subs格式有误或不是订阅链接')
     # 链接清洗任务不能使用代理IP操作
     except requests.exceptions.ProxyError:
         raise SystemExit
@@ -138,4 +134,38 @@ def subs2node(subs: str, timeout: int = None) -> dict:
         raise TypeError
     # 未知风险
     except requests.exceptions.RequestException as e:
-        print(f"{subs} -- {e}")
+        print(f"{subscribe} -- {e}")
+
+
+def node2detail(share_link_of_node: str = None, class_: str = None):
+    """
+
+    :param share_link_of_node:  like this vmess:// or ssr://
+    :param class_: class of node, like
+    :return:
+    """
+    import binascii
+    node = "" if share_link_of_node is None else share_link_of_node
+    class_ = "" if class_ is None else class_
+    flag = {
+        "ss": "ss://",
+        "shadowsocks": "ss://",
+        "ssr": "ssr://",
+        "shadowsocksr": "ssr://",
+        "v2ray": "vmess://",
+        "trojan": "trojan://",
+        "xray": "vless://",
+    }
+    protocol_head = flag.get(class_.strip())
+
+    if not isinstance(class_, str) or not isinstance(share_link_of_node, str):
+        return {}
+    if "" in (class_, node):
+        return {}
+    if not protocol_head:
+        return {}
+    try:
+        detail_ = base64.b64decode(node.replace(protocol_head, '')).decode('utf-8')
+        print(detail_)
+    except binascii.Error:
+        print("非base64编码传入")

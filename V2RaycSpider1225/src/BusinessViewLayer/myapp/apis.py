@@ -114,8 +114,7 @@ def apis_refresh_broadcast(show_path: str = NGINX_SUBSCRIBE, hyper_params: dict 
 def apis_admin_get_subs(command_: str):
     if not (command_ and isinstance(command_, str)) or command_ not in CRAWLER_SEQUENCE:
         return {"msg": "failed", "info": "参数类型错误"}
-    else:
-        return pop_subs_to_admin(command_)
+    return pop_subs_to_admin(command_)
 
 
 def apis_get_subs_num() -> dict:

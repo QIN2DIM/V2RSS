@@ -40,6 +40,3 @@ for i in user_data:
     file_name = f"{channel_id}-{dt}.list"
     with open(file_name, "a+") as f:
         f.write((i.get_attribute('href')) + "\n")
-
-if __name__ == '__main__':
-    pass

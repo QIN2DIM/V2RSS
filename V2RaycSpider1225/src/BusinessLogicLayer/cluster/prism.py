@@ -6,7 +6,7 @@
 import time
 from urllib.parse import urlparse
 
-from selenium.common.exceptions import *
+from selenium.common.exceptions import ElementClickInterceptedException, TimeoutException
 from selenium.webdriver import Chrome
 
 from src.BusinessCentralLayer.setting import logger

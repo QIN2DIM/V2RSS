@@ -11,7 +11,7 @@ from src.BusinessLogicLayer.plugins.breaker import clash_adapter
 from src.BusinessViewLayer.myapp.virtual_station import app
 
 
-class _ClashTaskAsh(object):
+class _ClashTaskAsh:
     def __init__(self, debug, decouple):
         self.debug = debug
         self.decouple = decouple
@@ -67,14 +67,14 @@ class _ClashTaskAsh(object):
                     process_server.terminate()
                     return True
 
-        except TypeError or AttributeError as e:
+        except (TypeError, AttributeError) as e:
             logger.exception(e)
         finally:
             logger.success('<ScaffoldGuider> End the V2RayCloudSpider')
             print(">>> 程序執行結束 請手動關閉交互窗口")
 
 
-class _Interface(object):
+class _Interface:
 
     @staticmethod
     def run(debug: bool = True, decouple: bool = True):

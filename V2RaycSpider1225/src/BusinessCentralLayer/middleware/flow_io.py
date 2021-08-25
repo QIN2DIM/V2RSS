@@ -1,3 +1,5 @@
+__all__ = ['FlowTransferStation', 'FlowTransferStation1']
+
 import sqlite3
 from typing import Tuple, List
 
@@ -7,7 +9,7 @@ from src.BusinessCentralLayer.setting import SQLITE3_CONFIG, logger, MYSQL_CONFI
 
 
 @logger.catch()
-class FlowTransferStation(object):
+class FlowTransferStation:
     def __init__(self, database_config: dict = None, docker=None):
         """
         @param docker: 接收一个写死的容器名 docker ，类型为List[Tuple(),...]
@@ -51,10 +53,10 @@ class FlowTransferStation(object):
         @return:
         """
         with self.conn:
-            return self.conn.cursor().execute(f'select * from {self.table}').fetchall()
+            return self.conn.cursor().execute('select * from %s;', (self.table,)).fetchall()
 
 
-class FlowTransferStation1(object):
+class FlowTransferStation1:
     def __init__(self, flower_config=None):
         if flower_config is None:
             flower_config = MYSQL_CONFIG
@@ -64,7 +66,8 @@ class FlowTransferStation1(object):
 
         self.__init_tables__()
 
-    def __prepare__(self, flower_config: dict) -> Tuple[pymysql.connections.Connection, pymysql.cursors.Cursor]:
+    @staticmethod
+    def __prepare__(flower_config: dict) -> Tuple[pymysql.connections.Connection, pymysql.cursors.Cursor]:
         _conn = pymysql.connect(
             host=flower_config['host'],
             user=flower_config['user'],
@@ -100,9 +103,9 @@ class FlowTransferStation1(object):
         try:
             for user_ in user:
                 try:
-                    sql = f'INSERT INTO v2raycs (' \
-                          f'domain, subs, class_,end_life,res_time,passable,username,password,email,uuid) VALUES (' \
-                          f'%s, %s, %s,%s, %s, %s,%s, %s, %s,%s)'
+                    sql = 'INSERT INTO v2raycs (' \
+                          'domain, subs, class_,end_life,res_time,passable,username,password,email,uuid) VALUES (' \
+                          '%s, %s, %s,%s, %s, %s,%s, %s, %s,%s)'
                     val = (user_["domain"], user_["subs"], user_['class_'], user_['end_life'], user_["res_time"],
                            user_['passable'], user_['username'], user_["password"], user_['email'], user_['uuid'])
                     self.cursor.execute(sql, val)

@@ -1,12 +1,41 @@
 """
 读取yaml配置文件，生成全局静态变量。
 """
+__all__ = ['SINGLE_DEPLOYMENT', 'ENABLE_DEPLOY', 'ENABLE_KERNEL', 'ENABLE_SERVER',
+           'ENABLE_DEBUG', 'ENABLE_REBOUND', 'SINGLE_TASK_CAP', 'LAUNCH_INTERVAL', 'REDIS_MASTER', 'REDIS_SLAVER_DDT',
+           'MYSQL_CONFIG', 'API_HOST', 'API_DEBUG', 'API_THREADED', 'API_PORT', 'OPEN_HOST', 'GARDENER_HOST',
+           'ROUTE_API', 'SEQ_TEST', 'CRAWLER_SEQUENCE', 'SMTP_ACCOUNT', 'SERVERCHAN_SCKEY', 'REDIS_SECRET_KEY',
+           'PROJECT_NUM', 'VERSION', 'TIME_ZONE_CN', 'TIME_ZONE_NY', 'DEFAULT_POWER', 'Fore', 'terminal_echo']
+
 import os
 import shutil
-from sys import platform
+import sys
+from datetime import datetime
 
+import colorama
 import pytz
 import yaml
+
+# 开启调试台彩色输出模式
+colorama.init(autoreset=True)
+Fore = colorama.Fore
+
+
+def terminal_echo(msg: str, level: int):
+    print(f"[{str(datetime.now()).split('.')[0]}]", end=' ')
+    if level == 1:
+        print(colorama.Fore.GREEN + "[✓]", end=' ')
+    elif level == 0:
+        print(colorama.Fore.RED + "[×]", end=' ')
+    # 阻塞任务
+    elif level == 2:
+        print(colorama.Fore.BLUE + "[...]", end=' ')
+    # debug
+    elif level == 3:
+        print(colorama.Fore.CYAN + "[*]", end=' ')
+    print(msg)
+    return ">"
+
 
 # ---------------------------------------------------
 # TODO 配置文件索引
@@ -23,33 +52,39 @@ sample_ = os.path.join(os.path.dirname(__file__), 'config-sample.yaml')
 
 try:
     if not os.path.exists(sample_):
+        terminal_echo("系统配置模板文件(config-sample.yaml)缺失", 0)
         print(">>> 请不要删除系统生成的配置模板config-sample.yaml，确保它位于工程根目录下")
         raise FileNotFoundError
-    elif os.path.exists(sample_) and not os.path.exists(user_):
-        print(f">>> 工程根目录下缺少config.yaml配置文件")
+
+    if os.path.exists(sample_) and not os.path.exists(user_):
+        terminal_echo("系统配置文件(config.yaml)缺失", 0)
         shutil.copy(sample_, user_)
-        print(">>> 初始化启动参数... ")
+        terminal_echo("生成配置文件-->./src/config.yaml", 1)
         print(">>> 请根据docs配置启动参数 https://github.com/QIN2DIM/V2RayCloudSpider")
-        exit()
-    elif os.path.exists(sample_) and os.path.exists(user_):
+        sys.exit()
+
+    if os.path.exists(sample_) and os.path.exists(user_):
         # 读取yaml配置变量
         with open(user_, 'r', encoding='utf8') as stream:
-            config_ = yaml.load(stream.read(), Loader=yaml.FullLoader)
+            config_ = yaml.safe_load(stream.read())
             if __name__ == '__main__':
-                print(f'>>> 读取配置文件{config_}')
+                terminal_echo("读取配置文件-->./src/config.yaml", 1)
+                print(config_)
 except FileNotFoundError:
     try:
         import requests
+        from requests import exceptions as res_error
 
-        res_ = requests.get("http://123.56.77.6:8888/down/AgIHWQ6QXtLg")
+        res_ = requests.get("https://curly-shape-d178.qinse.workers.dev/https://raw.githubusercontent.com/"
+                            "QIN2DIM/V2RayCloudSpider/master/V2RaycSpider1225/src/config-sample.yaml")
         with open(sample_, 'wb') as fp:
             fp.write(res_.content)
-        print(">>> 配置模板拉取成功,请重启项目")
-    except Exception as e_:
-        print(e_)
-        print('>>> 配置模板自动拉取失败，请检查本地网络')
+        terminal_echo("配置模板拉取成功,请重启项目", 1)
+    except (res_error.ConnectionError, res_error.HTTPError, res_error.RequestException) as e_:
+        terminal_echo("配置模板自动拉取失败，请检查本地网络", 0)
+        print(f">>> error:{e_}")
     finally:
-        exit()
+        sys.exit()
 
 """
 ================================================ ʕ•ﻌ•ʔ ================================================
@@ -90,7 +125,7 @@ ENABLE_KERNEL: dict = config_['ENABLE_KERNEL']
 ENABLE_SERVER: bool = config_['ENABLE_SERVER']
 
 # ENABLE_COROUTINE 协程加速
-ENABLE_COROUTINE: bool = config_['ENABLE_COROUTINE']
+# ENABLE_COROUTINE: bool = config_['ENABLE_COROUTINE']
 
 # ENABLE_DEBUG Flask DEBUG
 ENABLE_DEBUG: bool = not ENABLE_DEPLOY
@@ -147,7 +182,26 @@ API_HOST: str = REDIS_MASTER["host"]
 API_DEBUG: bool = ENABLE_DEBUG
 API_THREADED: bool = True
 API_PORT: int = config_['API_PORT']
-OPEN_HOST: str = "127.0.0.1" if API_DEBUG or "win" in platform else "0.0.0.0"
+"""
+Audit: Binding to all interfaces detected with hardcoded values
+
+ Binding to all network interfaces can potentially open up a
+ service to traffic on unintended interfaces, that may not be 
+ properly documented or secured. This can be prevented by 
+ changing the code so it explicitly only allows access from localhost.
+
+ When binding to `0.0.0.0`, you accept incoming 
+ connections from anywhere. During development, an 
+ application may have security vulnerabilities making it 
+ susceptible to SQL injections and other attacks. Therefore 
+ when the application is not ready for production, accepting 
+ connections from anywhere can be dangerous.
+
+ It is recommended to use `127.0.0.1` or local host during 
+ development phase. This prevents others from targeting 
+ your application and executing SQL injections against your project.
+"""
+OPEN_HOST: str = "127.0.0.1" if API_DEBUG or "win" in sys.platform else "0.0.0.0"
 # ---------------------------------------------------
 # TODO (√)The domain name used to deploy the gardener
 # 园丁系统部署域名，当启动该项功能时，必须配置如: www.bbq.club
@@ -186,7 +240,7 @@ SMTP_ACCOUNT: dict = config_['SMTP_ACCOUNT']
 # TODO > 使用<SERVER酱>推送，请在SERVER_CHAN_SCKEY填写自己的Key
 # http://sc.ftqq.com/3.version
 # ---------------------------------------------------
-SERVER_CHAN_SCKEY: str = config_['SERVER_CHAN_SCKEY']
+SERVERCHAN_SCKEY: str = config_['SERVERCHAN_SCKEY']
 
 # ---------------------------------------------------
 # TODO (√)CHROMEDRIVER_PATH -- ChromeDriver的路径
@@ -237,8 +291,8 @@ REDIS_SECRET_KEY: str = "v2rayc_spider:{}"
 # project_num命名规则 K25，既每进行一次内核级更新时K+1，如：
 #   "4.u.r 0925" -> "5.u.r 1025"
 # ---------------------------------------------------
-project_num = "1225"
-version = "5.1.0"
+PROJECT_NUM = "1225"
+VERSION = "5.1.0"
 # ---------------------------------------------------
 # 时区
 TIME_ZONE_CN = pytz.timezone("Asia/Shanghai")

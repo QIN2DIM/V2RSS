@@ -14,7 +14,7 @@ from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-class SliderValidator(object):
+class SliderValidator:
     def __init__(self, driver: Chrome, debug: bool = False, full_img_path: str = None, notch_img_path: str = None,
                  business_name: str = "SliderValidator"):
         self.debug = debug
@@ -162,8 +162,7 @@ class SliderValidator(object):
         if (abs(pix1[0] - pix2[0] < self.threshold) and abs(pix1[1] - pix2[1] < self.threshold) and abs(
                 pix1[2] - pix2[2] < self.threshold)):
             return True
-        else:
-            return False
+        return False
 
     def check_boundary(self, boundary):
         """
@@ -334,7 +333,7 @@ class SliderValidator(object):
         # v3
         button_text = self.api.find_element_by_class_name('geetest_radar_tip_content')
         text = button_text.text
-        if text == '尝试过多' or text == '网络不给力' or text == '请点击重试':
+        if text in ("尝试过多", "网络不给力", "请点击重试"):
             button = self.api.find_element_by_class_name('geetest_reset_tip_content')
             button.click()
 

@@ -11,7 +11,7 @@ from .master import ActionMasterGeneral
 from .slavers import __entropy__
 
 
-class ActionShunt(object):
+class ActionShunt:
     def __init__(self, class_, silence=True, beat_sync=True):
         """
 
@@ -61,9 +61,7 @@ class ActionShunt(object):
             # if 该订阅源不具备某指定类型链接的采集权限，剔除。
             if not action_entropy.get(self.class_):
                 continue
-            # else 将其添加至指定类型的pending_queue
-            else:
-                self.atomic_seq.append(action_tag)
+            self.atomic_seq.append(action_tag)
 
     def _pop_atomic(self):
         while True:
@@ -124,7 +122,7 @@ def reset_task() -> list:
         # 进行各个类型的实体任务的分类
         for task_name in CRAWLER_SEQUENCE:
             # 获取池中对应类型的数据剩余
-            storage_remain: int = rc.__len__(REDIS_SECRET_KEY.format(f'{task_name}'))
+            storage_remain: int = rc.get_len(REDIS_SECRET_KEY.format(f'{task_name}'))
             # 进行各个类型的实体任务的分类
             for atomic in action_list:
                 permission = {} if atomic.get('hyper_params') is None else atomic.get('hyper_params')

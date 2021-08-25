@@ -11,10 +11,10 @@ import os
 from src.BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE, CHROMEDRIVER_PATH
 from src.BusinessLogicLayer.utils.staff_mining import StaffChecker, StaffCollector, IdentifyRecaptcha, \
     StaffEntropyGenerator
-from src.BusinessLogicLayer.utils.staff_mining.common.exceptions import *
+from src.BusinessLogicLayer.utils.staff_mining.common.exceptions import CollectorSwitchError, NoSuchWindowException
 
 
-class _Interface(object):
+class _Interface:
 
     def __init__(self):
         self._cache_dir_staff_hosts = os.path.join(SERVER_DIR_DATABASE, "staff_hosts")
@@ -66,6 +66,7 @@ class _Interface(object):
                     for element in set(data):
                         f.write(f"{element}\n")
 
+    @logger.catch()
     def collector(self, silence: bool = True, debug: bool = False, page_num: int = 26, sleep_node: int = 5):
         """
         STAFF site collector
@@ -206,8 +207,8 @@ class _Interface(object):
             label = input(f">>> {url} <<<")
             with open(os.path.join(output_path), 'a', encoding="utf8") as f:
                 f.write(f"{label}\t{url}\n")
-        else:
-            driver.quit()
+
+        driver.quit()
 
     def generator(self, urls, silence=True):
         """
@@ -239,9 +240,8 @@ class _Interface(object):
         """
         if not os.path.exists(self._cache_path_staff_hosts):
             return True
-        else:
-            with open(self._cache_path_staff_hosts, 'r', encoding="utf8") as f:
-                return False if f.read() else True
+        with open(self._cache_path_staff_hosts, 'r', encoding="utf8") as f:
+            return not f.read()
 
     def go(self, debug: bool = False, silence: bool = True, power: int = os.cpu_count(),
            use_collector: bool = True, use_checker: bool = True, identity_recaptcha: bool = False,
@@ -324,10 +324,10 @@ staff_api = _Interface()
 if __name__ == '__main__':
     staff_api.go(
         debug=False,
-        silence=True,
+        silence=False,
         power=32,
-        identity_recaptcha=True,
-        use_collector=False,
-        use_checker=True,
+        identity_recaptcha=False,
+        use_collector=True,
+        use_checker=False,
         use_generator=False,
     )

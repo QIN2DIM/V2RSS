@@ -347,7 +347,7 @@ __entropy__ = [
     # ---------------------
     # [启动] 无障碍
     # ---------------------
-    ActionAaxCloud,  # v2ray
+    # ActionAaxCloud,  # v2ray
 
     # ---------------------
     # [启动] 需要滑动验证
@@ -363,7 +363,7 @@ __entropy__ = [
 
     # ActionJssForSSRCloud,  # ssr
 
-    # ActionJssForV2rayCloud,  # v2ray
+    ActionJssForV2rayCloud,  # v2ray 2day50G
 
     ActionPPForV2rayCloud,  # v2ray 1day2G
 
