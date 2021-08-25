@@ -1,3 +1,5 @@
+# Created by .ignore support plugin (hsz.mobi)
+### Python template
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -126,12 +128,7 @@ venv.bak/
 dmypy.json
 
 # Pyre type checker
-*.xml
-*.iml
-
-/V2RaycSpider1125/tests/
-/V2RaycSpider1125/README.md
-/V2RaycSpider1225/tests
-/V2RaycSpider1225/Database/logs
-/V2RaycSpider1225/Database/temp_cache
-/V2RaycSpider1225/Database/staff_hosts
+.pyre/
+/src/Database/
+/.idea/
+/test
