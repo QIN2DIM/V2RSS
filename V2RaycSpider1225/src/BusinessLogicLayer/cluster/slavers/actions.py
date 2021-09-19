@@ -219,7 +219,7 @@ ActionGsouCloud = {
 # =============================================
 ActionDuosCloud = {
     'name': "ActionDuosCloud",
-    'register_url': "https://www.douluos.xyz/auth/register",
+    'register_url': "https://www.jiuyecaody.xyz/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
     'hyper_params': {'ssr': False, 'v2ray': True},
@@ -261,7 +261,7 @@ ActionBitEbCloud = {
 # 国内代理 www.jssrvpn.xyz
 # - intro: 2day 50G
 # - change log:
-#   - 2021.07.14 [观察] 决绝注册
+#   - 2021.07.14 [观察] 拒绝注册
 # =============================================
 ActionJssForSSRCloud = {
     'name': "ActionJssForSSRCloud",
@@ -329,45 +329,24 @@ ActionAaxCloud = {
     'email': "@gmail.com",
     'feature': 'prism',
 }
-# =============================================
-# ActionJydCloud
-# - change log:
-#   -2021-07-18 [Create] 更新实例
-# =============================================
-ActionJydCloud = {
-    'name': "ActionJydCloud",
-    'register_url': "https://www.jiuyecaody.xyz/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': False, 'v2ray': True},
-    'email': "@gmail.com",
-}
 
 __entropy__ = [
     # ---------------------
     # [启动] 无障碍
     # ---------------------
-    # ActionAaxCloud,  # v2ray
+    ActionAaxCloud,  # v2ray
 
     # ---------------------
     # [启动] 需要滑动验证
     # ---------------------
 
-    ActionReCloud,  # v2ray 1day10G
+    ActionKakCloud,  # v2ray
 
-    ActionJydCloud,  # v2ray 1day2G
-
-    # ActionKakCloud,  # v2ray
-
-    # ActionDuosCloud,  # v2ray
-
-    # ActionJssForSSRCloud,  # ssr
+    ActionDuosCloud,  # v2ray
 
     ActionJssForV2rayCloud,  # v2ray 2day50G
 
     ActionPPForV2rayCloud,  # v2ray 1day2G
-
-    ActionPPForSSRCloud,  # ssr 1day2G
 
     # ---------------------
     # [停用] 公益节点
@@ -377,7 +356,6 @@ __entropy__ = [
     # ---------------------
     # [停用] 需要其他类型验证
     # ---------------------
-
     # ActionGsouCloud,
     # Action7ccCloud,
 
@@ -412,5 +390,6 @@ __entropy__ = [
     # ActionWgCloud,
     # 站点瘫痪
     # ActionZuiSuCloud,
+    # ActionReCloud,  # v2ray 1day10G
 
 ]
