@@ -1,8 +1,18 @@
 [中文](https://github.com/QIN2DIM/V2RayCloudSpider) **||** [English](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/README_us.md)
 
-# V2Ray云彩姬
-
-**科学上网 从娃娃抓起** **||** **运行脚本 开箱即用**
+<div align="center">
+    <h1> V2Ray云彩姬</h1>
+    <p>🚀 科学上网 从娃娃抓起</p>
+    <img src="https://img.shields.io/static/v1?message=reference&color=blue&style=for-the-badge&logo=micropython&label=python">
+    <img src="https://img.shields.io/github/license/qin2dim/v2raycloudspider?style=for-the-badge">
+	<a href="https://github.com/QIN2DIM/V2RayCloudSpider/releases"><img src="https://img.shields.io/github/downloads/qin2dim/v2raycloudspider/total?style=for-the-badge"></a>
+	<a href="https://github.com/QIN2DIM/V2RayCloudSpider/releases"><img src="https://img.shields.io/github/v/release/qin2dim/v2raycloudspider?style=for-the-badge"></a>
+	<br>
+	<a href="https://github.com/QIN2DIM/V2RayCloudSpider"><img src="https://img.shields.io/github/stars/qin2dim/v2raycloudspider?style=social"></a>
+	<a href = "https://t.me/joinchat/HlB9SQJubb5VmNU5"><img src="https://img.shields.io/static/v1?style=social&logo=telegram&label=chat&message=studio" ></a>
+	<br>
+	<br>
+</div>
 
 ## :carousel_horse: 项目简介
 
@@ -12,7 +22,7 @@
 >
 > 3. 禁止任何人使用本项目及其分支提供任何形式的收费代理服务。
 
-- 针对全球范围内基于[sspanel架构](https://github.com/Anankke/SSPanel-Uim)产出的机场进行垂直挖掘；
+- 针对全球范围内基于 [SSPanel-Uim](https://github.com/Anankke/SSPanel-Uim) 框架产出的机场进行垂直挖掘；
 - 理论上支持所有类型订阅的采集；
 
 ##  :airplane:快速上手
@@ -21,11 +31,11 @@
 
     - 软件获取： [**Windows 64x <约17Mb>**](https://github.com/QIN2DIM/V2RayCloudSpider/releases/download/v4.5.2/V2RayCloudSpider.win64.zip)
 
-    - 软件使用：运行`V2Ray云彩姬` 启动本体 -- [<V2Ray云彩姬使用说明>](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/V2Ray%E4%BA%91%E5%BD%A9%E5%A7%AC%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
+    - 软件使用：运行 `V2Ray云彩姬` 启动本体 -- [<V2Ray云彩姬使用说明>](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/V2Ray%E4%BA%91%E5%BD%A9%E5%A7%AC%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
 
 - **【方案二】开发者**
 
-    ​	Clone项目，根据[技术文档](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/技术文档(demo).md)合理配置`config.py`以及服务端环境后使用脚手架调试或部署项目。
+    ​	Clone项目，根据 [技术文档](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/技术文档(demo).md) 合理配置 `config.py` 以及服务端环境后使用脚手架调试或部署项目。
 
 
 ## :ocean: 网上冲浪 
@@ -39,7 +49,7 @@
 
 ## :email: 联系我们
 
-> 本项目由海南大学机器人与人工智能协会数据挖掘小组(`A-RAI.DM`)提供维护
+> 本项目由海南大学机器人与人工智能协会数据挖掘小组 (`A-RAI.DM`) 提供维护
 
 - [**Email**](mailto:RmAlkaid@outlook.com?subject=CampusDailyAutoSign-ISSUE) **||** [**Home**](https://a-rai.github.io/) **||** [**TG**](https://t.me/joinchat/HlB9SQJubb5VmNU5)
 
