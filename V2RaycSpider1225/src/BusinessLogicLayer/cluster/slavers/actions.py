@@ -9,7 +9,7 @@ ActionOhrCloud = {
     'life_cycle': 2,
     'anti_slider': False,
     'hyper_params': {'ssr': True, "v2ray": True},
-    'email': '@gmail.com'
+    'email': '@qq.com'
 }
 # =============================================
 # ActionKakCloud
@@ -124,7 +124,7 @@ ActionJdSuCloud = {
 # =============================================
 ActionHuoJianCloud = {
     'name': "ActionHuoJianCloud",
-    'register_url': "https://huojian321.club/auth/register",
+    'register_url': "https://www.666hjy.com/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
     'hyper_params': {'ssr': True, "v2ray": False},
@@ -191,10 +191,10 @@ ActionReCloud = {
 # =============================================
 ActionMxCloud = {
     'name': "ActionMxCloud",
-    'register_url': "https://www.mxyssr.fun/auth/register",
+    'register_url': "https://www.mxyssr.com/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": False},
+    'hyper_params': {'ssr': False, "v2ray": True},
     'email': '@gmail.com'
 }
 # =============================================
@@ -275,7 +275,7 @@ ActionJssForSSRCloud = {
 ActionJssForV2rayCloud = {
     'name': "ActionJssForV2rayCloud",
     'register_url': "https://www.jssr.cc/auth/register",
-    'life_cycle': 2,
+    'life_cycle': 1,
     'anti_slider': True,
     'hyper_params': {'ssr': False, 'v2ray': True},
     'email': "@gmail.com"
@@ -329,6 +329,19 @@ ActionAaxCloud = {
     'email': "@gmail.com",
     'feature': 'prism',
 }
+# =============================================
+# ActionJs8cCloud
+# - change log:
+#   -2021-09-24 [Create] 更新实例
+# =============================================
+ActionJs8cCloud = {
+    'name': "ActionJs8cCloud",
+    'register_url': "https://js8c.xyz/auth/register",
+    'life_cycle': 1,
+    'anti_slider': True,
+    'hyper_params': {'ssr': False, 'v2ray': True, 'usr_email': True},
+    'email': "@gmail.com",
+}
 
 __entropy__ = [
     # ---------------------
@@ -344,38 +357,35 @@ __entropy__ = [
 
     ActionDuosCloud,  # v2ray
 
-    ActionJssForV2rayCloud,  # v2ray 2day50G
+    ActionJssForV2rayCloud,  # v2ray 1day 2G
 
-    ActionPPForV2rayCloud,  # v2ray 1day2G
+    ActionMxCloud,  # v2ray 1day 2G
+
+    ActionJs8cCloud,  # v2ray 1day 10G
 
     # ---------------------
     # [停用] 公益节点
     # ---------------------
-    # ActionHuoJianCloud,
 
     # ---------------------
     # [停用] 需要其他类型验证
     # ---------------------
     # ActionGsouCloud,
     # Action7ccCloud,
+    # ActionHuoJianCloud,
 
     # ---------------------
     # [停用] 未达标
     # ---------------------
     # 流量不达标
-    # ActionSuFeiCloud,
-    # ActionMiTaoCloud,
-    # ActionMxCloud,
-    # ActionJfCloud,
 
     # 无免费节点
-    # ActionJdSuCloud,
     # ActionOhrCloud,
+    # ActionMiTaoCloud,
 
     # ---------------------
     # [剔除] 框架更换
     # ---------------------
-    # ActionThunderCloud,
     # ActionBitEbCloud,
     # ---------------------
     # [剔除] 其他
@@ -383,13 +393,21 @@ __entropy__ = [
     # 跑路
     # ActionTheSSR,
     # ActionUfoCloud,
+    # ActionPPForV2rayCloud,  # v2ray 1day2G
+
     # 域名过期
     # ActionN95Cloud,
+    # ActionSuFeiCloud,
+
     # 拒绝注册
     # ActionUUCloud,
     # ActionWgCloud,
+
     # 站点瘫痪
     # ActionZuiSuCloud,
     # ActionReCloud,  # v2ray 1day10G
+    # ActionThunderCloud,
+    # ActionJdSuCloud,
+    # ActionJfCloud,
 
 ]
