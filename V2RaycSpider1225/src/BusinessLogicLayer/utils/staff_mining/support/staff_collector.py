@@ -23,7 +23,8 @@ class StaffCollector:
         :param chromedriver_path:
         """
         self.GOOGLE_SEARCH_API = "https://www.google.com.hk"
-        self.SEARCH_QUERY = '"特此免费授予任何获得副本的人这个软件和相关的文档文件"'
+        # self.SEARCH_QUERY = '"特此免费授予任何获得副本的人这个软件和相关的文档文件"'
+        self.SEARCH_QUERY = '"由 @editXY 修改适配。"'
 
         self.CHROMEDRIVER_PATH = chromedriver_path
         self.cache_path = cache_path
