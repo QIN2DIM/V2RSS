@@ -1,5 +1,3 @@
-[中文](https://github.com/QIN2DIM/V2RayCloudSpider) **||** [English](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/README_us.md)
-
 <div align="center">
     <h1> V2Ray云彩姬</h1>
     <p>🚀 科学上网 从娃娃抓起</p>
@@ -13,6 +11,7 @@
 	<br>
 	<br>
 </div>
+
 
 ## :carousel_horse: 项目简介
 
@@ -29,13 +28,13 @@
 
 - **【方案一】用户**
 
-    - 软件获取： [**Windows 64x <约17Mb>**](https://github.com/QIN2DIM/V2RayCloudSpider/releases/download/v4.5.2/V2RayCloudSpider.win64.zip)
+  - 软件获取： [**Windows-64bit <约17MiB>**](https://github.com/QIN2DIM/V2RayCloudSpider/releases/download/v4.5.4/v2rss_4.5.4_Windows-64bit.zip)
 
-    - 软件使用：运行 `V2Ray云彩姬` 启动本体 -- [<V2Ray云彩姬使用说明>](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/V2Ray%E4%BA%91%E5%BD%A9%E5%A7%AC%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
+  - 软件使用：运行 `V2Ray云彩姬` 启动本体 -- [<V2Ray云彩姬使用说明>](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/V2Ray%E4%BA%91%E5%BD%A9%E5%A7%AC%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
 
 - **【方案二】开发者**
 
-    ​	Clone项目，根据 [技术文档](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/技术文档(demo).md) 合理配置 `config.py` 以及服务端环境后使用脚手架调试或部署项目。
+  ​	Clone项目，根据 [技术文档](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/技术文档(demo).md) 合理配置 `config.py` 以及服务端环境后使用脚手架调试或部署项目。
 
 
 ## :ocean: 网上冲浪 
