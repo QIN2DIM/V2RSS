@@ -48,7 +48,9 @@ def flow_probe(url: str) -> dict:
             # 首次，使用本地代理探测网站，若成功则直接返回 localhost proxies。使用空代理进行后续作业。
             # 若干次，在重试区间内不断刷新代理头并探测网站，若成功则返回可用 proxies
             session = requests.session()
-            session.head(url, headers=headers, proxies=proxies, timeout=3)
+            response = session.get(url, headers=headers, proxies=proxies, timeout=5)
+            if response.status_code != 200:
+                raise requests.exceptions.SSLError
             break
         except (requests.exceptions.SSLError, requests.exceptions.Timeout, requests.exceptions.ProxyError):
             # TODO 刷新 https 代理头，获取代理头依赖第三方项目 proxy-pool
