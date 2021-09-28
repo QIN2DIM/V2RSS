@@ -1,38 +1,32 @@
 ---
 name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
-assignees: ''
+about: 描述您在使用中遇到的问题
+title: "[BUG]"
+labels: bug
+assignees: QIN2DIM
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+**描述您遇到的问题**
+对 bug 的清晰而简洁的描述。
 
-**To Reproduce**
-Steps to reproduce the behavior:
+**如何重现问题**
+把你遇到的问题的发生步骤替换掉下面的内容：
 1. Go to '...'
 2. Click on '....'
 3. Scroll down to '....'
 4. See error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+**期待修复的效果**
+清晰而简洁地描述您期望的修复效果。
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+**相关截图**
+若有必要，可以用相关截图来增加信息浓度。
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+**环境版本说明**
+ - 操作系统 [e.g. Windows]
+ - 板载方案 [e.g. v2rayN, Qv2ray]
+ - 软体版本 [e.g. v4.5.4]
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
-
-**Additional context**
-Add any other context about the problem here.
+**附加内容**
+添加您认为有必要补充的内容。

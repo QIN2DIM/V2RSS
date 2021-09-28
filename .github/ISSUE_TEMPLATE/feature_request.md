@@ -1,20 +1,19 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
-assignees: ''
+about: 关于本项目的想法与建议
+title: "[Hamster]"
+labels: enhancement
+assignees: QIN2DIM
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+**您的功能请求是否与问题相关？请描述**
+简洁而有效地描述本项目出现的不足之处，或是对于本项目您想做补充的地方。
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+**描述您想要的解决方案**
+清晰而简洁地描述您想要实现的效果。
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+**如果您有其他想法，请在此补充 **
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+**附加内容**
+添加您认为有必要补充的内容。
