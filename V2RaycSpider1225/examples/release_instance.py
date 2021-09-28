@@ -1,6 +1,6 @@
 from gevent import monkey
 
-monkey.patch_all(ssl=False)
+monkey.patch_all()
 
 
 def demo1():
@@ -12,10 +12,10 @@ def demo1():
 
 
 def demo2():
-    from src.BusinessLogicLayer.cluster.slavers import ActionJs8cCloud
+    from src.BusinessLogicLayer.cluster.slavers import ActionZZCloud
     from src.BusinessLogicLayer.plugins.accelerator import booster
 
-    booster(docker=ActionJs8cCloud, silence=False, power=1, assault=True)
+    booster(docker=ActionZZCloud, silence=True, power=1, assault=True)
 
 
 if __name__ == '__main__':

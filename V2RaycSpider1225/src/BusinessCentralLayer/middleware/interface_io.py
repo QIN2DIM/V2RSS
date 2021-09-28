@@ -89,29 +89,27 @@ _cd = _ContainerDegradation()
 class _SystemEngine:
 
     def __init__(self) -> None:
-        terminal_echo(f"[SystemEngineIO] CONFIG_COLLECTOR_PERMISSION:{CRAWLER_SEQUENCE}", 1)
-        terminal_echo(f"[SystemEngineIO] CONFIG_ENABLE_DEPLOY:{ENABLE_DEPLOY}", 1)
-        terminal_echo("[SystemEngineIO] CONFIG_COROUTINE:True", 1)
-        for action_image in ACTIONS_IO:
-            terminal_echo(f"[SystemEngineIO] CONFIG_ACTIONS:{action_image}", 1)
+        if ENABLE_DEPLOY['global']:
+            terminal_echo(f"[SystemEngineIO] CONFIG_ENABLE_DEPLOY:{ENABLE_DEPLOY}", 1)
+            if ENABLE_DEPLOY['tasks']['collector']:
+                terminal_echo(f"[SystemEngineIO] CONFIG_COLLECTOR_PERMISSION:{CRAWLER_SEQUENCE}", 1)
+                for action_image in ACTIONS_IO:
+                    terminal_echo(f"[SystemEngineIO] CONFIG_ACTIONS:{action_image}", 1)
 
-        logger.success("<SystemEngineIO> System core initialized successfully.")
+        logger.success("<SystemEngineIO> Startup coroutine engine.")
+        logger.success("<SystemEngineIO> Service core loading completed.")
 
     @staticmethod
-    def run_server() -> None:
-        """
-        部署接口
-        @return:
-        """
-        app.run(host=OPEN_HOST, port=API_PORT, debug=API_DEBUG, threaded=API_THREADED)
+    def run_server(**optional) -> None:
+        host = optional.get("host") if optional.get("host") else OPEN_HOST
+        port = optional.get("port") if optional.get("port") else API_PORT
+        debug = True if optional.get("debug") else API_DEBUG
+
+        app.run(host=host, port=port, debug=debug, threaded=API_THREADED)
 
     @staticmethod
     @logger.catch()
     def run_deploy() -> None:
-        """
-        定时任务,建议使用if而非for构造任务线程池
-        @return:
-        """
         # 载入定时任务权限配置
         tasks = ENABLE_DEPLOY['tasks']
         task2function = {
@@ -119,7 +117,6 @@ class _SystemEngine:
             'ddt_overdue': _cd.startup_ddt_overdue,
         }
         try:
-
             # 初始化调度器
             docker_of_based_scheduler = TasksScheduler()
             docker_of_collector_scheduler = CollectorScheduler()
@@ -201,17 +198,24 @@ class _SystemEngine:
         logger.success('<Gevent>任务结束')
 
     @staticmethod
-    def startup() -> None:
+    def startup(**kwargs) -> None:
         process_list = []
         try:
-            # 部署<单进程多线程>定时任务
+            # 部署定时任务
             if ENABLE_DEPLOY['global']:
                 process_list.append(
-                    multiprocessing.Process(target=_SystemEngine.run_deploy, name='deploymentTimingTask'))
+                    multiprocessing.Process(
+                        target=_SystemEngine.run_deploy,
+                        name='deploymentTimingTask'
+                    ))
 
-            # 部署flask
+            # 部署 flask
             if ENABLE_SERVER:
-                process_list.append(multiprocessing.Process(target=_SystemEngine.run_server, name='deploymentFlaskAPI'))
+                process_list.append(multiprocessing.Process(
+                    target=_SystemEngine.run_server,
+                    name='deploymentFlaskAPI',
+                    kwargs=kwargs
+                ))
 
             # 执行多进程任务
             for process_ in process_list:
@@ -229,7 +233,7 @@ class _SystemEngine:
             for process_ in process_list:
                 process_.terminate()
         finally:
-            logger.success('<SystemProcess> The system exits completely.')
+            logger.success('<SystemProcess> V2rss server exits completely.')
 
 
 # ----------------------------------------
@@ -263,7 +267,8 @@ class SystemInterface:
     def run(
             deploy_: bool = None,
             beat_sync: bool = True,
-            force_run: bool = None
+            force_run: bool = None,
+            **kwargs
     ) -> None:
         """
         主程序入口
@@ -275,7 +280,7 @@ class SystemInterface:
 
         # 部署定时任务
         if deploy_:
-            _SystemEngine().startup()
+            _SystemEngine().startup(**kwargs)
 
         # 立刻执行任务(debug)
         else:

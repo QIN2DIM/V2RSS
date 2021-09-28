@@ -58,8 +58,11 @@ ENABLE_KERNEL:
   # 园丁系统
   gardener: False
 
-# ENABLE_SERVER 部署Flask
+# ENABLE_SERVER 部署 flask for v2rss-service
 ENABLE_SERVER: True
+
+# ENABLE_PROXY_POOL 开启弹性代理访问
+ENABLE_PROXY: False
 
 # ENABLE_COROUTINE 协程加速
 ENABLE_COROUTINE: True
@@ -137,6 +140,14 @@ MYSQL_CONFIG:
 # flask开放的端口号，通信方式为HTTP
 # ---------------------------------------------------
 API_PORT: 6500
+
+# ---------------------------------------------------
+# TODO (√) PROXY_POOL setting
+# PROXY_POOL 代理池通信配置，通信方式为HTTP
+# ---------------------------------------------------
+PROXY_POOL:
+  host: 'localhost'
+  port: 6501
 
 # ---------------------------------------------------
 # TODO (√)The domain name used to deploy the gardener

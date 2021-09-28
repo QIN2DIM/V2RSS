@@ -18,7 +18,7 @@ from urllib3.exceptions import HTTPError
 from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
 from src.BusinessCentralLayer.setting import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
 from ..plugins.armour import GeeTestAdapter
-from ..plugins.armour import get_header
+from ..plugins.armour import get_header, flow_probe
 
 
 class BaseAction:
@@ -141,9 +141,10 @@ class BaseAction:
         """
         return str(datetime.now(TIME_ZONE_CN) + timedelta(days=trial_time)).split('.')[0]
 
-    def set_spider_option(self, header=None) -> Chrome:
+    def set_spider_option(self, header=None, guise: bool = None) -> Chrome:
         """
 
+        :param guise: 是否使用代理。部分机场 band 了采集器 ip，使用伪装通行。
         :param header:
         :return:
         """
@@ -161,10 +162,14 @@ class BaseAction:
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
         options.add_argument('--log-level=3')
         # 更换头部
-        if header:
-            options.add_argument(f"user-agent={header}")
-        else:
-            options.add_argument(f'user-agent={get_header()}')
+        header = get_header() if header is None else header
+        options.add_argument(f"user-agent={header}")
+        # 更换代理
+        if guise is True:
+            proxies = flow_probe(self.register_url)
+            if proxies:
+                options.add_argument(f"--proxy-server={proxies['https']}")
+                logger.warning(f"GUISE <{self.action_name}> --proxy-server={proxies['https']}")
         # 静默启动
         if self.silence is True:
             options.add_argument('--headless')
@@ -289,13 +294,23 @@ class BaseAction:
                 By.XPATH, tag_xpath_str
             )))
 
-    def check_in(self, button_xpath_str: str):
+    @staticmethod
+    def check_in(api: Chrome):
         """
         机场账号每日签到
         该功能收益较低，加入主工作流会降低系统运行效率，仅在编写特种脚本时引用
-        :param button_xpath_str:
+        :param api:
         :return:
         """
+        try:
+            time.sleep(3)
+            api.find_element_by_id("checkin-div").click()
+        # 加载失败
+        except NoSuchElementException:
+            pass
+        # 出现弹窗遮挡，需要进一步处理
+        except WebDriverException:
+            pass
 
     def load_any_subscribe(self, api: Chrome, element_xpath_str: str, href_xpath_str: str, class_: str, retry=0):
         """
@@ -412,9 +427,10 @@ class ActionMasterGeneral(BaseAction):
             'qtl': False,
             # Kitsunebi
             'kit': False,
-            # usr_email True: 需要自己输入邮箱后缀(默认为qq)
-            # usr_email False: 邮箱后缀为选择形式只需填写主段
+            # usr_email | True 需要自己输入邮箱后缀(默认为qq) False: 邮箱后缀为选择形式只需填写主段
             'usr_email': False,
+            # check_in | 机场签到（仅在注册时签到，不提供每日维护）
+            'check_in': True,
         }
         # 更新模型超参数
         if hyper_params:
@@ -445,7 +461,7 @@ class ActionMasterGeneral(BaseAction):
     def run(self, api=None):
         logger.debug(f">> RUN <{self.action_name}> --> beat_sync[{self.beat_sync}] feature[General]")
         # 获取任务设置
-        api = self.set_spider_option() if api is None else api
+        api = self.set_spider_option(guise=self.hyper_params.get("proxy")) if api is None else api
         # 执行核心业务逻辑
         try:
             # 设置弹性计时器，当目标站点未能在规定时间内渲染到预期范围时自主销毁实体
@@ -457,6 +473,9 @@ class ActionMasterGeneral(BaseAction):
             self.wait(api, 40, "//div[@class='card-body']")
             # 根据原子类型订阅的优先顺序 依次捕获
             self.capture_subscribe(api)
+            # 根据具体需要进行账号签到充能
+            if self.hyper_params.get("check_in"):
+                self.check_in(api)
         except TimeoutException:
             logger.error(f'>>> TimeoutException <{self.action_name}> -- {self.register_url}')
         except WebDriverException as e:

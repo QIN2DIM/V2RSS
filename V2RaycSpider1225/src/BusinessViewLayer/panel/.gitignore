@@ -132,3 +132,5 @@ dmypy.json
 /src/Database/
 /.idea/
 /test
+/auto_decompile.py
+/auto_pack.py

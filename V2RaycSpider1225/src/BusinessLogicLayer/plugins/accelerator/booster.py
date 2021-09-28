@@ -1,6 +1,7 @@
 """
 核心功能：单步调试actions-entropy任务
 """
+import warnings
 
 from src.BusinessLogicLayer.cluster.cook import ActionShunt
 from src.BusinessLogicLayer.cluster.prism import Prism
@@ -69,6 +70,9 @@ def booster(docker: dict or list, silence: bool, power: int = 1, assault=False):
             ActionShunt.generate_entity(atomic=docker, silence=silence, assault=assault)()
         # 对该实体发起power次并发的行为测试[使用gevent]
         elif power > 1:
+            if power > 16:
+                return warnings.warn("The power of BoosterEngine has exceeded performance expectations."
+                                     "Please make it less than 16.")
             SpawnBooster(docker=[docker, ] * power, silence=silence, assault=assault).run(power)
 
     # 该方法针对scaffold_spawn 实现相关接口，经典用法为灌入__entropy__

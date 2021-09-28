@@ -1,60 +1,23 @@
-__all__ = ['scaffold', 'command_set']
+"""v2rss-cli 脚手架"""
+__all__ = ['Scaffold']
 
 from gevent import monkey
 
 monkey.patch_all()
-
 import csv
 import os
-import sys
-import time
 import shutil
-from typing import List
+import sys
 
-import gevent
+from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
+from src.BusinessCentralLayer.middleware.subscribe_io import select_subs_to_admin
+from src.BusinessLogicLayer.apis.staff_mining import staff_api
+from src.BusinessLogicLayer.cluster.slavers import __entropy__
+from src.BusinessLogicLayer.plugins.accelerator import booster, SubscribesCleaner, SubscribeParser
 
 from src.BusinessCentralLayer.setting import logger, DEFAULT_POWER, CHROMEDRIVER_PATH, \
     REDIS_MASTER, SERVER_DIR_DATABASE_CACHE, SERVER_DIR_CLIENT_DEPORT, SERVER_PATH_DEPOT_VCS, SERVER_DIR_CACHE_BGPIC, \
-    REDIS_SLAVER_DDT, CRAWLER_SEQUENCE, terminal_echo, SERVER_DIR_DATABASE_LOG, SERVER_DIR_SSPANEL_MINING
-
-command_set = {
-
-    # ---------------------------------------------
-    # 部署接口
-    # ---------------------------------------------
-    'deploy': "部署项目（定时任务/Flask 开启与否取决于yaml配置文件）",
-    # ---------------------------------------------
-    # 调试接口
-    # ---------------------------------------------
-    "clear": "清理系统运行缓存",
-    "decouple": "立即唤醒一次subs_ddt链接解耦任务",
-    "overdue": "立即执行一次过时链接清洗任务",
-    "run": "[请使用spawn命令替代]立即执行一次采集任务（强制使用协程加速）",
-    "force_run": "[请使用spawn命令替代]强制执行采集任务",
-    "remain": "读取剩余订阅数量",
-    "ping": "测试数据库连接",
-    "entropy": "打印采集队列",
-    "exile": "执行队列运维脚本（高饱和强阻塞任务）",
-    "spawn": "并发执行所有在列的采集任务",
-    "mining": "启动一次针对STAFF host的SEO全站挖掘任务",
-    # ---------------------------------------------
-    # 随参调试接口
-    # ---------------------------------------------
-    # usage: 解析某条订阅链接 python main.py --parse https://domain/link/token?sub=3
-    # usage: 解析多条订阅链接 python main.py --parse https://domain/link/token?sub=3 https://domain/link/token2?sub=3
-    # "--parse": """解析链接。若是订阅链接，则检测节点数量并测试ping延时""",
-
-    # ---------------------------------------------
-    # Windows 功能接口
-    # ---------------------------------------------
-    "panel": "[for Windows] 打开桌面前端面板",
-    "ash": "[for Windows] 一键清洗订阅池,并将所有类型订阅转换为Clash yaml配置文件,"
-           "借由URL Scheme自动打开Clash并下载配置文件",
-    # ---------------------------------------------
-    # 调用示例
-    # ---------------------------------------------
-    "example": "python main.py ping"
-}
+    REDIS_SLAVER_DDT, terminal_echo, SERVER_DIR_DATABASE_LOG, SERVER_DIR_SSPANEL_MINING
 
 
 class _ConfigQuarantine:
@@ -67,25 +30,7 @@ class _ConfigQuarantine:
         self.flag = False
 
     def set_up_file_tree(self, root):
-        """
-        --/qinse/V2RaycSpider{verNum}
-            --BCL
-            --BLL
-            --BVL
-            --Database
-                --client_depot
-                    --vcs.csv
-                --logs
-                    --*error.log
-                    --*runtime.log
-                --temp_cache
-                    --*AnyTempCacheFile...
-                --*CrawlFetchHistory.txt
-                --fake_useragent_0.1.11.json
-            --*tests
-        """
-
-        # 检查默认下载地址是否残缺 深度优先初始化系统文件
+        # 深度优先初始化系统文件
         for child_ in root:
             if not os.path.exists(child_):
                 self.flag = True
@@ -142,122 +87,194 @@ class _ConfigQuarantine:
                 sys.exit()
 
 
-_ConfigQuarantine().run()
+class Scaffold:
 
+    def __init__(self, ):
+        self.cq = _ConfigQuarantine()
 
-class _ScaffoldGuider:
-    # __slots__ = list(command_set.keys())
-
-    def __init__(self):
-        # 脚手架公开接口
-        self.scaffold_ruler = [i for i in self.__dir__() if i.startswith('_scaffold_')]
-        self.command2solution = {
-            'deploy': self._scaffold_deploy,
-            'decouple': self._scaffold_decouple,
-            'overdue': self._scaffold_overdue,
-            'spawn': self._scaffold_spawn,
-            # 'run': self._scaffold_run,
-            # 'force_run': self._scaffold_force_run,
-            'remain': self._scaffold_remain,
-            'ping': self._scaffold_ping,
-            'panel': self._scaffold_panel,
-            'entropy': self._scaffold_entropy,
-            'ash': self._scaffold_ash,
-            'mining': self._scaffold_mining,
-        }
-
-    def startup(self, driver_command_set: List[str]):
+    def build(self):
         """
-        仅支持单进程使用
-        @param driver_command_set: 在空指令时列表仅有1个元素，表示启动路径
-        @return:
+        [实验功能] 为 CentOS7 操作系统用户自动下载 v2rss server 运行所需组件。
+
+
+
+        :return:
         """
-        # logger.info(f">>> {' '.join(driver_command_set)}")
 
-        # -------------------------------
-        # TODO 优先级0：预处理指令集
-        # -------------------------------
-        # CommandId or List[CommandId]
-        driver_command: List[str] = []
-
-        # 未输入任何指令 列出脚手架简介
-        if len(driver_command_set) == 1:
-            print("\n".join([f">>> {menu[0].ljust(20, '-')}|| {menu[-1]}" for menu in command_set.items()]))
-            return True
-        # 输入立即指令 转译指令
-        if len(driver_command_set) == 2:
-            driver_command = [driver_command_set[-1].lower(), ]
-        # 输入指令集 转译指令集
-        elif len(driver_command_set) > 2:
-            driver_command = list({command.lower() for command in driver_command_set[1:]})
-
-        # 捕获意料之外的情况
-        if not isinstance(driver_command, list):
-            return True
-        # -------------------------------
-        # TODO 优先级1：解析运行参数
-        # -------------------------------
-
-        # TODO --help 帮助菜单（继续完善相关功能）
-        # 使用该参数时系统不解析运行指令
-        if '--help' in driver_command:
-            logger.info(">>>GuiderHelp || 帮助菜单")
-            driver_command.remove("--help")
-            for command_ in driver_command:
-                introduction = command_set.get(command_)
-                if introduction:
-                    print(f"> {command_.ljust(20, '-')}|| {introduction}")
-                else:
-                    print(f"> {command_}指令不存在")
-            return True
-
-        # 智能采集 解析目标
-        if '--parse' in driver_command:
-            driver_command.remove('--parse')
-            task_list = []
-            for url_ in reversed(driver_command):
-                if url_.startswith("http") or url_.startswith("ssr") or url_.startswith("vmess"):
-                    task_list.append(gevent.spawn(self._scaffold_parse, url=url_))
-            gevent.joinall(task_list)
-            return True
-
-        # 清除系统缓存
-        if 'clear' in driver_command:
-            driver_command.remove('clear')
-            self._scaffold_clear()
-            return True
-        # -------------------------------
-        # TODO 优先级2：运行单线程指令
-        # -------------------------------
-
-        # 协程任务队列
-        task_list = []
-
-        # 测试数据库连接
-        while driver_command.__len__() > 0:
-            _pending_command = driver_command.pop()
-            try:
-                task_list.append(gevent.spawn(self.command2solution[_pending_command]))
-            except KeyError as e:
-                logger.warning(f'脚手架暂未授权指令<{_pending_command}> {e}')
-
-        # 并发执行以上指令
-        gevent.joinall(task_list)
-
-        # -------------------------------
-        # TODO 优先级3：自定义参数部署（阻塞线程）
-        # -------------------------------
-        if 'deploy' in driver_command:
-            self._scaffold_deploy()
+    # ----------------------------------
+    # Tools for dev
+    # ----------------------------------
 
     @staticmethod
-    def _scaffold_deploy():
-        # logger.info("<ScaffoldGuider> Deploy || MainProcess")
-        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
-        SystemInterface.run(deploy_=True)
+    def parse(subscribe: str, decode: bool = False):
+        """
+        解析订阅链接/节点分享链接。
+
+        返回订阅链接所映射的可用节点数及详细订阅信息。
+
+        Usage: python main.py parse --url=[<URL>]
+        Usage: python main.py parse [<URL>]
+        Usage: python main.py parse '[<URL>]'       当链接存在 & 符号时用引号将链接框起来
+        Usage: python main.py parse [<URL>] --decode        启动 BASE64 自动解码程序，返回节点明文数据
+        :param decode: 解析订阅时进行自动 BASE64 解码
+        :param subscribe: 需要解析的订阅链接
+        :return:
+        """
+        terminal_echo(f"Parse {subscribe}", 1)
+
+        # 检测缓存路径完整性
+        if not os.path.exists(SERVER_DIR_DATABASE_CACHE):
+            os.mkdir(SERVER_DIR_DATABASE_CACHE)
+
+        # 调取API解析链接
+        result = SubscribeParser(subscribe).parse_out(auto_base64=decode)
+        body = result.get("body")
+        if result.get("is_subscribe"):
+            info = {}
+            if not body:
+                return False
+            nodes = body['nodes']
+
+            # 节点数量 减去无效的注释项
+            node_num = nodes.__len__() - 2 if nodes.__len__() - 2 >= 0 else 0
+            info.update({"available nodes": node_num})
+
+            # 缓存数据
+            cache_path = os.path.join(SERVER_DIR_DATABASE_CACHE, 'sub2node.txt')
+            with open(cache_path, 'w', encoding="utf8") as f:
+                for node in nodes:
+                    f.write(f"{node}\n")
+
+            # 打印转义后的节点信息
+            for node in reversed(nodes):
+                terminal_echo(node, 1)
+            terminal_echo("Detail:{}".format(info), 1)
+        else:
+            node = body['msg']
+            terminal_echo(node, 1)
 
     @staticmethod
-    def _scaffold_clear():
+    def remain():
+        """
+        获取订阅池状态。
+
+        Usage: python main.py remain
+
+        :return:
+        """
+        tracer = [f"{tag[0]}\n采集类型：{info_[0]}\n存活数量：{tag[-1]}" for info_ in
+                  select_subs_to_admin(select_netloc=None, _debug=False)['info'].items() for tag in info_[-1].items()]
+        for i, tag in enumerate(tracer):
+            print(f">>> [{i + 1}/{tracer.__len__()}]{tag}")
+
+    @staticmethod
+    def mining():
+        """
+        启动一次对 SSPanel-Uim 站点的检索与分类。
+
+        该项任务需要为国内IP开启系统代理。
+
+        Usage: python main.py mining
+
+        :return:
+        """
+        use_collector = staff_api.is_first_run()
+        classify_dir, staff_info = staff_api.go(
+            debug=False,
+            silence=True,
+            power=os.cpu_count() * 2,
+            identity_recaptcha=False,
+            use_collector=use_collector,
+            use_checker=True,
+            use_generator=False,
+        )
+        staff_api.refresh_cache(mode='de-dup')
+        print(f"\n\nSTAFF INFO\n{'_' * 32}")
+        for element in staff_info.items():
+            for i, tag in enumerate(element[-1]):
+                print(f">>> [{i + 1}/{len(element[-1])}]{element[0]}: {tag}")
+        print(f">>> 文件导出目录: {classify_dir}")
+
+    @staticmethod
+    def entropy():
+        """
+        在控制台输出本机采集队列信息。
+
+        Usage: python main.py entropy
+
+        :return:
+        """
+        for i, host_ in enumerate(__entropy__):
+            print(f">>> [{i + 1}/{__entropy__.__len__()}]{host_['name']}")
+            print(f"注册链接: {host_['register_url']}")
+            print(f"存活周期: {host_['life_cycle']}天")
+            print(f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n")
+
+    @staticmethod
+    def ping():
+        """
+        测试数据库连接。
+
+        Usage: python main.py ping
+
+        :return:
+        """
+        from src.BusinessCentralLayer.middleware.redis_io import RedisClient
+        logger.info(f"<ScaffoldGuider> Ping || {RedisClient().test()}")
+
+    @staticmethod
+    def spawn():
+        """
+        并发执行本机所有采集器任务，每个采集器实体启动一次，并发数取决于本机硬件条件。
+
+        Usage: python main.py spawn
+
+        :return:
+        """
+
+        _ConfigQuarantine.check_config(call_driver=True)
+        logger.info("<ScaffoldGuider> Spawn || MainCollector")
+        booster(docker=__entropy__, silence=True, power=DEFAULT_POWER, assault=True)
+
+    @staticmethod
+    def overdue():
+        """
+        对指向的订阅池执行一次过时链接的清洗任务。
+
+        Usage: python main.py overdue
+
+        :return:
+        """
+        logger.info("<ScaffoldGuider> Overdue || Redis DDT")
+        SystemInterface.ddt()
+
+    @staticmethod
+    def decouple():
+        """
+        扫描所指订阅池，清除无效订阅。
+
+        无效订阅规则：
+            - 解析异常，订阅映射站点瘫痪；
+            - 订阅过期，使用 pre-clean 机制进行欲清除；
+            - 订阅耦合，被客户端成功获取但未被正常删除的订阅；
+        Usage: python main.py decouple
+
+        :return:
+        """
+        logger.info("<ScaffoldGuider> Decouple || General startup")
+        SubscribesCleaner(debug=True).interface(power=DEFAULT_POWER)
+
+    @staticmethod
+    def clear():
+        """
+        清理系统运行缓存。
+
+        清理项包括过期运行日志,以及由 mining 指令产生的采集输出
+
+        Usage: python main.py clear
+
+        :return:
+        """
         _permission = {
             "logs": input(terminal_echo("是否清除所有运行日志[y]?", 2)),
             "cache": input(terminal_echo("是否清除所有运行缓存[y]?", 2))
@@ -295,134 +312,64 @@ class _ScaffoldGuider:
                         terminal_echo(f"清除运行缓存-->{_file}", 3)
             terminal_echo("系统缓存文件清理完毕", 1)
 
+    # ----------------------------------
+    # Backend service interface
+    # ----------------------------------
     @staticmethod
-    def _scaffold_decouple():
-        logger.info("<ScaffoldGuider> Decouple || General startup")
-        from src.BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
-        SubscribesCleaner(debug=True).interface(power=DEFAULT_POWER)
-
-    @staticmethod
-    def _scaffold_overdue():
-        logger.info("<ScaffoldGuider> Overdue || Redis DDT")
-        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
-        SystemInterface.ddt()
-
-    @staticmethod
-    def _scaffold_spawn():
-        _ConfigQuarantine.check_config(call_driver=True)
-        logger.info("<ScaffoldGuider> Spawn || MainCollector")
-        from src.BusinessLogicLayer.cluster.slavers import __entropy__
-        from src.BusinessLogicLayer.plugins.accelerator import booster
-        booster(docker=__entropy__, silence=True, power=DEFAULT_POWER, assault=True)
-
-    @staticmethod
-    def _scaffold_run():
-        _ConfigQuarantine.check_config(call_driver=True)
-        logger.info("<ScaffoldGuider> Run || MainCollector")
-        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
-        SystemInterface.run(deploy_=False)
-
-    @staticmethod
-    def _scaffold_force_run():
-        _ConfigQuarantine.check_config(call_driver=True)
-        logger.info("<ScaffoldGuider> ForceRun || MainCollector")
-        from src.BusinessLogicLayer.plugins.accelerator import ForceRunRelease
-        ForceRunRelease(task_docker=CRAWLER_SEQUENCE).interface()
-
-    @staticmethod
-    def _scaffold_remain():
-        from src.BusinessCentralLayer.middleware.subscribe_io import select_subs_to_admin
-        tracer = [f"{tag[0]}\n采集类型：{info_[0]}\n存活数量：{tag[-1]}" for info_ in
-                  select_subs_to_admin(select_netloc=None, _debug=False)['info'].items() for tag in info_[-1].items()]
-        for i, tag in enumerate(tracer):
-            print(f">>> [{i + 1}/{tracer.__len__()}]{tag}")
-
-    @staticmethod
-    def _scaffold_ping():
-        from src.BusinessCentralLayer.middleware.redis_io import RedisClient
-        logger.info(f"<ScaffoldGuider> Ping || {RedisClient().test()}")
-
-    @staticmethod
-    def _scaffold_parse(url, _unused_mode: str = "subscribe"):
-        logger.info(f">>> PARSE --> {url}")
-        from src.BusinessLogicLayer.plugins.accelerator import cleaner
-
-        # 检查路径完整性
-        if not os.path.exists(SERVER_DIR_DATABASE_CACHE):
-            os.mkdir(SERVER_DIR_DATABASE_CACHE)
-
-        # 调取API解析链接
-        result = cleaner.subs2node(url)
-        if result and isinstance(result, dict):
-            _, info, nodes = result.values()
-
-            # 节点数量 减去无效的注释项
-            _unused_node_num = nodes.__len__() - 2 if nodes.__len__() - 2 >= 0 else 0
-            token_ = '' if info.get('token') is None else info.get('token')
-
-            # 缓存数据
-            cache_sub2node = os.path.join(SERVER_DIR_DATABASE_CACHE, f'sub2node_{token_}.txt')
-            with open(cache_sub2node, 'w', encoding="utf8") as f:
-                for node in nodes:
-                    f.write(f"{node}\n")
-
-            # 自动打开缓存文件，仅在parse一个链接时启用
-            # os.startfile(cache_sub2node)
-
-            cleaner.node2detail(nodes[0])
-
-        else:
-            return False
-
-    @staticmethod
-    def _scaffold_panel():
-        from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
-        SystemInterface.system_panel()
-
-    @staticmethod
-    def _scaffold_entropy(_debug=False):
-        from src.BusinessLogicLayer.cluster.slavers import __entropy__
-        for i, host_ in enumerate(__entropy__):
-            print(f">>> [{i + 1}/{__entropy__.__len__()}]{host_['name']}")
-            print(f"注册链接: {host_['register_url']}")
-            print(f"存活周期: {host_['life_cycle']}天")
-            print(f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n")
-
-    @staticmethod
-    def _scaffold_exile(task_sequential=4):
-
-        logger.debug(f"<ScaffoldGuider> Exile[0/{task_sequential}] || Running scaffold exile...")
-        time.sleep(0.3)
-
-        # task1: 检查队列任务
-        logger.debug(f"<ScaffoldGuider> Exile[1/{task_sequential}] || Checking the task queue...")
-        time.sleep(0.3)
-        _ScaffoldGuider._scaffold_entropy(_debug=True)
-        # logger.success(f">>> [Mission Completed] || entropy")
-
-        # task2: decouple
-        logger.debug(f"<ScaffoldGuider> Exile[2/{task_sequential}] || Cleaning the subscribe pool...")
-        time.sleep(0.3)
-        _ScaffoldGuider._scaffold_decouple()
-        # logger.success(f">>> [Mission Completed] || decouple")
-
-        # task3: overdue
-        logger.debug(f"<ScaffoldGuider> Exile[3/{task_sequential}] || Cleaning timed out subscribes...")
-        time.sleep(0.3)
-        _ScaffoldGuider._scaffold_overdue()
-        # logger.success(">>> [Mission Completed] || overdue")
-
-        # finally: print task-queue， remaining subscribes
-        logger.debug(f"<ScaffoldGuider> Exile[{task_sequential}/{task_sequential}] || Outputting debug data...")
-        _ScaffoldGuider._scaffold_entropy()
-        _ScaffoldGuider._scaffold_remain()
-        logger.success("<ScaffoldGuider> Exile[Mission Completed] || exile")
-
-    @staticmethod
-    @logger.catch()
-    def _scaffold_ash():
+    def server(port: int = None, host: str = None, debug: bool = False):
         """
-        无尽套娃
+        启动 V2RSS 后端服务。
+
+        当不指定参数时，v2rss server 自动读取 config.yaml 中关于服务运行的配置：
+            - ENABLE_SERVER     是否开启 flask
+            - LAUNCH_INTERVAL   定时任务的执行间隔
+            - ENABLE_DEPLOY     各种定时任务的开关
+
+        Usage: python main.py server    以系统默认配置启动服务
+        Usage: python main.py server --debug    以 debug 模式启动 flask
+        Usage: python main.py server --ip=6500 --port="localhost"   指定运行端口启动服务
+
+        :param debug: 以 debug 模式启动 flask。注意，若配置文件中的 ENABLE_SERVER: False，此配置项无效。
+        :param port: v2rss server 后端服务 (Flask) 的部署端口，默认 port=API_PORT(6500)
+        :param host:
+        v2rss server 后端服务 (Flask) hostname ，默认 host=OPEN_HOST 策略。
+
+        在 Windows 操作系统上调试或 debug=True 时，默认 hostname="localhost"。
+        在其他操作系统上运行且 debug=False 时，默认 hostname="0.0.0.0"。
+
+        :return:
+        """
+        SystemInterface.run(deploy_=True, port=port, host=host, debug=debug)
+
+    # ----------------------------------
+    # Front-end debugging interface
+    # ----------------------------------
+    @staticmethod
+    def panel():
+        """
+        打开 panel 调试面板。
+
+        仅可在 Windows 操作系统上运行。
+
+        Usage: python main.py panel
+
+        :return:
+        """
+        from src.BusinessViewLayer.panel.panel import startup_from_platform
+        startup_from_platform()
+
+    @staticmethod
+    def ash():
+        """
+        一键拉取、合并、自动更新 Clash for Windows 订阅文件。
+
+        1. 仅可在 Windows 操作系统上运行。
+        2. 清洗订阅池，并将所有类型的节点分享链接合并转写为 Clash.yaml配置文件，
+        借由 URL Scheme 自动打开 Clash 并下载更新配置文件。
+
+        Usage: python main.py ash
+
+        :return:
         """
         from src.BusinessLogicLayer.apis import scaffold_api
         logger.info("<ScaffoldGuider> ash | Clash订阅堆一键生成脚本")
@@ -430,38 +377,10 @@ class _ScaffoldGuider:
         # --------------------------------------------------
         # 参数清洗
         # --------------------------------------------------
-        if 'win' not in sys.platform:
-            return
+        # if 'win' not in sys.platform:
+        #     return
 
         # --------------------------------------------------
         # 运行脚本
         # --------------------------------------------------
         return scaffold_api.ash(debug=True, decouple=True)
-
-    @staticmethod
-    def _scaffold_mining():
-        """
-        “国外”服务器：直接运行
-        大陆主机：开启代理后运行
-        :return:
-        """
-        from src.BusinessLogicLayer.apis.staff_mining import staff_api
-        use_collector = staff_api.is_first_run()
-        classify_dir, staff_info = staff_api.go(
-            debug=False,
-            silence=True,
-            power=os.cpu_count() * 2,
-            identity_recaptcha=False,
-            use_collector=use_collector,
-            use_checker=True,
-            use_generator=False,
-        )
-        staff_api.refresh_cache(mode='de-dup')
-        print(f"\n\nSTAFF INFO\n{'_' * 32}")
-        for element in staff_info.items():
-            for i, tag in enumerate(element[-1]):
-                print(f">>> [{i + 1}/{len(element[-1])}]{element[0]}: {tag}")
-        print(f">>> 文件导出目录: {classify_dir}")
-
-
-scaffold = _ScaffoldGuider()

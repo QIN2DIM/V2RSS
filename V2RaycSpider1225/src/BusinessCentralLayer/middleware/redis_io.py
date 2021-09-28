@@ -160,7 +160,13 @@ class RedisClient:
         @param key_name: secret key
         @return:
         """
-        return list(self.db.hgetall(key_name).items())
+        _sync_response = []
+        try:
+            _sync_response = list(self.db.hgetall(key_name).items())
+            return list(self.db.hgetall(key_name).items())
+        except redis.exceptions.ResponseError:
+            logger.error(f"{key_name} 队列为空")
+            return _sync_response
 
     def sync_message_queue(self, mode: str, message: str = None):
         """

@@ -22,7 +22,7 @@ ActionKakCloud = {
     'register_url': "https://www.kaikaiyun.icu/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': False, "v2ray": True},
+    'hyper_params': {'ssr': False, "v2ray": True, 'proxy': True},
     'email': '@gmail.com'
 }
 # =============================================
@@ -343,23 +343,46 @@ ActionJs8cCloud = {
     'email': "@gmail.com",
 }
 
+# =============================================
+# ActionZZCloud
+# - change log:
+#   -2021-09-24 [Create] 更新实例
+# =============================================
+ActionZZCloud = {
+    'name': "ActionZZCloud",
+    'register_url': "https://zz12.xyz/auth/register",
+    'life_cycle': 6,
+    'anti_slider': False,
+    'hyper_params': {'ssr': False, 'v2ray': True},
+    'email': "@gmail.com",
+}
+
+# =============================================
+# ActionMaoQCloud
+# - change log:
+#   -2021-09-24 [Create] 更新实例
+# =============================================
+ActionMaoQCloud = {
+    'name': "ActionMaoQCloud",
+    'register_url': "https://maoqiang.xyz/auth/register",
+    'life_cycle': 2,
+    'anti_slider': False,
+    'hyper_params': {'ssr': True, 'v2ray': False, 'usr_email': True},
+    'email': "@gmail.com",
+}
+
 __entropy__ = [
     # ---------------------
     # [启动] 无障碍
     # ---------------------
-    ActionAaxCloud,  # v2ray
-
+    ActionAaxCloud,  # v2ray 1day 10G
+    # ActionZZCloud,  # v2ray 6day100G
+    # ActionMaoQCloud,  # ssr 3day3G
     # ---------------------
     # [启动] 需要滑动验证
     # ---------------------
 
-    ActionKakCloud,  # v2ray
-
-    ActionDuosCloud,  # v2ray
-
-    ActionJssForV2rayCloud,  # v2ray 1day 2G
-
-    ActionMxCloud,  # v2ray 1day 2G
+    ActionKakCloud,  # v2ray 1day5G
 
     ActionJs8cCloud,  # v2ray 1day 10G
 
@@ -378,6 +401,9 @@ __entropy__ = [
     # [停用] 未达标
     # ---------------------
     # 流量不达标
+    # ActionDuosCloud,  # v2ray 1day2G
+    # ActionJssForV2rayCloud,  # v2ray 1day 2G
+    # ActionMxCloud,  # v2ray 1day 2G
 
     # 无免费节点
     # ActionOhrCloud,

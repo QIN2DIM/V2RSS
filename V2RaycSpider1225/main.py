@@ -4,9 +4,9 @@
 # Github  : https://github.com/QIN2DIM
 # Description: Welcome to use V2RayCloudSpider
 
-from sys import argv
+import fire
 
-from src.BusinessCentralLayer.scaffold import scaffold
+from src.BusinessCentralLayer.scaffold import Scaffold
 
 if __name__ == '__main__':
-    scaffold.startup(driver_command_set=argv)
+    fire.Fire(Scaffold)

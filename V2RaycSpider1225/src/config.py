@@ -5,7 +5,9 @@ __all__ = ['SINGLE_DEPLOYMENT', 'ENABLE_DEPLOY', 'ENABLE_KERNEL', 'ENABLE_SERVER
            'ENABLE_DEBUG', 'ENABLE_REBOUND', 'SINGLE_TASK_CAP', 'LAUNCH_INTERVAL', 'REDIS_MASTER', 'REDIS_SLAVER_DDT',
            'MYSQL_CONFIG', 'API_HOST', 'API_DEBUG', 'API_THREADED', 'API_PORT', 'OPEN_HOST', 'GARDENER_HOST',
            'ROUTE_API', 'SEQ_TEST', 'CRAWLER_SEQUENCE', 'SMTP_ACCOUNT', 'SERVERCHAN_SCKEY', 'REDIS_SECRET_KEY',
-           'PROJECT_NUM', 'VERSION', 'TIME_ZONE_CN', 'TIME_ZONE_NY', 'DEFAULT_POWER', 'Fore', 'terminal_echo']
+           'PROJECT_NUM', 'VERSION', 'TIME_ZONE_CN', 'TIME_ZONE_NY', 'DEFAULT_POWER', 'Fore', 'terminal_echo',
+           'PROXY_POOL', 'ENABLE_PROXY',
+           ]
 
 import os
 import shutil
@@ -124,6 +126,12 @@ ENABLE_KERNEL: dict = config_['ENABLE_KERNEL']
 # ENABLE_SERVER 部署Flask
 ENABLE_SERVER: bool = config_['ENABLE_SERVER']
 
+# ENABLE_SERVER 允许代理访问
+ENABLE_PROXY: bool = config_['ENABLE_PROXY']
+
+# PROXY_POOL 代理池配置信息
+PROXY_POOL: dict = config_['PROXY_POOL']
+
 # ENABLE_COROUTINE 协程加速
 # ENABLE_COROUTINE: bool = config_['ENABLE_COROUTINE']
 
@@ -201,7 +209,7 @@ Audit: Binding to all interfaces detected with hardcoded values
  development phase. This prevents others from targeting 
  your application and executing SQL injections against your project.
 """
-OPEN_HOST: str = "127.0.0.1" if API_DEBUG or "win" in sys.platform else "0.0.0.0"
+OPEN_HOST: str = "127.0.0.1" if (API_DEBUG is True) or ("win" in sys.platform) else "0.0.0.0"
 # ---------------------------------------------------
 # TODO (√)The domain name used to deploy the gardener
 # 园丁系统部署域名，当启动该项功能时，必须配置如: www.bbq.club

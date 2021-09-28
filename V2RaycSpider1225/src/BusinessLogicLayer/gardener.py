@@ -9,7 +9,7 @@ import os
 import sys
 from uuid import uuid4
 
-from src.BusinessLogicLayer.plugins.accelerator.cleaner import subs2node
+from src.BusinessLogicLayer.plugins.accelerator.cleaner import SubscribeParser
 
 
 class GardenerServer:
@@ -27,17 +27,18 @@ class GardenerServer:
         if isinstance(subs, str):
             subs = [subs, ]
         for sub in subs:
-            unzip_stream: dict = subs2node(sub)
+            unzip_stream: dict = SubscribeParser(sub).parse_subscribe()
             # 类型清洗，当传入的subs不确定类型时使用
             # 若使用，则仅会返回对应类型的链接
             if sub_type:
+                # FIXME  DICT 键值对冲突
                 info_tags = unzip_stream.get("info")
                 if info_tags and info_tags.get("class_") == sub_type:
-                    yield [sub, unzip_stream['node']]
+                    yield [sub, unzip_stream['nodes']]
                 else:
                     yield [sub, []]
             else:
-                yield [sub, unzip_stream['node']]
+                yield [sub, unzip_stream['nodes']]
 
     @staticmethod
     def subscribe_clearing(node_unzip_stream: list or str):

@@ -6,7 +6,6 @@
 import base64
 import warnings
 from typing import List
-from urllib.parse import urlparse
 
 import requests
 from redis import exceptions as redis_error
@@ -55,12 +54,12 @@ class SubscribesCleaner(CoroutineSpeedup):
                 self._del_subs(sub_info[-1], sub_info[0], "target active removal")
             else:
                 # 解析订阅
-                node_info: dict = subs2node(sub_info[0])
+                node_info: dict = SubscribeParser(sub_info[0]).parse_subscribe()
                 # 订阅解耦
-                if node_info['node'].__len__() <= threshold:
+                if node_info['nodes'].__len__() <= threshold:
                     self._del_subs(sub_info[-1], sub_info[0], "decouple active removal")
                 elif self.debug:
-                    terminal_echo(f"valid -- {node_info['subs']} -- {len(node_info['node'])}", 1)
+                    terminal_echo(f"valid -- {node_info['subs']} -- {len(node_info['nodes'])}", 1)
         except (UnicodeDecodeError, TypeError) as e:
             # 对于已标记“解析错误”的订阅 更新其请求次数
             if self.temp_cache.get(sub_info[0]):
@@ -86,86 +85,82 @@ class SubscribesCleaner(CoroutineSpeedup):
             logger.success("<SubscribesCleaner> --> decouple compete.")
 
 
-def subs2node(subscribe: str, timeout: int = None) -> dict:
-    """
-    将订阅链接解析成节点数据
-    一般订阅解包后，两条信息分别用于描述“可用剩余时长”与"可用剩余流量"，其加密特征与节点完全不同
-    :param subscribe: any class_ subscribe 需要解析的订阅链接
-    :param timeout: 设置requests 超时时间
-    :return: {'subs': subscribe, "node": info}
-    """
+class SubscribeParser:
+    def __init__(self, url):
+        self.url = url
 
-    # 订阅类型
-    class_ = ''
-    headers = {
-        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
-                      " Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.53"}
-    # 流量不通过系统代理
-    proxies = {
-        'http': None,
-        'https': None
-    }
-    try:
-        # 订阅解析
-        obj = urlparse(subscribe)
-        # 类型粗识别
-        if '1' in obj.query:
-            class_ = 'ssr'
-        elif '3' in obj.query:
-            class_ = 'v2ray'
-        obj_analyze = {'net': obj.netloc, 'token': obj.path.split('/')[-1], 'class_': class_}
-        # 根据是否设置超时选择不同的请求方式
-        if timeout:
-            res = requests.get(subscribe, headers=headers, timeout=timeout)
-        else:
-            res = requests.get(subscribe, headers=headers, proxies=proxies)
-        # 解码订阅链接所指向的服务器节点数据
-        node_info = base64.decodebytes(res.content)
+    @staticmethod
+    def is_subscribe(url: str):
+        protocol = url.split("://", 1)[0]
+        if protocol.startswith("http"):
+            return True
+        return False
 
-        return {'subs': subscribe, 'info': obj_analyze, "node": [i for i in node_info.decode("utf8").split("\n") if i]}
-    # 捕获异常输入 剔除恶意链接或脏数据
-    except requests.exceptions.MissingSchema:
-        print(f'{subscribe} -- 传入的subs格式有误或不是订阅链接')
-    # 链接清洗任务不能使用代理IP操作
-    except requests.exceptions.ProxyError:
-        raise SystemExit
-    # 并发数过大 远程主机关闭通信窗口
-    except requests.exceptions.ConnectionError:
-        raise TypeError
-    # 未知风险
-    except requests.exceptions.RequestException as e:
-        print(f"{subscribe} -- {e}")
+    def parse_subscribe(self, subscribe: str = None, auto_base64=False) -> dict:
+        """
+        将订阅链接解析成节点数据
+        :param subscribe:
+        :param auto_base64:
+        :return: {'subs': subscribe, "nodes": nodes}
+        """
 
+        subscribe = self.url if subscribe is None else subscribe
+        # 提取有效解析内容
+        subscribe = subscribe.split("&")[0]
 
-def node2detail(share_link_of_node: str = None, class_: str = None):
-    """
+        # 订阅类型
+        headers = {
+            'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+                          " Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.53",
+        }
+        # 流量不通过系统代理
+        proxies = {'http': None, 'https': None}
+        try:
+            # 拉取订阅
+            session = requests.session()
+            res = session.get(subscribe, headers=headers, proxies=proxies)
 
-    :param share_link_of_node:  like this vmess:// or ssr://
-    :param class_: class of node, like
-    :return:
-    """
-    import binascii
-    node = "" if share_link_of_node is None else share_link_of_node
-    class_ = "" if class_ is None else class_
-    flag = {
-        "ss": "ss://",
-        "shadowsocks": "ss://",
-        "ssr": "ssr://",
-        "shadowsocksr": "ssr://",
-        "v2ray": "vmess://",
-        "trojan": "trojan://",
-        "xray": "vless://",
-    }
-    protocol_head = flag.get(class_.strip())
+            # 解析订阅
+            nodes_bytes = base64.decodebytes(res.content)
+            nodes = [self.parse_share_link(i, auto_base64)['msg'] for i in nodes_bytes.decode("utf8").split("\n") if i]
 
-    if not isinstance(class_, str) or not isinstance(share_link_of_node, str):
-        return {}
-    if "" in (class_, node):
-        return {}
-    if not protocol_head:
-        return {}
-    try:
-        detail_ = base64.b64decode(node.replace(protocol_head, '')).decode('utf-8')
-        print(detail_)
-    except binascii.Error:
-        print("非base64编码传入")
+            return {'subs': subscribe, "nodes": nodes}
+
+        # 捕获异常输入 剔除恶意链接或脏数据
+        except requests.exceptions.MissingSchema:
+            print(f'{subscribe} -- 传入的subs格式有误或不是订阅链接')
+        # 链接清洗任务不能使用代理IP操作
+        except requests.exceptions.ProxyError:
+            raise SystemExit
+        # 并发数过大 远程主机关闭通信窗口
+        except requests.exceptions.ConnectionError:
+            raise TypeError
+        # 未知风险
+        except requests.exceptions.RequestException as e:
+            logger.error(f"{subscribe} -- {e}")
+
+    def parse_share_link(self, node: str = None, auto_parse: bool = True) -> dict:
+        """
+
+        :param auto_parse: 自动进行 BASE64 解密工作
+        :param node: node of share link ,like this vmess:// ssr://
+        :return:
+        """
+        # 读取协议头以及正文信息
+        node = self.url if node is None else node
+        class_, body = node.split('://', 1)
+
+        # 补全非标准格式 BASE64 编码
+        body: str = body if body.endswith("==") else f"{body}=="
+
+        if auto_parse:
+            share_link: str = base64.b64decode(body).decode("utf8")
+            return {"msg": share_link, "protocol": class_}
+        return {"msg": body, "protocol": class_}
+
+    def parse_out(self, auto_base64=True) -> dict:
+        response = self.is_subscribe(self.url)
+        return {
+            "is_subscribe": response,
+            "body": self.parse_subscribe(auto_base64=auto_base64) if response else self.parse_share_link()
+        }
