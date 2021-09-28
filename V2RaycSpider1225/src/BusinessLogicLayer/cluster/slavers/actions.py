@@ -376,7 +376,7 @@ __entropy__ = [
     # [启动] 无障碍
     # ---------------------
     ActionAaxCloud,  # v2ray 1day 10G
-    # ActionZZCloud,  # v2ray 6day100G
+    ActionZZCloud,  # v2ray 6day100G
     # ActionMaoQCloud,  # ssr 3day3G
     # ---------------------
     # [启动] 需要滑动验证
