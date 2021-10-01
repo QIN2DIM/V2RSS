@@ -1,5 +1,6 @@
 __all__ = [
-    'FlexibleDistribute',
+    'FlexibleDistributeV0',
+    'FlexibleDistributeV2',
     'pop_subs_to_admin',
     'detach',
     'set_task2url_cache',
@@ -21,10 +22,10 @@ from .redis_io import RedisClient
 from ..middleware import work_io
 
 
-class FlexibleDistribute:
+class FlexibleDistributeV0:
     """数据交换 弹性分发"""
 
-    def __init__(self, docker: list = None, beat_sync=False):
+    def __init__(self, docker: list = None, access_mapping: dict = None, beat_sync=False):
         """
 
         @param docker:['domain', 'subs', 'class_', 'end_life', 'res_time', 'passable',
@@ -32,6 +33,7 @@ class FlexibleDistribute:
         @param beat_sync:立即启动数据存储功能，当单只爬虫调试时弃用，若为集群运动，数据存储功能将由其他模块单独负责
         """
         self.work_q = work_io.Middleware
+        self.alias = access_mapping
         # 若容器激活，迅速入队
         try:
             if all(docker) and isinstance(docker, list):
@@ -60,6 +62,8 @@ class FlexibleDistribute:
 
     def to_redis(self, ):
         r = RedisClient().get_driver()
+
+        # docker[0] 订阅类型  docker[-1] 订阅链接
         for docker in self.work_q.cache_redis_queue.items():
             key_name = REDIS_SECRET_KEY.format(docker[0])
             if docker[-1]:
@@ -102,6 +106,34 @@ class FlexibleDistribute:
         # self.to_sqlite3(docker)
 
         # Middleware.hera.put('push')
+
+
+class FlexibleDistributeV2:
+    def __init__(self, stream: dict):
+        self.stream = stream
+
+    def distribute(self):
+        self.to_redis()
+
+    def to_redis(self):
+        rdb = RedisClient()
+
+        # 存储订阅
+        subscribe = self.stream.get("subscribe")
+        end_time = self.stream.get("end_time")
+        subscribe_class = self.stream.get("class")
+        rdb.add(subscribe_class=subscribe_class, subscribe=subscribe, end_time=end_time)
+
+        # 存储别名
+        alias = self.stream.get("action")
+        netloc = self.stream.get("netloc")
+        rdb.set_alias(alias=alias, netloc=netloc)
+
+    def to_nginx(self):
+        pass
+
+    def to_sqlite3(self):
+        pass
 
 
 def set_task2url_cache(task_name, register_url, subs):

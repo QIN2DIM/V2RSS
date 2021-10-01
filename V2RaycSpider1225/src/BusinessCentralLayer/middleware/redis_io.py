@@ -25,18 +25,16 @@ class RedisClient:
         self.subscribe = ''
         self.crawler_seq = CRAWLER_SEQUENCE
 
-    def add(self, key_name=None, subscribe=None, life_cycle: str = None):
+    def add(self, subscribe_class=None, subscribe=None, end_time: str = None):
         """
 
-        @param key_name: hash_name
+        @param subscribe_class:
         @param subscribe:
-        @param life_cycle:
+        @param end_time:
         @return:
         """
-        try:
-            self.db.hset(key_name, subscribe, life_cycle)
-        finally:
-            self.kill()
+        name_ = REDIS_SECRET_KEY.format(subscribe_class)
+        self.db.hset(name_, subscribe, end_time)
 
     def get(self, key_name, pop_=0) -> str or bool:
         """
@@ -192,6 +190,15 @@ class RedisClient:
             if self.db.exists("Poseidon"):
                 return self.db.lpop("Poseidon")
             return False
+
+    def set_alias(self, alias: str, netloc: str):
+        """
+        为订阅存储别名
+        :param netloc: 网址的 netloc
+        :param alias: 别名
+        :return:
+        """
+        self.db.hset("v2rss:alias", netloc, alias)
 
 
 class RedisDataDisasterTolerance(RedisClient):

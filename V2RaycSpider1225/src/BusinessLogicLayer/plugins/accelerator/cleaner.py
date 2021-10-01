@@ -14,16 +14,25 @@ from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.setting import REDIS_SECRET_KEY, CRAWLER_SEQUENCE, logger, terminal_echo
 from .core import CoroutineSpeedup
 
+WHITELIST = [
+    "www.kaikaiyun.cyou"
+]
+
 
 class SubscribesCleaner(CoroutineSpeedup):
     """解耦清洗插件：国内IP调用很可能出现性能滑坡"""
 
-    def __init__(self, debug=False, kill_target: str = None):
+    def __init__(self, debug=False, whitelist: list = None):
+        """
+
+        :param debug:
+        :param whitelist: 白名单，包含 whitelist 特征的链接不被主动清扫
+        """
         super(SubscribesCleaner, self).__init__()
         self.debug = debug
         self.keys = [REDIS_SECRET_KEY.format(s) for s in CRAWLER_SEQUENCE]
         self.rc = RedisClient().get_driver()
-        self.kill_ = kill_target
+        self.whitelist = whitelist if whitelist else WHITELIST
 
     def offload_task(self):
         for key_ in self.keys:
@@ -35,8 +44,13 @@ class SubscribesCleaner(CoroutineSpeedup):
 
     def _del_subs(self, key_: str, subs: str, err_) -> None:
         try:
-            self.rc.hdel(key_, subs)
-            terminal_echo(f"detach -> {subs} {err_}", 3)
+            # 白名单对象，拒绝清除
+            if subs in self.whitelist:
+                logger.info(f"<SubscribeCleaner> Mission pass cause by whitelist:{self.whitelist} | {subs}")
+            else:
+                self.rc.hdel(key_, subs)
+                # terminal_echo(f"detach -> {subs} {err_}", 3)
+                logger.debug(f"<SubscribeCleaner> detach -> {subs} {err_}")
         except redis_error.ConnectionError:
             logger.critical("<SubscribeCleaner> The local network communication is abnormal.")
 
@@ -49,17 +63,13 @@ class SubscribesCleaner(CoroutineSpeedup):
         """
         super(SubscribesCleaner, self).control_driver(task=sub_info)
         try:
-            # 针对指定订阅源进行清洗工作
-            if self.kill_ and self.kill_ in sub_info[0]:
-                self._del_subs(sub_info[-1], sub_info[0], "target active removal")
-            else:
-                # 解析订阅
-                node_info: dict = SubscribeParser(sub_info[0]).parse_subscribe()
-                # 订阅解耦
-                if node_info['nodes'].__len__() <= threshold:
-                    self._del_subs(sub_info[-1], sub_info[0], "decouple active removal")
-                elif self.debug:
-                    terminal_echo(f"valid -- {node_info['subs']} -- {len(node_info['nodes'])}", 1)
+            # 解析订阅
+            node_info: dict = SubscribeParser(sub_info[0]).parse_subscribe()
+            # 订阅解耦
+            if node_info['nodes'].__len__() <= threshold:
+                self._del_subs(sub_info[-1], sub_info[0], "decouple active removal")
+            elif self.debug:
+                terminal_echo(f"valid -- {node_info['subs']} -- {len(node_info['nodes'])}", 1)
         except (UnicodeDecodeError, TypeError) as e:
             # 对于已标记“解析错误”的订阅 更新其请求次数
             if self.temp_cache.get(sub_info[0]):
@@ -132,7 +142,7 @@ class SubscribeParser:
         # 链接清洗任务不能使用代理IP操作
         except requests.exceptions.ProxyError:
             raise SystemExit
-        # 并发数过大 远程主机关闭通信窗口
+        # 并发数过大 远程主机关闭通信窗口 或是 IP被封禁，可能原因是 GeoIp 过滤屏蔽国内访问
         except requests.exceptions.ConnectionError:
             raise TypeError
         # 未知风险

@@ -43,6 +43,8 @@ class Prism(ActionMasterGeneral):
             try:
                 self.wait(api, 10, self.xpath_page_shop)
                 api.find_element_by_xpath(self.xpath_page_shop).click()
+            except TimeoutException:
+                logger.error(f">>> TimeoutException <{self.action_name}> -- {self.register_url} -- 商城转换页面超时")
             # 弹窗遮盖
             except ElementClickInterceptedException:
                 time.sleep(0.5)

@@ -187,8 +187,8 @@ class _SystemEngine:
 
         # FIXME 节拍同步
         if not beat_sync:
-            from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
-            FlexibleDistribute().start()
+            from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistributeV0
+            FlexibleDistributeV0().start()
 
         # 执行一次数据迁移
         # TODO 将集群接入多哨兵模式，减轻原生数据拷贝的额外CPU资源开销

@@ -15,7 +15,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3.exceptions import HTTPError
 
-from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistribute
+from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistributeV2
 from src.BusinessCentralLayer.setting import CHROMEDRIVER_PATH, TIME_ZONE_CN, SERVER_DIR_CACHE_BGPIC, logger
 from ..plugins.armour import GeeTestAdapter
 from ..plugins.armour import get_header, flow_probe
@@ -332,25 +332,19 @@ class BaseAction:
         if self.subscribe:
             # 失败重试3次
             for _ in range(3):
-                # ['domain', 'subs', 'class_', 'end_life', 'res_time', 'passable','username', 'password', 'email']
                 try:
-                    # 机场域名
-                    domain = urlparse(self.register_url).netloc
-                    # 采集时间
-                    res_time = str(datetime.now(TIME_ZONE_CN)).split('.')[0]
-                    # 链接可用，默认为true
-                    passable = 'true'
-                    # 信息键
-                    docker = [domain, self.subscribe, class_, self.generate_life_cycle(self.life_cycle), res_time,
-                              passable, self.username,
-                              self.password, self.email]
-                    # 根据不同的beat_sync形式持久化数据
-                    FlexibleDistribute(docker=docker, beat_sync=self.beat_sync)
+                    # 组织结构数据
+                    image = {
+                        "netloc": urlparse(self.subscribe).netloc,
+                        "subscribe": self.subscribe,
+                        "class": class_,
+                        "end_time": self.generate_life_cycle(self.life_cycle),
+                        "action": self.action_name
+                    }
+                    # 分发订阅
+                    FlexibleDistributeV2(image).distribute()
                     # 数据存储成功后结束循环
                     logger.success(">> GET <{}> --> [{}] {}".format(self.action_name, class_, self.subscribe))
-                    # TODO ADD v5.1.0更新特性，记录机场域名-订阅域名映射缓存
-                    # set_task2url_cache(task_name=self.__class__.__name__, register_url=self.register_url,
-                    #                    subs=self.subscribe)
                     break
                 except Exception as e:
                     logger.debug(">> FAILED <{}> --> {}:{}".format(self.action_name, class_, e))
@@ -473,7 +467,7 @@ class ActionMasterGeneral(BaseAction):
             self.wait(api, 40, "//div[@class='card-body']")
             # 根据原子类型订阅的优先顺序 依次捕获
             self.capture_subscribe(api)
-            # 根据具体需要进行账号签到充能
+            # 根据具体需要进行签到
             if self.hyper_params.get("check_in"):
                 self.check_in(api)
         except TimeoutException:
