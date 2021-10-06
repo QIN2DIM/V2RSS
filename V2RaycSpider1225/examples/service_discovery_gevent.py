@@ -73,7 +73,7 @@ def demo_with_gevent(auto_start=True):
 
     # Tasks Overload.
     task_container = []
-    for x in range(RUNTIME_POWER):
+    for _ in range(RUNTIME_POWER):
         task = gevent.spawn(middleware)
         task_container.append(task)
     gevent.joinall(task_container)

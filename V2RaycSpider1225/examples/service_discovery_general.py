@@ -11,6 +11,7 @@
 
 import os
 import random
+import shlex
 
 from src.BusinessCentralLayer.setting import logger
 from src.BusinessLogicLayer.cluster.prism import ServiceDiscovery
@@ -46,19 +47,12 @@ def demo(register_url: str = preload(), silence=True, share_type="v2ray", start_
         cache_path = machine.save_runtime_report(list(runtime_report.values()))
         # 自动打开文件
         if start_cache:
-            os.startfile(cache_path)
+            os.startfile(shlex.quote(cache_path))
     except TypeError:
         logger.warning("服务拒绝！此站点存在安全漏洞。")
     finally:
         logger.info("demo 执行完毕")
 
 
-def demo_with_gevent(power=4):
-    from gevent import monkey
-    monkey.patch_all()
-
-    urls = preload(get_sample=False)
-
-
 if __name__ == '__main__':
-    demo( silence=False, start_cache=True)
+    demo(silence=True, start_cache=True)

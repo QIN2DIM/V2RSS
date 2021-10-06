@@ -52,7 +52,6 @@ class CoroutineSpeedup:
 
         @return:
         """
-        pass
 
     def interface(self, power: int = 8) -> None:
         """

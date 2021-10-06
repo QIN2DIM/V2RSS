@@ -321,12 +321,14 @@ class BaseAction:
         except NoSuchElementException:
             self.email += "@gmail.com"
 
-    def rebuild_policy(self, api, subs_type, retry=0, limit=8):
+    @staticmethod
+    def rebuild_policy(api, _unused_subs_type, retry=0, limit=8):
         while retry < limit:
             try:
+                api.find_element_by_xpath("//div[@class='buttons']")
                 # case1: card_body 无返回值 --> 模式不匹配，例如存在弹窗阻挡；
                 # case2：subs_type in card_body --> 模式匹配，且存在对应类型订阅，反之则模式匹配，不存在对应类型订阅；
-                card_body = api.find_element_by_xpath("//div[@class='buttons']")
+                # card_body = api.find_element_by_xpath("//div[@class='buttons']")
                 # card_body = [i.text for i in card_body if subs_type in i.text.lower()]
                 # if not card_body:
                 #     logger.error("任务类型不匹配，存在异常的请求对象。"
@@ -337,7 +339,6 @@ class BaseAction:
                 time.sleep(1)
                 retry += 1
         return RuntimeError
-
 
     @staticmethod
     def check_in(api: Chrome):
@@ -413,7 +414,7 @@ class BaseAction:
             retry += 1
             self.load_any_subscribe(api, element_xpath_str, href_xpath_str, class_, retry)
 
-    def run(self):
+    def run(self, api=None):
         """Please rewrite this function!"""
 
         # Get register url

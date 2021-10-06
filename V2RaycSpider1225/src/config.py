@@ -3,7 +3,7 @@
 """
 __all__ = ['SINGLE_DEPLOYMENT', 'ENABLE_DEPLOY', 'ENABLE_KERNEL', 'ENABLE_SERVER',
            'ENABLE_DEBUG', 'ENABLE_REBOUND', 'SINGLE_TASK_CAP', 'LAUNCH_INTERVAL', 'REDIS_MASTER', 'REDIS_SLAVER_DDT',
-           'MYSQL_CONFIG', 'API_HOST', 'API_DEBUG', 'API_THREADED', 'API_PORT', 'OPEN_HOST', 'GARDENER_HOST',
+           'API_HOST', 'API_DEBUG', 'API_THREADED', 'API_PORT', 'OPEN_HOST', 'GARDENER_HOST',
            'ROUTE_API', 'SEQ_TEST', 'CRAWLER_SEQUENCE', 'SMTP_ACCOUNT', 'SERVERCHAN_SCKEY', 'REDIS_SECRET_KEY',
            'PROJECT_NUM', 'VERSION', 'TIME_ZONE_CN', 'TIME_ZONE_NY', 'DEFAULT_POWER', 'Fore', 'terminal_echo',
            'PROXY_POOL', 'ENABLE_PROXY',
@@ -181,7 +181,7 @@ REDIS_MASTER: dict = config_['REDIS_MASTER']
 REDIS_SLAVER_DDT: dict = config_['REDIS_SLAVER_DDT']
 
 # TODO (x)This configuration is not applicable in the current version
-MYSQL_CONFIG: dict = config_['MYSQL_CONFIG']
+# MYSQL_CONFIG: dict = config_['MYSQL_CONFIG']
 
 # ---------------------------------------------------
 # TODO (√)API for Flask(SSH-BASE)

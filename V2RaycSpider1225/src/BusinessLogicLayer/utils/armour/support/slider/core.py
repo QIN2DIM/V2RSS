@@ -43,7 +43,7 @@ class SliderValidator:
         唤醒验证 若无需唤醒则pass
         :return:
         """
-        pass
+        raise NotImplementedError()
 
     def capture_slider(self, xpath: str = None, class_name: str = None):
         if xpath:
@@ -54,6 +54,7 @@ class SliderValidator:
             self.slider = self.wait.until(
                 ec.element_to_be_clickable((By.CLASS_NAME, class_name))
             )
+        return self.slider
 
     def capture_full_img(self):
         """
@@ -117,14 +118,14 @@ class SliderValidator:
         :return:
         """
 
-        pass
+        raise NotImplementedError()
 
     def operator_sport_v3(self):
         """
         计算方案3：使用强化学习暴力破解，生成拟人化的物理算子运动轨迹
         :return:
         """
-        pass
+        raise NotImplementedError()
 
     def identify_boundary(self, full_img_path, notch_img_path, offset: int = 35):
         """
@@ -342,7 +343,7 @@ class SliderValidator:
 
         :return:
         """
-        pass
+        raise NotImplementedError()
 
     def run(self):
         """

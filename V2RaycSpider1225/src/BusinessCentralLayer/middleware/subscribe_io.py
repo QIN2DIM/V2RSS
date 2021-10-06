@@ -17,7 +17,6 @@ from faker import Faker
 
 from src.BusinessCentralLayer.setting import logger, REDIS_SECRET_KEY, CRAWLER_SEQUENCE, NGINX_SUBSCRIBE, \
     SQLITE3_CONFIG, TIME_ZONE_CN
-from .flow_io import FlowTransferStation
 from .redis_io import RedisClient
 from ..middleware import work_io
 
@@ -44,21 +43,6 @@ class FlexibleDistributeV0:
                 self.start()
         except TypeError:
             pass
-
-    @staticmethod
-    @logger.catch()
-    def to_sqlite3(docker: dict):
-        """
-
-        @param docker: {uuid1:{key1:value1, key2:value2, ...}, uuid2:{key1:value1, key2:value2, ...}, ...} len >= 1
-        @return:
-        """
-        try:
-            if docker.keys().__len__() >= 1:
-                docker = [tuple(data.values()) for data in docker.values()]
-                # logger.success(f'>> STORING -> Sqlite3')
-        finally:
-            FlowTransferStation(docker=docker).add()
 
     def to_redis(self, ):
         r = RedisClient().get_driver()
@@ -130,10 +114,10 @@ class FlexibleDistributeV2:
         rdb.set_alias(alias=alias, netloc=netloc)
 
     def to_nginx(self):
-        pass
+        raise NotImplementedError()
 
     def to_sqlite3(self):
-        pass
+        raise NotImplementedError()
 
 
 def set_task2url_cache(task_name, register_url, subs):
@@ -201,7 +185,7 @@ def pop_subs_to_admin(class_: str):
                 logger.error(f'<SuperAdmin> --  无可用<{class_}>订阅')
                 return {'msg': 'failed', 'info': f"无可用<{class_}>订阅"}
             # 从池中获取(最新加入的)订阅s-e
-            subs, end_life = remain_subs.pop()
+            subs, _ = remain_subs.pop()
 
             # 将s-e加入缓冲队列，该队列将被ddt的refresh工作流同过期链接一同删除
             # 使用缓冲队列的方案保证节拍同步，防止过热操作/失误操作贯穿Redis

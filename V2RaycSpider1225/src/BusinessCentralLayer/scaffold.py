@@ -1,4 +1,4 @@
-"""v2rss-cli 脚手架"""
+"""v2rss-service 脚手架入口"""
 __all__ = ['Scaffold']
 
 from gevent import monkey
@@ -21,8 +21,8 @@ from src.BusinessCentralLayer.setting import logger, DEFAULT_POWER, CHROMEDRIVER
 
 
 class _ConfigQuarantine:
+    """系统环境诊断工具"""
     def __init__(self):
-
         self.root = [
             SERVER_DIR_CLIENT_DEPORT, SERVER_PATH_DEPOT_VCS,
             SERVER_DIR_DATABASE_CACHE, SERVER_DIR_CACHE_BGPIC
@@ -30,6 +30,11 @@ class _ConfigQuarantine:
         self.flag = False
 
     def set_up_file_tree(self, root):
+        """
+        初始化 database 文件系统，创建各种可能用到的系统文件
+        :param root:
+        :return:
+        """
         # 深度优先初始化系统文件
         for child_ in root:
             if not os.path.exists(child_):
@@ -53,6 +58,11 @@ class _ConfigQuarantine:
 
     @staticmethod
     def check_config(call_driver: bool = False):
+        """
+        检查用户配置是否残缺
+        :param call_driver: 针对 ChromeDriver 配置情况的检查
+        :return:
+        """
         chromedriver_not_found_error = "<ScaffoldGuider> ForceRun || ChromedriverNotFound ||" \
                                        "未查找到chromedriver驱动，请根据技术文档正确配置\n" \
                                        ">>> https://github.com/QIN2DIM/V2RayCloudSpider"
@@ -73,6 +83,10 @@ class _ConfigQuarantine:
             sys.exit()
 
     def run(self):
+        """
+        外部接口，用于便捷启动多种检测模式
+        :return:
+        """
         try:
             if [cq for cq in reversed(self.root) if not os.path.exists(cq)]:
                 logger.warning('系统文件残缺！')
@@ -88,6 +102,10 @@ class _ConfigQuarantine:
 
 
 class Scaffold:
+    """
+    v2rss-service 脚手架
+        - 集成了各种后端服务常用的调试指令，并牵引了更加便捷的部署接口。
+    """
 
     def __init__(self, ):
         self.cq = _ConfigQuarantine()

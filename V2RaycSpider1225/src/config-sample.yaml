@@ -128,13 +128,6 @@ REDIS_SLAVER_DDT:
   port: 6379
   db: 0
 
-# TODO (*)This configuration is not applicable in the current version
-MYSQL_CONFIG:
-  user: ''
-  host: ''
-  password: ''
-  db: ''
-
 # ---------------------------------------------------
 # TODO (√)Communication port for flask
 # flask开放的端口号，通信方式为HTTP

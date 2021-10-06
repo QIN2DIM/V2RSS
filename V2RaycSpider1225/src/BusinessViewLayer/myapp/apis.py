@@ -23,25 +23,24 @@ def apis_capture_subscribe(style: dict) -> dict:
     @return:
     """
     response = {"msg": "failed", "info": ""}
-    try:
-        # 提取subs class
-        if style.get('type') in CRAWLER_SEQUENCE:
+    # 提取subs class
+    if style.get('type') in CRAWLER_SEQUENCE:
 
-            # 读取缓存文件
-            try:
-                with open(NGINX_SUBSCRIBE.format(style.get('type')), 'r', encoding='utf-8') as f:
-                    response.update(
-                        {'info': f.read(), 'msg': 'success'})
-            # error 文件路径有误或文件缺失
-            except FileNotFoundError:
+        # 读取缓存文件
+        try:
+            with open(NGINX_SUBSCRIBE.format(style.get('type')), 'r', encoding='utf-8') as f:
                 response.update(
-                    {'info': 'Server denied access'})
-        # 接口错误引用，type-value is None
-        else:
+                    {'info': f.read(), 'msg': 'success'})
+        # error 文件路径有误或文件缺失
+        except FileNotFoundError:
             response.update(
-                {'info': 'Request parameter error'})
-    finally:
-        return response
+                {'info': 'Server denied access'})
+    # 接口错误引用，type-value is None
+    else:
+        response.update(
+            {'info': 'Request parameter error'})
+
+    return response
 
 
 def apis_version_manager(
@@ -81,8 +80,8 @@ def apis_version_manager(
         # TODO 4.比对版本号 -> if need to update
         usr_version_cmp = usr_version.split('.')
         server_version_cmp = response['version-server'].split('.')
-        for i in range(len(usr_version_cmp)):
-            if int(server_version_cmp[i]) > int(usr_version_cmp[i]):
+        for index, _ in enumerate(usr_version_cmp):
+            if int(server_version_cmp[index]) > int(usr_version_cmp[index]):
                 response.update({'need_update': True})
                 break
         else:
@@ -90,8 +89,8 @@ def apis_version_manager(
     # FIXME 回溯文件缺失 or 传参错误
     except FileNotFoundError:
         response = {'msg': 'failed'}
-    finally:
-        return response
+
+    return response
 
 
 def apis_refresh_broadcast(show_path: str = NGINX_SUBSCRIBE, hyper_params: dict = None):
@@ -107,8 +106,8 @@ def apis_refresh_broadcast(show_path: str = NGINX_SUBSCRIBE, hyper_params: dict 
             response.update({'msg': 'success', 'info': f'upload new subs: {new_subs}'})
     except FileNotFoundError:
         response.update({"info": 'Traceback file is missing'})
-    finally:
-        return response
+
+    return response
 
 
 def apis_admin_get_subs(command_: str):
