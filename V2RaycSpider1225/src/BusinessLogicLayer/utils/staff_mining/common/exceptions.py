@@ -25,6 +25,7 @@ class CollectorSwitchError(StaffMiningError):
     """
     Thrown when the collector access is intercepted by man-machine verification.
     """
+
     pass
 
 
@@ -32,6 +33,7 @@ class CollectorNoTouchElementError(NoSuchElementException):
     """
     Thrown when the collector fails to identify the target element within the specified operating time.
     """
+
     pass
 
 
@@ -39,4 +41,5 @@ class ManuallyCloseTheCollectorError(NoSuchWindowException):
     """
     Thrown when the collector task is manually closed when the task is executed.
     """
+
     pass

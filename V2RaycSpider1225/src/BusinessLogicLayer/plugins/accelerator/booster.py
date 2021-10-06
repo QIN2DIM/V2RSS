@@ -23,7 +23,13 @@ class SpawnBooster(CoroutineSpeedup):
 
         # 将单例视为容量为1的sequence
         # 允许sequence中出现重复的任务
-        self.docker = docker if isinstance(docker, list) else [docker, ]
+        self.docker = (
+            docker
+            if isinstance(docker, list)
+            else [
+                docker,
+            ]
+        )
         self.jobs = []
 
         # 其他SpawnBooster参数
@@ -39,10 +45,14 @@ class SpawnBooster(CoroutineSpeedup):
         # 根据步态特征获取实例化任务
         for mirror_image in self.docker:
             # entity: ActionMaster 的行为抽象，此处为原子化操作，实体数仅为1
-            if mirror_image.get("feature") == 'prism':
-                entity_ = Prism(atomic=mirror_image, silence=self.silence, assault=self.assault).run
+            if mirror_image.get("feature") == "prism":
+                entity_ = Prism(
+                    atomic=mirror_image, silence=self.silence, assault=self.assault
+                ).run
             else:
-                entity_ = ActionShunt.generate_entity(atomic=mirror_image, silence=self.silence, assault=self.assault)
+                entity_ = ActionShunt.generate_entity(
+                    atomic=mirror_image, silence=self.silence, assault=self.assault
+                )
             # 将运行实体加入任务队列
             self.work_q.put_nowait(entity_)
             self.jobs.append(entity_)
@@ -71,13 +81,24 @@ def booster(docker: dict or list, silence: bool, power: int = 1, assault=False):
     if isinstance(docker, dict):
         # 对该实体发起一次行为测试
         if power == 1:
-            ActionShunt.generate_entity(atomic=docker, silence=silence, assault=assault)()
+            ActionShunt.generate_entity(
+                atomic=docker, silence=silence, assault=assault
+            )()
         # 对该实体发起power次并发的行为测试[使用gevent]
         elif power > 1:
             if power > 16:
-                return warnings.warn("The power of BoosterEngine has exceeded performance expectations."
-                                     "Please make it less than 16.")
-            SpawnBooster(docker=[docker, ] * power, silence=silence, assault=assault).run(power)
+                return warnings.warn(
+                    "The power of BoosterEngine has exceeded performance expectations."
+                    "Please make it less than 16."
+                )
+            SpawnBooster(
+                docker=[
+                    docker,
+                ]
+                * power,
+                silence=silence,
+                assault=assault,
+            ).run(power)
 
     # 该方法针对scaffold_spawn 实现相关接口，经典用法为灌入__entropy__
     # 此时认为docker_list.__len__()>=2，否则将会被识别为单个实体分流至其他业务模块
@@ -85,7 +106,9 @@ def booster(docker: dict or list, silence: bool, power: int = 1, assault=False):
         # 每个实体的行为测试被依次发起
         if power == 1:
             for mirror_image in docker:
-                ActionShunt.generate_entity(atomic=mirror_image, silence=silence, assault=assault)()
+                ActionShunt.generate_entity(
+                    atomic=mirror_image, silence=silence, assault=assault
+                )()
         # 建立多核工作栈，使用弹性分发控件对服务器进行边缘压力测试
         elif power == -1:
             return True

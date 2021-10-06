@@ -18,5 +18,5 @@ def demo2():
     booster(docker=ActionZZCloud, silence=True, power=1, assault=True)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     demo2()

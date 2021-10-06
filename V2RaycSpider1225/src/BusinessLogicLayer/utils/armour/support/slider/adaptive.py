@@ -11,7 +11,14 @@ from .geetest_v3 import GeeTest3
 
 
 class GeeTestAdapter:
-    def __init__(self, driver: Chrome, debug=False, business_name=None, full_img_path=None, notch_img_path=None):
+    def __init__(
+        self,
+        driver: Chrome,
+        debug=False,
+        business_name=None,
+        full_img_path=None,
+        notch_img_path=None,
+    ):
         self.api = driver
         self.debug = debug
         self.business_name = business_name
@@ -34,5 +41,5 @@ class GeeTestAdapter:
             debug=self.debug,
             business_name=self.business_name,
             full_img_path=self.full_img_path,
-            notch_img_path=self.notch_img_path
+            notch_img_path=self.notch_img_path,
         ).run()

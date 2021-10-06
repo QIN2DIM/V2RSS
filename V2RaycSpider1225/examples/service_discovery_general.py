@@ -23,14 +23,19 @@ def preload(get_sample: bool = True):
     :param get_sample:
     :return:
     """
-    with open('staff_arch_general.txt', 'r', encoding='utf8') as f:
-        urls = [i for i in f.read().split('\n') if i]
+    with open("staff_arch_general.txt", "r", encoding="utf8") as f:
+        urls = [i for i in f.read().split("\n") if i]
     if get_sample:
         return random.choice(urls)
     return urls
 
 
-def demo(register_url: str = preload(), silence=True, share_type="v2ray", start_cache: bool = False):
+def demo(
+    register_url: str = preload(),
+    silence=True,
+    share_type="v2ray",
+    start_cache: bool = False,
+):
     """
 
     :param start_cache:
@@ -54,5 +59,5 @@ def demo(register_url: str = preload(), silence=True, share_type="v2ray", start_
         logger.info("demo 执行完毕")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     demo(silence=True, start_cache=True)

@@ -14,9 +14,12 @@ import urllib.parse
 import requests
 
 
-def ding_to_group(subscribe: str = "这里是V2Ray云彩姬",
-                  access_token: str = None, timestamp: str = None, sign_: str = None
-                  ):
+def ding_to_group(
+    subscribe: str = "这里是V2Ray云彩姬",
+    access_token: str = None,
+    timestamp: str = None,
+    sign_: str = None,
+):
     """
     通过POST接口，传递必要参数，控制指定的机器人向指定的群组发送TEXT类型消息
     :param subscribe: 要发送的订阅
@@ -29,18 +32,16 @@ def ding_to_group(subscribe: str = "这里是V2Ray云彩姬",
     headers = {
         "Content-Type": "application/json",
     }
-    params = {
-        "access_token": access_token,
-        "timestamp": timestamp,
-        "sign": sign_
-    }
+    params = {"access_token": access_token, "timestamp": timestamp, "sign": sign_}
     data = {
         "msgtype": "text",
         "text": {"content": subscribe},
     }
     session = requests.session()
 
-    response = session.post(web_hook, headers=headers, params=params, data=json.dumps(data))
+    response = session.post(
+        web_hook, headers=headers, params=params, data=json.dumps(data)
+    )
 
     print(response.json())
 
@@ -58,10 +59,12 @@ def calculate_the_signature(secret_key: str = None) -> dict:
     timestamp = str(round(time.time() * 1000))
 
     # 计算签名
-    secret_enc = secret.encode('utf-8')
-    string_to_sign = '{}\n{}'.format(timestamp, secret)
-    string_to_sign_enc = string_to_sign.encode('utf-8')
-    hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
+    secret_enc = secret.encode("utf-8")
+    string_to_sign = "{}\n{}".format(timestamp, secret)
+    string_to_sign_enc = string_to_sign.encode("utf-8")
+    hmac_code = hmac.new(
+        secret_enc, string_to_sign_enc, digestmod=hashlib.sha256
+    ).digest()
     sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
 
     return {"timestamp": timestamp, "sign": sign}
@@ -93,13 +96,10 @@ def quick_start(secret_key: str, access_token: str):
     ding_to_group(
         subscribe=subscribe,
         access_token=access_token,
-        timestamp=security_group['timestamp'],
-        sign_=security_group['sign']
+        timestamp=security_group["timestamp"],
+        sign_=security_group["sign"],
     )
 
 
-if __name__ == '__main__':
-    quick_start(
-        secret_key="",
-        access_token=""
-    )
+if __name__ == "__main__":
+    quick_start(secret_key="", access_token="")

@@ -7,4 +7,4 @@
 
 from .scaffold_ash import ash
 
-__all__ = ['ash']
+__all__ = ["ash"]

@@ -18,7 +18,7 @@ class _ClashTaskAsh:
 
     @staticmethod
     def run_server():
-        app.run(host='127.0.0.1', port=8847, debug=False)
+        app.run(host="127.0.0.1", port=8847, debug=False)
 
     def run_business(self):
         # 1.清洗过期订阅
@@ -28,8 +28,11 @@ class _ClashTaskAsh:
         # 2.拉取订阅池
         logger.info("<ClashTaskAsh> ash | 正在拉取订阅堆...")
         rc = RedisClient().get_driver()
-        rss_pool = [subscribe for key_ in CRAWLER_SEQUENCE for subscribe, _ in
-                    rc.hgetall(REDIS_SECRET_KEY.format(key_)).items()]
+        rss_pool = [
+            subscribe
+            for key_ in CRAWLER_SEQUENCE
+            for subscribe, _ in rc.hgetall(REDIS_SECRET_KEY.format(key_)).items()
+        ]
         # 2.1 筛选订阅防止重名
         rss_dict = {}
         for url in rss_pool:
@@ -45,7 +48,11 @@ class _ClashTaskAsh:
         # 4.执行订阅转换并缓存配置文件
         clash_adapter.api.run(subscribe=rss_pool)
         # 5.创建本地连接 启动Clash
-        webbrowser.open(clash_adapter.api.url_scheme_download()['info'].format("http://127.0.0.1:8847/V2Ray云彩姬"))
+        webbrowser.open(
+            clash_adapter.api.url_scheme_download()["info"].format(
+                "http://127.0.0.1:8847/V2Ray云彩姬"
+            )
+        )
         time.sleep(5)
         return True
 
@@ -55,9 +62,13 @@ class _ClashTaskAsh:
         # --------------------------------------------------
         try:
             # 部署flask
-            process_server = multiprocessing.Process(target=self.run_server, name="VirtualStation")
+            process_server = multiprocessing.Process(
+                target=self.run_server, name="VirtualStation"
+            )
             # 执行业务
-            process_business = multiprocessing.Process(target=self.run_business, name="Adapter")
+            process_business = multiprocessing.Process(
+                target=self.run_business, name="Adapter"
+            )
             # 执行多进程任务
             process_server.start()
             process_business.start()
@@ -70,12 +81,11 @@ class _ClashTaskAsh:
         except (TypeError, AttributeError) as e:
             logger.exception(e)
         finally:
-            logger.success('<ScaffoldGuider> End the V2RayCloudSpider')
+            logger.success("<ScaffoldGuider> End the V2RayCloudSpider")
             print(">>> 程序執行結束 請手動關閉交互窗口")
 
 
 class _Interface:
-
     @staticmethod
     def run(debug: bool = True, decouple: bool = True):
         return _ClashTaskAsh(debug=debug, decouple=decouple).startup()

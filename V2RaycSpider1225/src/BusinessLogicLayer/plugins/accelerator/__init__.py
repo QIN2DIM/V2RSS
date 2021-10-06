@@ -5,4 +5,11 @@ from .booster import booster, SpawnBooster
 from .cleaner import SubscribesCleaner, SubscribeParser
 from .vulcan_ash import ShuntRelease, ForceRunRelease
 
-__all__ = ['booster', 'SubscribesCleaner', 'ShuntRelease', 'ForceRunRelease', 'SpawnBooster', 'SubscribeParser']
+__all__ = [
+    "booster",
+    "SubscribesCleaner",
+    "ShuntRelease",
+    "ForceRunRelease",
+    "SpawnBooster",
+    "SubscribeParser",
+]

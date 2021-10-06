@@ -1,4 +1,4 @@
-__all__ = ['StaffCollector']
+__all__ = ["StaffCollector"]
 
 import random
 import sys
@@ -14,7 +14,13 @@ from ..common.exceptions import CollectorSwitchError
 
 
 class StaffCollector:
-    def __init__(self, cache_path: str, chromedriver_path: str, silence: bool = True, debug: bool = False):
+    def __init__(
+        self,
+        cache_path: str,
+        chromedriver_path: str,
+        silence: bool = True,
+        debug: bool = False,
+    ):
         """
 
         :param cache_path:
@@ -33,7 +39,7 @@ class StaffCollector:
 
     @staticmethod
     def _down_to_api(api: Chrome, search_query: str):
-        """ 键入并跳转至相关页面"""
+        """键入并跳转至相关页面"""
         while True:
             try:
                 input_tag = api.find_element_by_xpath("//input[@name='q']")
@@ -87,9 +93,11 @@ class StaffCollector:
     def _capture_host(self, api: Chrome):
         time.sleep(1)
         # hosts = api.find_elements_by_xpath("//span[@class='qXLe6d dXDvrc']//span[@class='fYyStc']")
-        hosts = api.find_elements_by_xpath("//div[contains(@class,'NJjxre')]//cite[@class='iUh30 Zu0yb qLRx3b tjvcx']")
+        hosts = api.find_elements_by_xpath(
+            "//div[contains(@class,'NJjxre')]//cite[@class='iUh30 Zu0yb qLRx3b tjvcx']"
+        )
 
-        with open(self.cache_path, 'a', encoding='utf8') as f:
+        with open(self.cache_path, "a", encoding="utf8") as f:
             for host in hosts:
                 f.write(f"{host.text.split(' ')[0].strip()}/auth/register\n")
 
@@ -97,39 +105,44 @@ class StaffCollector:
         # 实例化Chrome可选参数
         options = ChromeOptions()
         # 最高权限运行
-        options.add_argument('--no-sandbox')
+        options.add_argument("--no-sandbox")
         # 隐身模式
-        options.add_argument('-incognito')
+        options.add_argument("-incognito")
         # 无缓存加载
-        options.add_argument('--disk-cache-')
+        options.add_argument("--disk-cache-")
         # 设置中文
-        options.add_argument('lang=zh_CN.UTF-8')
+        options.add_argument("lang=zh_CN.UTF-8")
         # 禁用 DevTools listening
-        options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        options.add_argument('--log-level=3')
+        options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        options.add_argument("--log-level=3")
         # 更换头部
-        options.add_argument("user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                             "(KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36 Edg/92.0.902.78'")
+        options.add_argument(
+            "user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36 Edg/92.0.902.78'"
+        )
         # 静默启动
         if self.silence is True:
-            options.add_argument('--headless')
-            options.add_argument('--disable-gpu')
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
             options.add_argument("--disable-software-rasterizer")
 
         # 抑制自动化控制特征
-        options.add_argument('--disable-blink-features=AutomationControlled')
-        options.add_experimental_option('useAutomationExtension', False)
-        options.add_experimental_option('excludeSwitches', ['enable-automation'])
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_experimental_option("useAutomationExtension", False)
+        options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
         try:
             _api = Chrome(options=options, executable_path=self.CHROMEDRIVER_PATH)
-            _api.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-                "source": """
+            _api.execute_cdp_cmd(
+                "Page.addScriptToEvaluateOnNewDocument",
+                {
+                    "source": """
                            Object.defineProperty(navigator, 'webdriver', {
                              get: () => undefined
                            })
                          """
-            })
+                },
+            )
             return _api
         except WebDriverException as e:
             if "chromedriver" in str(e):
@@ -140,7 +153,7 @@ class StaffCollector:
     def get_page_num(api: Chrome):
         try:
             result = api.find_element_by_xpath("//div[@id='result-stats']")
-            tag_num = result.text.strip().split(' ')[1]
+            tag_num = result.text.strip().split(" ")[1]
             print(tag_num)
         except NoSuchElementException:
             return None
@@ -155,7 +168,7 @@ class StaffCollector:
             ncols=150,
             unit="piece",
             dynamic_ncols=False,
-            leave=True
+            leave=True,
         )
         loop_progress.set_postfix({"status": "__initialize__"})
 

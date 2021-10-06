@@ -15,8 +15,14 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 
 class SliderValidator:
-    def __init__(self, driver: Chrome, debug: bool = False, full_img_path: str = None, notch_img_path: str = None,
-                 business_name: str = "SliderValidator"):
+    def __init__(
+        self,
+        driver: Chrome,
+        debug: bool = False,
+        full_img_path: str = None,
+        notch_img_path: str = None,
+        business_name: str = "SliderValidator",
+    ):
         self.debug = debug
         # Selenium操作句柄
         self.api = driver
@@ -25,8 +31,12 @@ class SliderValidator:
         # 业务名 用于debug模式下标记控制台的信息输出
         self.business_name = business_name
         # 完整图形和缺口图形文件路径
-        self.full_img_path = full_img_path if full_img_path else f"full_img_path_{time.time()}.png"
-        self.notch_img_path = notch_img_path if notch_img_path else f"notch_img_path_{time.time()}.png"
+        self.full_img_path = (
+            full_img_path if full_img_path else f"full_img_path_{time.time()}.png"
+        )
+        self.notch_img_path = (
+            notch_img_path if notch_img_path else f"notch_img_path_{time.time()}.png"
+        )
         # 像素相似度阈值 用于粗糙地比对两张size一致的图形的相同像素坐标下的RGBA残差
         self.threshold: int = 60
         # 偏置起点 拼图在x轴上的像素体积
@@ -47,9 +57,7 @@ class SliderValidator:
 
     def capture_slider(self, xpath: str = None, class_name: str = None):
         if xpath:
-            self.slider = self.wait.until(
-                ec.element_to_be_clickable((By.XPATH, xpath))
-            )
+            self.slider = self.wait.until(ec.element_to_be_clickable((By.XPATH, xpath)))
         elif class_name:
             self.slider = self.wait.until(
                 ec.element_to_be_clickable((By.CLASS_NAME, class_name))
@@ -81,20 +89,30 @@ class SliderValidator:
         :return: 生成一维坐标的运动轨迹
         """
         # 运动终点坐标
-        boundary = phys_params['boundary']
+        boundary = phys_params["boundary"]
         # 轨迹树
         track = []
         # 物理算子当前所在的一维空间位置
-        current_coordinate = phys_params.get("current_coordinate") if phys_params.get("current_coordinate") else 0
+        current_coordinate = (
+            phys_params.get("current_coordinate")
+            if phys_params.get("current_coordinate")
+            else 0
+        )
         # 切割变加速度的边界距离
         mid = phys_params.get("mid") if phys_params.get("mid") else boundary * 3.2 / 4
         # 运动时间（采样间隔）越高则单步位移提升越大，任务耗时降低，但误差增大
-        t = phys_params.get("t") if phys_params.get("t") else 1.
+        t = phys_params.get("t") if phys_params.get("t") else 1.0
         # 运动初速度为0
         v = 0
         # 当算子还未抵达终点时，持续生成下一步坐标
-        alpha_factor = phys_params.get("alpha_factor") if phys_params.get("alpha_factor") else 1.8712
-        beta_factor = phys_params.get("beta_factor") if phys_params.get("beta_factor") else 1.912
+        alpha_factor = (
+            phys_params.get("alpha_factor")
+            if phys_params.get("alpha_factor")
+            else 1.8712
+        )
+        beta_factor = (
+            phys_params.get("beta_factor") if phys_params.get("beta_factor") else 1.912
+        )
         while current_coordinate < boundary:
             # 当算子处于“距离中点”前时加速，越过后减速
             if current_coordinate < mid:
@@ -108,7 +126,9 @@ class SliderValidator:
             current_coordinate += move
             track.append(int(move))
         if self.debug:
-            print(f">>> displacement: {sum(track)}, boundary: {boundary}, position: {sum(track) - boundary}")
+            print(
+                f">>> displacement: {sum(track)}, boundary: {boundary}, position: {sum(track) - boundary}"
+            )
         # 返回算子运动轨迹
         return track, sum(track) - boundary
 
@@ -160,8 +180,11 @@ class SliderValidator:
         pix1 = img1.load()[x, y]
         pix2 = img2.load()[x, y]
 
-        if (abs(pix1[0] - pix2[0] < self.threshold) and abs(pix1[1] - pix2[1] < self.threshold) and abs(
-                pix1[2] - pix2[2] < self.threshold)):
+        if (
+            abs(pix1[0] - pix2[0] < self.threshold)
+            and abs(pix1[1] - pix2[1] < self.threshold)
+            and abs(pix1[2] - pix2[2] < self.threshold)
+        ):
             return True
         return False
 
@@ -179,10 +202,19 @@ class SliderValidator:
         # 打开作图句柄
         draw = ImageDraw.Draw(boundary_notch)
         # 标识边界线（计算值）
-        draw.line((boundary, 0, boundary, boundary_notch.size[1]), fill=(30, 255, 12), width=line_width)
+        draw.line(
+            (boundary, 0, boundary, boundary_notch.size[1]),
+            fill=(30, 255, 12),
+            width=line_width,
+        )
         # 标识边界线x轴坐标
         ft = ImageFont.truetype(text_font, size=text_size)
-        draw.text((boundary + line_width, 10), f"x = ({boundary}, )", fill=(255, 0, 0), font=ft)
+        draw.text(
+            (boundary + line_width, 10),
+            f"x = ({boundary}, )",
+            fill=(255, 0, 0),
+            font=ft,
+        )
         # 显示图片
         boundary_notch.show()
 
@@ -205,10 +237,14 @@ class SliderValidator:
         return pending_step
 
     def drag_slider(
-            self, track, slider, position: int, boundary: int,
-            use_imitate=True,
-            is_hold=False,
-            momentum_convergence=False
+        self,
+        track,
+        slider,
+        position: int,
+        boundary: int,
+        use_imitate=True,
+        is_hold=False,
+        momentum_convergence=False,
     ):
         """
 
@@ -238,7 +274,9 @@ class SliderValidator:
         # 震荡收敛步伐初始化
         catwalk = []
         # 参数表
-        debugger_map = {'position': position, }
+        debugger_map = {
+            "position": position,
+        }
         # ====================================
         # 执行核心逻辑
         # ====================================
@@ -253,15 +291,21 @@ class SliderValidator:
                 catwalk = self.shock(step_num=step_num, alpha=0.3, beta=0.5)
                 # 执行步态
                 for step in catwalk:
-                    ActionChains(self.api).move_by_offset(xoffset=step, yoffset=0).perform()
+                    ActionChains(self.api).move_by_offset(
+                        xoffset=step, yoffset=0
+                    ).perform()
                 # 姿态回衡
                 if abs(sum(catwalk)) >= int(step_num / 2):
-                    ActionChains(self.api).move_by_offset(xoffset=-sum(catwalk) + 1, yoffset=0).perform()
+                    ActionChains(self.api).move_by_offset(
+                        xoffset=-sum(catwalk) + 1, yoffset=0
+                    ).perform()
             else:
                 if position > 0:
                     # 拼图位于boundary右方 -> 回落
                     # 修正后落于区间 ∈ [-2,1,2,3,4,5,6]
-                    emergency_braking = -int((position / 2)) if -int((position / 2)) != 0 else -2
+                    emergency_braking = (
+                        -int((position / 2)) if -int((position / 2)) != 0 else -2
+                    )
                 else:
                     # 拼图位于boundary左方 -> 补偿
                     # 修正后落于区间 ∈ [3, 4, 5, 6, 7...]
@@ -271,25 +315,31 @@ class SliderValidator:
                 pending_step = self.shock(step_num=step_num, alpha=0.3, beta=0.2)
 
                 # 一级步态修正
-                ActionChains(self.api).move_by_offset(xoffset=emergency_braking, yoffset=0).perform()
+                ActionChains(self.api).move_by_offset(
+                    xoffset=emergency_braking, yoffset=0
+                ).perform()
                 catwalk.append(emergency_braking)
                 for step in pending_step:
                     if random.uniform(0, 1) < 0.2:
                         time.sleep(0.5)
-                    ActionChains(self.api).move_by_offset(xoffset=step, yoffset=0).perform()
+                    ActionChains(self.api).move_by_offset(
+                        xoffset=step, yoffset=0
+                    ).perform()
                     catwalk.append(step)
 
                 # 二级步态修正
                 stance = sum(catwalk) + position
                 while abs(stance) > 3 and position != 0:
                     # 踏出对抗步伐
-                    step = - (position / abs(position))
-                    ActionChains(self.api).move_by_offset(xoffset=step, yoffset=0).perform()
+                    step = -(position / abs(position))
+                    ActionChains(self.api).move_by_offset(
+                        xoffset=step, yoffset=0
+                    ).perform()
                     # 更新参数
                     catwalk.append(step)
                     position += step
                     stance = sum(catwalk) + position
-            debugger_map.update({'catwalk': catwalk})
+            debugger_map.update({"catwalk": catwalk})
         # step2.2: operator于一维空间中的位置回衡 基于极限收敛
         if momentum_convergence:
             # 通过强化学习拟合出的收敛区间
@@ -311,12 +361,18 @@ class SliderValidator:
             # 当算子处于收敛空间外时，使用运动补偿的方法回落姿态
             elif position not in convergence_region:
                 if position < convergence_region[0]:
-                    inertial = random.randint(convergence_region[0] - position, convergence_region[-1] - position)
+                    inertial = random.randint(
+                        convergence_region[0] - position,
+                        convergence_region[-1] - position,
+                    )
                 else:
-                    inertial = -random.randint(position - convergence_region[-1], position - convergence_region[0])
+                    inertial = -random.randint(
+                        position - convergence_region[-1],
+                        position - convergence_region[0],
+                    )
             # 将补偿算子inertial作为单步像素距离移动
             ActionChains(self.api).move_by_offset(xoffset=inertial, yoffset=0).perform()
-            debugger_map.update({'inertial': inertial})
+            debugger_map.update({"inertial": inertial})
         # 打印参数表
         if self.debug:
             print(f"{self.business_name}: {debugger_map}")
@@ -332,10 +388,10 @@ class SliderValidator:
         """
 
         # v3
-        button_text = self.api.find_element_by_class_name('geetest_radar_tip_content')
+        button_text = self.api.find_element_by_class_name("geetest_radar_tip_content")
         text = button_text.text
         if text in ("尝试过多", "网络不给力", "请点击重试"):
-            button = self.api.find_element_by_class_name('geetest_reset_tip_content')
+            button = self.api.find_element_by_class_name("geetest_reset_tip_content")
             button.click()
 
     def is_success(self):

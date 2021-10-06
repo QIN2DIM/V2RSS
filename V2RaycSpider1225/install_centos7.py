@@ -15,8 +15,10 @@ import sys
 
 # 版本断言，该脚本应当在 Python3+ 的环境中运行
 if int(platform.python_version_tuple()[0]) == 2:
-    print("---> This project does not support running in the Python2 environment."
-          "Please use Python3.6+ to run this  script.")
+    print(
+        "---> This project does not support running in the Python2 environment."
+        "Please use Python3.6+ to run this  script."
+    )
     sys.exit()
 # 导入第三方包，若当前环境足够干净，则自动拉取
 try:
@@ -79,8 +81,12 @@ def pull_project():
 
     if res == 0:
         print("---> kernel_downloaded_successfully")
-        src_dir = [node[0] for node in os.walk(THIS_WALK) if
-                   node[0].startswith("./{}/V2RaycSpider".format(PROJECT_NAME)) and 'src' in node[1]][0]
+        src_dir = [
+            node[0]
+            for node in os.walk(THIS_WALK)
+            if node[0].startswith("./{}/V2RaycSpider".format(PROJECT_NAME))
+            and "src" in node[1]
+        ][0]
 
         print("---> Mobile_core_project_source_code")
         shell_echo(f"cp -r {src_dir}/* ./")
@@ -99,7 +105,9 @@ def set_google_chrome_on_centos7():
         return True
 
     # installing Google Chrome on CentOS7
-    shell_echo("wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm")
+    shell_echo(
+        "wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm"
+    )
     shell_echo("sudo yum localinstall google-chrome-stable_current_x86_64.rpm")
 
 
@@ -108,22 +116,30 @@ def set_chromedriver(unzip_path=None):
     unzip_path = "/usr/bin/chromedriver" if unzip_path is None else unzip_path
 
     # 读取 google-chrome 的发行版本 Such as 89.0.4389.23
-    chrome_version = "".join(os.popen("google-chrome --version").readlines()).strip().split(' ')[-1]
+    chrome_version = (
+        "".join(os.popen("google-chrome --version").readlines()).strip().split(" ")[-1]
+    )
 
     # 访问 chromedriver 镜像
     res = requests.get("http://npm.taobao.org/mirrors/chromedriver")
-    soup = BeautifulSoup(res.text, 'html.parser')
+    soup = BeautifulSoup(res.text, "html.parser")
 
     # 通过文件名清洗定位到所需版本文件的下载地址
-    options = [i.split('/')[0] for i in soup.text.split('\n') if i.startswith(chrome_version[:5])]
+    options = [
+        i.split("/")[0]
+        for i in soup.text.split("\n")
+        if i.startswith(chrome_version[:5])
+    ]
     if len(options) == 1:
         chromedriver_version = options[0]
     else:
         chromedriver_version = max(options)
 
     # 拉取 chromedriver
-    shell_echo(f"wget http://npm.taobao.org/mirrors/chromedriver/{chromedriver_version}"
-               "/chromedriver_linux64.zip >/dev/null")
+    shell_echo(
+        f"wget http://npm.taobao.org/mirrors/chromedriver/{chromedriver_version}"
+        "/chromedriver_linux64.zip >/dev/null"
+    )
 
     # 解压 chromedriver
     shell_echo("unzip chromedriver_linux64.zip")
@@ -154,8 +170,12 @@ def init_project(script_name: str):
     print("Welcome to use V2RayCloudSpider!")
     shell_echo("python main.py")
 
-    print(f"---> Please replace the configuration file  {os.path.abspath(THIS_WALK)}/src/config.yaml")
-    print(f"---> If you have any questions, please visit the project homepage.See {GITHUB_REPO}")
+    print(
+        f"---> Please replace the configuration file  {os.path.abspath(THIS_WALK)}/src/config.yaml"
+    )
+    print(
+        f"---> If you have any questions, please visit the project homepage.See {GITHUB_REPO}"
+    )
     print("---> Please press any key to exit.")
     shell_echo(f"rm -rf {script_name}")
 
@@ -180,5 +200,5 @@ def run():
     init_project(script_name)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

@@ -11,20 +11,36 @@ from .core import SliderValidator, By, ec, ActionChains
 
 
 class GeeTest2(SliderValidator):
-    def __init__(self, driver, debug=False, business_name="GeeTest_v2", full_img_path=None, notch_img_path=None):
-        super(GeeTest2, self).__init__(driver=driver, debug=debug, business_name=business_name,
-                                       full_img_path=full_img_path, notch_img_path=notch_img_path, )
+    def __init__(
+        self,
+        driver,
+        debug=False,
+        business_name="GeeTest_v2",
+        full_img_path=None,
+        notch_img_path=None,
+    ):
+        super(GeeTest2, self).__init__(
+            driver=driver,
+            debug=debug,
+            business_name=business_name,
+            full_img_path=full_img_path,
+            notch_img_path=notch_img_path,
+        )
 
         self.threshold = 60
         self.offset = 60
 
     def capture_full_img(self):
-        gt_full_img = self.api.find_element_by_xpath("//a[contains(@class,'gt_fullbg')]")
+        gt_full_img = self.api.find_element_by_xpath(
+            "//a[contains(@class,'gt_fullbg')]"
+        )
         gt_full_img.screenshot(filename=self.full_img_path)
 
     def capture_notch_img(self):
         gt_notch_img = self.wait.until(
-            ec.invisibility_of_element_located((By.XPATH, "//a[contains(@class,'gt_hide')]"))
+            ec.invisibility_of_element_located(
+                (By.XPATH, "//a[contains(@class,'gt_hide')]")
+            )
         )
         gt_notch_img.screenshot(filename=self.notch_img_path)
 
@@ -56,7 +72,9 @@ class GeeTest2(SliderValidator):
         # 获取缺口截图并存储
         self.capture_notch_img()
         # 识别缺口左边界坐标
-        boundary = self.identify_boundary(self.full_img_path, self.notch_img_path, self.offset)
+        boundary = self.identify_boundary(
+            self.full_img_path, self.notch_img_path, self.offset
+        )
         if 60 <= boundary <= 63:
             boundary -= 12
         # debug模式下 可视化识别结果
@@ -68,13 +86,13 @@ class GeeTest2(SliderValidator):
             solution=self.operator_sport_v1,
             # 计算所需的物理量初始值字典
             phys_params={
-                'boundary': boundary,
-                'current_coordinate': 0,
-                'mid': boundary * 3.3 / 4,
-                't': 1.2,
-                'alpha_factor': 0.4011,
-                'beta_factor': 0.5211,
-            }
+                "boundary": boundary,
+                "current_coordinate": 0,
+                "mid": boundary * 3.3 / 4,
+                "t": 1.2,
+                "alpha_factor": 0.4011,
+                "beta_factor": 0.5211,
+            },
         )
         # 拖动滑块
         self.drag_slider(
@@ -84,7 +102,7 @@ class GeeTest2(SliderValidator):
             boundary=boundary,
             use_imitate=False,
             is_hold=True,
-            momentum_convergence=True
+            momentum_convergence=True,
         )
         # 验证通过
         if self.is_success():

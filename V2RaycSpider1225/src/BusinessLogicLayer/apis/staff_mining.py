@@ -4,25 +4,43 @@
     - 本模块内嵌协程启动项，请勿从外部并发调用此模块，此举将引起重大复写灾难
     - 本模块网络通信基于协程进行，在程序调试时请注释掉 monkey包
 """
-__all__ = ['staff_api']
+__all__ = ["staff_api"]
 
 import os
 
-from src.BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE, CHROMEDRIVER_PATH
-from src.BusinessLogicLayer.utils.staff_mining import StaffChecker, StaffCollector, IdentifyRecaptcha, \
-    StaffEntropyGenerator
-from src.BusinessLogicLayer.utils.staff_mining.common.exceptions import CollectorSwitchError, NoSuchWindowException
+from src.BusinessCentralLayer.setting import (
+    logger,
+    SERVER_DIR_DATABASE,
+    CHROMEDRIVER_PATH,
+)
+from src.BusinessLogicLayer.utils.staff_mining import (
+    StaffChecker,
+    StaffCollector,
+    IdentifyRecaptcha,
+    StaffEntropyGenerator,
+)
+from src.BusinessLogicLayer.utils.staff_mining.common.exceptions import (
+    CollectorSwitchError,
+    NoSuchWindowException,
+)
 
 
 class _Interface:
-
     def __init__(self):
         self._cache_dir_staff_hosts = os.path.join(SERVER_DIR_DATABASE, "staff_hosts")
-        self._cache_dir_classifier = os.path.join(self._cache_dir_staff_hosts, "classifier")
+        self._cache_dir_classifier = os.path.join(
+            self._cache_dir_staff_hosts, "classifier"
+        )
 
-        self._cache_path_staff_hosts = os.path.join(self._cache_dir_staff_hosts, "staff_host.txt")
-        self._path_staff_arch_recaptcha = os.path.join(self._cache_dir_classifier, "staff_arch_recaptcha.txt")
-        self._path_staff_arch_entropy = os.path.join(self._cache_dir_classifier, "staff_arch_entropy.txt")
+        self._cache_path_staff_hosts = os.path.join(
+            self._cache_dir_staff_hosts, "staff_host.txt"
+        )
+        self._path_staff_arch_recaptcha = os.path.join(
+            self._cache_dir_classifier, "staff_arch_recaptcha.txt"
+        )
+        self._path_staff_arch_entropy = os.path.join(
+            self._cache_dir_classifier, "staff_arch_entropy.txt"
+        )
 
         self._cache_files = []
         self._create_local_db()
@@ -44,30 +62,38 @@ class _Interface:
             else:
                 for cache_file in os.listdir(node):
                     # Keep the data that is more expensive to collect.
-                    if ("staff_host.txt" in cache_file) or ('staff_arch_recaptcha.txt' in cache_file):
+                    if ("staff_host.txt" in cache_file) or (
+                        "staff_arch_recaptcha.txt" in cache_file
+                    ):
                         continue
-                    if cache_file.endswith('.txt'):
+                    if cache_file.endswith(".txt"):
                         self._cache_files.append(os.path.join(node, cache_file))
 
-    def refresh_cache(self, mode='reset'):
+    def refresh_cache(self, mode="reset"):
         """
         Clear the classified cache of staff-host, the data in staff-host.txt will not be affected
         :return:
         """
-        if mode == 'reset':
+        if mode == "reset":
             for cache_file in self._cache_files:
-                with open(cache_file, 'w', encoding="utf8"):
+                with open(cache_file, "w", encoding="utf8"):
                     pass
-        elif mode == 'de-dup':
+        elif mode == "de-dup":
             for cache_file in self._cache_files:
-                with open(cache_file, 'r', encoding="utf8") as f:
-                    data = [i for i in f.read().split('\n') if i]
-                with open(cache_file, 'w', encoding="utf8") as f:
+                with open(cache_file, "r", encoding="utf8") as f:
+                    data = [i for i in f.read().split("\n") if i]
+                with open(cache_file, "w", encoding="utf8") as f:
                     for element in set(data):
                         f.write(f"{element}\n")
 
     @logger.catch()
-    def collector(self, silence: bool = True, debug: bool = False, page_num: int = 26, sleep_node: int = 5):
+    def collector(
+        self,
+        silence: bool = True,
+        debug: bool = False,
+        page_num: int = 26,
+        sleep_node: int = 5,
+    ):
         """
         STAFF site collector
 
@@ -83,7 +109,9 @@ class _Interface:
         :param sleep_node: 每采集多少页进行一次随机时长的休眠，默认sleep_node为5
         :return:
         """
-        logger.info(f"Successfully obtained interface permissions -> {StaffCollector.__name__}")
+        logger.info(
+            f"Successfully obtained interface permissions -> {StaffCollector.__name__}"
+        )
 
         try:
             # 采集器实例化
@@ -92,21 +120,24 @@ class _Interface:
                 # cache_path 为采集到的站点链接输出目录
                 cache_path=self._cache_path_staff_hosts,
                 chromedriver_path=CHROMEDRIVER_PATH,
-                debug=debug
-            ).run(
-                page_num=page_num,
-                sleep_node=sleep_node
-            )
+                debug=debug,
+            ).run(page_num=page_num, sleep_node=sleep_node)
         except CollectorSwitchError:
-            logger.error("<StaffCollector> Traffic interception is detected, and the system is taking a backup plan")
+            logger.error(
+                "<StaffCollector> Traffic interception is detected, and the system is taking a backup plan"
+            )
         except IndexError:
-            logger.warning("<StaffCollector> An error occurred while switching the page number")
+            logger.warning(
+                "<StaffCollector> An error occurred while switching the page number"
+            )
         except NoSuchWindowException:
             logger.error("<StaffCollector> The Chromedriver exited abnormally")
         except Exception as e:
             logger.exception(f"<StaffCollector> {e}")
 
-    def checker(self, business_name: str, debug: bool = True, power: int = os.cpu_count()):
+    def checker(
+        self, business_name: str, debug: bool = True, power: int = os.cpu_count()
+    ):
         """
         STAFF checker executes related function modules according to different business names
         :param business_name: STAFF检查器业务名 此处业务名应与StaffChecker中的相应的方法名完全一致
@@ -128,8 +159,8 @@ class _Interface:
             return False
 
         # Read cache cache file
-        with open(cache_path_load, 'r', encoding='utf8') as f:
-            data = [i for i in f.read().split('\n') if i]
+        with open(cache_path_load, "r", encoding="utf8") as f:
+            data = [i for i in f.read().split("\n") if i]
 
         # Instantiate the STAFF checker
         # Specify the link iterator to be cleaned, output cache address, task power, debug mode, and business name
@@ -138,7 +169,7 @@ class _Interface:
             output_dir=cache_dir_save,
             power=power,
             debug=debug,
-            work_name=business_name
+            work_name=business_name,
         )
         self.sc_.go()
 
@@ -146,9 +177,11 @@ class _Interface:
         _classifier = {}
         for node in os.listdir(self._cache_dir_classifier):
             file = os.path.join(self._cache_dir_classifier, node)
-            if file.endswith('.txt'):
-                with open(file, 'r', encoding="utf8") as f:
-                    _classifier[node.replace('.txt', '')] = list(set([i for i in f.read().split("\n") if i]))
+            if file.endswith(".txt"):
+                with open(file, "r", encoding="utf8") as f:
+                    _classifier[node.replace(".txt", "")] = list(
+                        set([i for i in f.read().split("\n") if i])
+                    )
         return self._cache_dir_classifier, _classifier
 
     @logger.catch()
@@ -160,7 +193,9 @@ class _Interface:
         :return:
         """
         if isinstance(urls, str):
-            urls = [urls, ]
+            urls = [
+                urls,
+            ]
         elif isinstance(urls, list):
             urls = list(set(urls))
         elif isinstance(urls, set):
@@ -170,7 +205,7 @@ class _Interface:
             chromedriver_path=CHROMEDRIVER_PATH,
             output_path=self._path_staff_arch_recaptcha,
             power=os.cpu_count(),
-            silence=silence
+            silence=silence,
         ).go()
 
     @staticmethod
@@ -185,17 +220,17 @@ class _Interface:
         :return:
         """
         # FileNotFoundError
-        if (not os.path.exists(input_path)) or (not os.path.exists(os.path.dirname(output_path))):
+        if (not os.path.exists(input_path)) or (
+            not os.path.exists(os.path.dirname(output_path))
+        ):
             return False
 
         # Use Selenium to open the corresponding sites one by one, and manually mark the object properties
-        with open(input_path, 'r', encoding='utf8') as f:
-            data = [i for i in f.read().split('\n') if i]
+        with open(input_path, "r", encoding="utf8") as f:
+            data = [i for i in f.read().split("\n") if i]
         # Instantiate Selenium operation object
         driver = StaffCollector(
-            cache_path='',
-            chromedriver_path=CHROMEDRIVER_PATH,
-            silence=False
+            cache_path="", chromedriver_path=CHROMEDRIVER_PATH, silence=False
         ).set_spider_options()
         # Perform related business processes
         for url in data:
@@ -205,7 +240,7 @@ class _Interface:
             # For example: this is not the expected goal -> f
             # For example: This is a noise sample -> x
             label = input(f">>> {url} <<<")
-            with open(os.path.join(output_path), 'a', encoding="utf8") as f:
+            with open(os.path.join(output_path), "a", encoding="utf8") as f:
                 f.write(f"{label}\t{url}\n")
 
         driver.quit()
@@ -218,7 +253,9 @@ class _Interface:
         :return:
         """
         if isinstance(urls, str):
-            urls = [urls, ]
+            urls = [
+                urls,
+            ]
         elif isinstance(urls, list):
             urls = list(set(urls))
         elif isinstance(urls, set):
@@ -228,7 +265,7 @@ class _Interface:
             chromedriver_path=CHROMEDRIVER_PATH,
             output_path=self._path_staff_arch_entropy,
             power=4,
-            silence=silence
+            silence=silence,
         ).go()
 
     def is_first_run(self) -> bool:
@@ -240,12 +277,19 @@ class _Interface:
         """
         if not os.path.exists(self._cache_path_staff_hosts):
             return True
-        with open(self._cache_path_staff_hosts, 'r', encoding="utf8") as f:
+        with open(self._cache_path_staff_hosts, "r", encoding="utf8") as f:
             return not f.read()
 
-    def go(self, debug: bool = False, silence: bool = True, power: int = os.cpu_count(),
-           use_collector: bool = True, use_checker: bool = True, identity_recaptcha: bool = False,
-           use_generator: bool = False) -> tuple:
+    def go(
+        self,
+        debug: bool = False,
+        silence: bool = True,
+        power: int = os.cpu_count(),
+        use_collector: bool = True,
+        use_checker: bool = True,
+        identity_recaptcha: bool = False,
+        use_generator: bool = False,
+    ) -> tuple:
         """
         Execute business flow in series.
 
@@ -299,10 +343,14 @@ class _Interface:
                     pass
                 # 读取上一次STAFF检查器的运行缓存
                 else:
-                    files = [node for node in self._cache_files if ('general' in node) or ('other' in node)]
+                    files = [
+                        node
+                        for node in self._cache_files
+                        if ("general" in node) or ("other" in node)
+                    ]
                     for file in files:
-                        with open(file, 'r', encoding="utf8") as f:
-                            urls += [i for i in f.read().split('\n') if i]
+                        with open(file, "r", encoding="utf8") as f:
+                            urls += [i for i in f.read().split("\n") if i]
             # 本次go运行启动了STAFF检查器
             # 使用本次STAFF检查器的运行缓存执行决策器
             else:
@@ -321,7 +369,7 @@ class _Interface:
 
 staff_api = _Interface()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     staff_api.go(
         debug=False,
         silence=False,

@@ -1,13 +1,39 @@
 """
 读取yaml配置文件，生成全局静态变量。
 """
-__all__ = ['SINGLE_DEPLOYMENT', 'ENABLE_DEPLOY', 'ENABLE_KERNEL', 'ENABLE_SERVER',
-           'ENABLE_DEBUG', 'ENABLE_REBOUND', 'SINGLE_TASK_CAP', 'LAUNCH_INTERVAL', 'REDIS_MASTER', 'REDIS_SLAVER_DDT',
-           'API_HOST', 'API_DEBUG', 'API_THREADED', 'API_PORT', 'OPEN_HOST', 'GARDENER_HOST',
-           'ROUTE_API', 'SEQ_TEST', 'CRAWLER_SEQUENCE', 'SMTP_ACCOUNT', 'SERVERCHAN_SCKEY', 'REDIS_SECRET_KEY',
-           'PROJECT_NUM', 'VERSION', 'TIME_ZONE_CN', 'TIME_ZONE_NY', 'DEFAULT_POWER', 'Fore', 'terminal_echo',
-           'PROXY_POOL', 'ENABLE_PROXY',
-           ]
+__all__ = [
+    "SINGLE_DEPLOYMENT",
+    "ENABLE_DEPLOY",
+    "ENABLE_KERNEL",
+    "ENABLE_SERVER",
+    "ENABLE_DEBUG",
+    "ENABLE_REBOUND",
+    "SINGLE_TASK_CAP",
+    "LAUNCH_INTERVAL",
+    "REDIS_MASTER",
+    "REDIS_SLAVER_DDT",
+    "API_HOST",
+    "API_DEBUG",
+    "API_THREADED",
+    "API_PORT",
+    "OPEN_HOST",
+    "GARDENER_HOST",
+    "ROUTE_API",
+    "SEQ_TEST",
+    "CRAWLER_SEQUENCE",
+    "SMTP_ACCOUNT",
+    "SERVERCHAN_SCKEY",
+    "REDIS_SECRET_KEY",
+    "PROJECT_NUM",
+    "VERSION",
+    "TIME_ZONE_CN",
+    "TIME_ZONE_NY",
+    "DEFAULT_POWER",
+    "Fore",
+    "terminal_echo",
+    "PROXY_POOL",
+    "ENABLE_PROXY",
+]
 
 import os
 import shutil
@@ -24,17 +50,17 @@ Fore = colorama.Fore
 
 
 def terminal_echo(msg: str, level: int):
-    print(f"[{str(datetime.now()).split('.')[0]}]", end=' ')
+    print(f"[{str(datetime.now()).split('.')[0]}]", end=" ")
     if level == 1:
-        print(colorama.Fore.GREEN + "[✓]", end=' ')
+        print(colorama.Fore.GREEN + "[✓]", end=" ")
     elif level == 0:
-        print(colorama.Fore.RED + "[×]", end=' ')
+        print(colorama.Fore.RED + "[×]", end=" ")
     # 阻塞任务
     elif level == 2:
-        print(colorama.Fore.BLUE + "[...]", end=' ')
+        print(colorama.Fore.BLUE + "[...]", end=" ")
     # debug
     elif level == 3:
-        print(colorama.Fore.CYAN + "[*]", end=' ')
+        print(colorama.Fore.CYAN + "[*]", end=" ")
     print(msg)
     return ">"
 
@@ -47,10 +73,10 @@ def terminal_echo(msg: str, level: int):
 # 若在单机上开启多个进程的任务，既每个进程应对应一个启动配置文件（.yaml）则需改动此处user_指向的文件名，如：
 # config_1.yaml   user_= os.path.join(os.path.dirname(__file__), 'config_1.yaml')
 # config_master.yaml   user_= os.path.join(os.path.dirname(__file__), 'config_master.yaml')
-user_ = os.path.join(os.path.dirname(__file__), 'config.yaml')
+user_ = os.path.join(os.path.dirname(__file__), "config.yaml")
 
 # 配置模板的文件名 无特殊需求请不要改动
-sample_ = os.path.join(os.path.dirname(__file__), 'config-sample.yaml')
+sample_ = os.path.join(os.path.dirname(__file__), "config-sample.yaml")
 
 try:
     if not os.path.exists(sample_):
@@ -67,9 +93,9 @@ try:
 
     if os.path.exists(sample_) and os.path.exists(user_):
         # 读取yaml配置变量
-        with open(user_, 'r', encoding='utf8') as stream:
+        with open(user_, "r", encoding="utf8") as stream:
             config_ = yaml.safe_load(stream.read())
-            if __name__ == '__main__':
+            if __name__ == "__main__":
                 terminal_echo("读取配置文件-->./src/config.yaml", 1)
                 print(config_)
 except FileNotFoundError:
@@ -77,12 +103,18 @@ except FileNotFoundError:
         import requests
         from requests import exceptions as res_error
 
-        res_ = requests.get("https://curly-shape-d178.qinse.workers.dev/https://raw.githubusercontent.com/"
-                            "QIN2DIM/V2RayCloudSpider/master/V2RaycSpider1225/src/config-sample.yaml")
-        with open(sample_, 'wb') as fp:
+        res_ = requests.get(
+            "https://curly-shape-d178.qinse.workers.dev/https://raw.githubusercontent.com/"
+            "QIN2DIM/V2RayCloudSpider/master/V2RaycSpider1225/src/config-sample.yaml"
+        )
+        with open(sample_, "wb") as fp:
             fp.write(res_.content)
         terminal_echo("配置模板拉取成功,请重启项目", 1)
-    except (res_error.ConnectionError, res_error.HTTPError, res_error.RequestException) as e_:
+    except (
+        res_error.ConnectionError,
+        res_error.HTTPError,
+        res_error.RequestException,
+    ) as e_:
         terminal_echo("配置模板自动拉取失败，请检查本地网络", 0)
         print(f">>> error:{e_}")
     finally:
@@ -115,22 +147,22 @@ except FileNotFoundError:
 # ---------------------------------------------------
 
 # SINGLE_DEPLOYMENT 部署模式，单机部署True(默认)，分布式False
-SINGLE_DEPLOYMENT = config_['SINGLE_DEPLOYMENT']
+SINGLE_DEPLOYMENT = config_["SINGLE_DEPLOYMENT"]
 
 # ENABLE_DEPLOY 单节点部署定时任务开关
-ENABLE_DEPLOY: dict = config_['ENABLE_DEPLOY']
+ENABLE_DEPLOY: dict = config_["ENABLE_DEPLOY"]
 
 # ENABLE_DEPLOY 服务器内核开关
-ENABLE_KERNEL: dict = config_['ENABLE_KERNEL']
+ENABLE_KERNEL: dict = config_["ENABLE_KERNEL"]
 
 # ENABLE_SERVER 部署Flask
-ENABLE_SERVER: bool = config_['ENABLE_SERVER']
+ENABLE_SERVER: bool = config_["ENABLE_SERVER"]
 
 # ENABLE_SERVER 允许代理访问
-ENABLE_PROXY: bool = config_['ENABLE_PROXY']
+ENABLE_PROXY: bool = config_["ENABLE_PROXY"]
 
 # PROXY_POOL 代理池配置信息
-PROXY_POOL: dict = config_['PROXY_POOL']
+PROXY_POOL: dict = config_["PROXY_POOL"]
 
 # ENABLE_COROUTINE 协程加速
 # ENABLE_COROUTINE: bool = config_['ENABLE_COROUTINE']
@@ -142,7 +174,7 @@ ENABLE_DEBUG: bool = not ENABLE_DEPLOY
 # 当master server宕机后，将slave中的订阅清洗后传回。
 # 该选项会反转主从关系，仅在主机数据丢失情况下手动开启。
 # 在完成数据覆盖后应立即将ENABLE_REBOUND置False后重启项目。
-ENABLE_REBOUND: bool = config_['ENABLE_REBOUND']
+ENABLE_REBOUND: bool = config_["ENABLE_REBOUND"]
 
 # ---------------------------------------------------
 # TODO (√)SINGLE_TASK_CAP -- 单类订阅的队列容载极限
@@ -151,7 +183,7 @@ ENABLE_REBOUND: bool = config_['ENABLE_REBOUND']
 # Defaults type:int = 25
 # 个人使用 推荐SINGLE_TASK_CAP不超过3
 # ---------------------------------------------------
-SINGLE_TASK_CAP: int = config_['SINGLE_TASK_CAP']
+SINGLE_TASK_CAP: int = config_["SINGLE_TASK_CAP"]
 
 # ---------------------------------------------------
 # TODO (√)DEPLOY_INTERVAL -- schedule任务间隔,单位秒（s）
@@ -166,7 +198,7 @@ SINGLE_TASK_CAP: int = config_['SINGLE_TASK_CAP']
 
 # 为保证系统高可用性，请不要让任务巡回频次低于以上预设值
 # ---------------------------------------------------
-LAUNCH_INTERVAL: dict = config_['LAUNCH_INTERVAL']
+LAUNCH_INTERVAL: dict = config_["LAUNCH_INTERVAL"]
 
 # ---------------------------------------------------
 # TODO (√)Redis Cluster Configuration(SSH-BASE)
@@ -175,10 +207,10 @@ LAUNCH_INTERVAL: dict = config_['LAUNCH_INTERVAL']
 # ---------------------------------------------------
 
 # TODO (√)Settings of the Master-Redis responsible for leading the workflow
-REDIS_MASTER: dict = config_['REDIS_MASTER']
+REDIS_MASTER: dict = config_["REDIS_MASTER"]
 
 # TODO (*)Setting of the Slave-Redis responsible for data disaster tolerance（DDT）
-REDIS_SLAVER_DDT: dict = config_['REDIS_SLAVER_DDT']
+REDIS_SLAVER_DDT: dict = config_["REDIS_SLAVER_DDT"]
 
 # TODO (x)This configuration is not applicable in the current version
 # MYSQL_CONFIG: dict = config_['MYSQL_CONFIG']
@@ -189,7 +221,7 @@ REDIS_SLAVER_DDT: dict = config_['REDIS_SLAVER_DDT']
 API_HOST: str = REDIS_MASTER["host"]
 API_DEBUG: bool = ENABLE_DEBUG
 API_THREADED: bool = True
-API_PORT: int = config_['API_PORT']
+API_PORT: int = config_["API_PORT"]
 """
 Audit: Binding to all interfaces detected with hardcoded values
 
@@ -209,20 +241,22 @@ Audit: Binding to all interfaces detected with hardcoded values
  development phase. This prevents others from targeting 
  your application and executing SQL injections against your project.
 """
-OPEN_HOST: str = "127.0.0.1" if (API_DEBUG is True) or ("win" in sys.platform) else "0.0.0.0"
+OPEN_HOST: str = (
+    "127.0.0.1" if (API_DEBUG is True) or ("win" in sys.platform) else "0.0.0.0"
+)
 # ---------------------------------------------------
 # TODO (√)The domain name used to deploy the gardener
 # 园丁系统部署域名，当启动该项功能时，必须配置如: www.bbq.club
 # 由于性能受限，该域名必须为当前主机的域名
 # ---------------------------------------------------
-GARDENER_HOST: str = config_['GARDENER_HOST']
+GARDENER_HOST: str = config_["GARDENER_HOST"]
 # ---------------------------------------------------
 # 路由接口（公开）
 # ---------------------------------------------------
 ROUTE_API = {
     "capture_subscribe": "/v2raycs/api/capture_subscribe",
     "version_manager": "/v2raycs/api/version_manager",
-    "get_subs_num": "/v2raycs/api/get_sbus_num"
+    "get_subs_num": "/v2raycs/api/get_sbus_num",
 }
 # ---------------------------------------------------
 # 任务队列
@@ -242,13 +276,13 @@ CRAWLER_SEQUENCE = [i[0].lower() for i in SEQ_TEST.items() if i[-1]]
 # TODO > 使用Email推送-推荐使用QQ邮箱，开启邮箱SMTP服务教程如下
 # https://service.mail.qq.com/cgi-bin/help?subtype=1&&id=28&&no=1001256
 # ---------------------------------------------------
-SMTP_ACCOUNT: dict = config_['SMTP_ACCOUNT']
+SMTP_ACCOUNT: dict = config_["SMTP_ACCOUNT"]
 
 # ---------------------------------------------------
 # TODO > 使用<SERVER酱>推送，请在SERVER_CHAN_SCKEY填写自己的Key
 # http://sc.ftqq.com/3.version
 # ---------------------------------------------------
-SERVERCHAN_SCKEY: str = config_['SERVERCHAN_SCKEY']
+SERVERCHAN_SCKEY: str = config_["SERVERCHAN_SCKEY"]
 
 # ---------------------------------------------------
 # TODO (√)CHROMEDRIVER_PATH -- ChromeDriver的路径
@@ -310,9 +344,9 @@ TIME_ZONE_NY = pytz.timezone("America/New_York")
 DEFAULT_POWER = os.cpu_count()
 
 # 任务开关
-if not ENABLE_DEPLOY['global']:
-    for reset_ in ENABLE_DEPLOY['tasks'].items():
-        ENABLE_DEPLOY['tasks'][reset_[0]] = False
+if not ENABLE_DEPLOY["global"]:
+    for reset_ in ENABLE_DEPLOY["tasks"].items():
+        ENABLE_DEPLOY["tasks"][reset_[0]] = False
 
 # 主从反转
 if ENABLE_REBOUND:

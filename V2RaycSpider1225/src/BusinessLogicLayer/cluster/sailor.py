@@ -1,12 +1,18 @@
 # TODO 该模块存在大量exec用法，请勿随意改动相关文件名或函数名
-__all__ = ['manage_task']
+__all__ = ["manage_task"]
 
 import random
 
 from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.middleware.work_io import Middleware
-from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE, REDIS_SECRET_KEY, SINGLE_TASK_CAP, ENABLE_DEPLOY, \
-    SINGLE_DEPLOYMENT, logger
+from src.BusinessCentralLayer.setting import (
+    CRAWLER_SEQUENCE,
+    REDIS_SECRET_KEY,
+    SINGLE_TASK_CAP,
+    ENABLE_DEPLOY,
+    SINGLE_DEPLOYMENT,
+    logger,
+)
 from .cook import ActionShunt
 from .slavers import __entropy__
 from ..plugins.accelerator import ShuntRelease
@@ -27,7 +33,7 @@ def _is_overflow(task_name: str, rc=None):
     cap: int = SINGLE_TASK_CAP
 
     # 获取当前仓库剩余
-    storage_remain: int = rc.get_len(REDIS_SECRET_KEY.format(f'{task_name}'))
+    storage_remain: int = rc.get_len(REDIS_SECRET_KEY.format(f"{task_name}"))
 
     # 获取本机任务缓存
     cache_size: int = Middleware.poseidon.qsize()
@@ -35,7 +41,7 @@ def _is_overflow(task_name: str, rc=None):
     # 判断任务队列是否达到满载状态或已溢出
     if storage_remain >= cap:
         # logger.warning(f'<TaskManager> OverFlow || 任务溢出<{task_name}>({storage_remain}/{cap})')
-        return 'stop'
+        return "stop"
 
     # 判断缓冲队列是否已达单机采集极限
     # 未防止绝对溢出，此处限制单机任务数不可超过满载值的~x％
@@ -43,8 +49,8 @@ def _is_overflow(task_name: str, rc=None):
     if storage_remain + cache_size > round(cap * 0.8):
         # 若已达或超过单机采集极限，则休眠任务
         # logger.info(f'<TaskManager> BeatPause || 节拍停顿<{task_name}>({storage_remain + cache_size}/{cap})')
-        return 'offload'
-    return 'continue'
+        return "offload"
+    return "continue"
 
 
 def _update_entropy(rc=None, entropy=None):
@@ -52,23 +58,27 @@ def _update_entropy(rc=None, entropy=None):
     try:
         atomic_queue = []
         for entity_ in entropy.copy():
-            work_filed = [f"{j[0].upper()}" for j in entity_['hyper_params'].items() if j[-1]]
+            work_filed = [
+                f"{j[0].upper()}" for j in entity_["hyper_params"].items() if j[-1]
+            ]
             work_filed = "&".join(work_filed).strip()
             atomic_item = f"|{work_filed}| {entity_['name']}"
             atomic_queue.append(atomic_item)
         # 更新列表
         if rc is None:
             rc = RedisClient()
-        rc.get_driver().set(name=REDIS_SECRET_KEY.format("__entropy__"), value="$".join(atomic_queue))
+        rc.get_driver().set(
+            name=REDIS_SECRET_KEY.format("__entropy__"), value="$".join(atomic_queue)
+        )
     except Exception as e:
         logger.exception(e)
 
 
 def sync_actions(
-        class_: str,
-        mode_sync: str = None,
-        only_sync=False,
-        beat_sync=True,
+    class_: str,
+    mode_sync: str = None,
+    only_sync=False,
+    beat_sync=True,
 ):
     """
 
@@ -85,7 +95,7 @@ def sync_actions(
     # ================================================
     rc = RedisClient()
     _state = _is_overflow(task_name=class_, rc=rc)
-    if _state == 'stop':
+    if _state == "stop":
         return _state
 
     # ================================================
@@ -101,45 +111,51 @@ def sync_actions(
     # ================================================
     # $执行核心业务
     # ================================================
-    if mode_sync == 'upload':
+    if mode_sync == "upload":
         # fixme:临时方案:解决链接溢出问题
         if round(rc.get_len(REDIS_SECRET_KEY.format(class_)) * 1.25) > SINGLE_TASK_CAP:
             logger.warning("<TaskManager> UploadHijack -- 连接池任务即将溢出，上传任务被劫持")
             return None
         # 持续实例化采集任务
         for _ in range(sync_queue.__len__()):
-            rc.sync_message_queue(mode='upload', message=class_)
+            rc.sync_message_queue(mode="upload", message=class_)
             # 节拍同步线程锁
             if only_sync:
                 logger.warning("<TaskManager> OnlySync -- 触发节拍同步线程锁，仅上传一枚原子任务")
                 break
         logger.success("<TaskManager> UploadTasks -- 任务上传完毕")
-    elif mode_sync == 'download':
+    elif mode_sync == "download":
         async_queue: list = []
         while True:
             # 获取原子任务
-            atomic = rc.sync_message_queue(mode='download')
+            atomic = rc.sync_message_queue(mode="download")
             # 若原子有效则同步数据
             if atomic and atomic in CRAWLER_SEQUENCE:
                 # 判断同步状态
                 # 防止过载。当本地缓冲任务即将突破容载极限时停止同步
                 # _state 状态有三，continue/offload/stop
                 _state = _is_overflow(task_name=atomic, rc=rc)
-                if _state != 'continue':
+                if _state != "continue":
                     return _state
                 if async_queue.__len__() == 0:
-                    async_queue = ActionShunt(atomic, silence=True, beat_sync=beat_sync).shunt()
+                    async_queue = ActionShunt(
+                        atomic, silence=True, beat_sync=beat_sync
+                    ).shunt()
                     random.shuffle(async_queue)
                 # 将采集器实体推送至Poseidon本机消息队列
                 Middleware.poseidon.put_nowait(async_queue.pop())
-                logger.info(f'<TaskManager> offload atomic<{atomic}>({Middleware.poseidon.qsize()})')
+                logger.info(
+                    f"<TaskManager> offload atomic<{atomic}>({Middleware.poseidon.qsize()})"
+                )
                 # 节拍同步线程锁
                 if only_sync:
-                    logger.warning(f"<TaskManager> OnlySync -- <{atomic}>触发节拍同步线程锁，仅下载一枚原子任务")
-                    return 'offload'
+                    logger.warning(
+                        f"<TaskManager> OnlySync -- <{atomic}>触发节拍同步线程锁，仅下载一枚原子任务"
+                    )
+                    return "offload"
             else:
-                return 'offload'
-    elif mode_sync == 'force_run':
+                return "offload"
+    elif mode_sync == "force_run":
         for slave_ in sync_queue:
             # ================================================================================================
             # TODO v5.4.r 版本新增特性 scaffold spawn
@@ -150,7 +166,7 @@ def sync_actions(
             # force_run ：适用于单机部署或单步调试下
             # 需要确保无溢出风险，故即使是force_run的启动模式，任务执行数也不应逾越任务容载数
             _state = _is_overflow(task_name=class_, rc=rc)
-            if _state != 'continue':
+            if _state != "continue":
                 return _state
 
             # 将采集器实体推送至Poseidon本机消息队列
@@ -158,19 +174,21 @@ def sync_actions(
 
             # 节拍同步线程锁
             if only_sync:
-                logger.warning(f"<TaskManager> OnlySync -- <{class_}>触发节拍同步线程锁，仅下载一枚原子任务")
-                return 'stop'
+                logger.warning(
+                    f"<TaskManager> OnlySync -- <{class_}>触发节拍同步线程锁，仅下载一枚原子任务"
+                )
+                return "stop"
 
-        return 'offload'
+        return "offload"
 
 
 @logger.catch()
 def manage_task(
-        class_: str = 'v2ray',
-        only_sync=False,
-        run_collector=None,
-        beat_sync=True,
-        force_run=None
+    class_: str = "v2ray",
+    only_sync=False,
+    run_collector=None,
+    beat_sync=True,
+    force_run=None,
 ) -> bool:
     """
     加载任务
@@ -190,7 +208,11 @@ def manage_task(
         return False
 
     # collector_permission 审核采集权限，允许越权传参。当手动指定参数时，可授予本机采集权限，否则使用配置权限
-    collector_permission: bool = ENABLE_DEPLOY.get('tasks').get('collector') if run_collector is None else run_collector
+    collector_permission: bool = (
+        ENABLE_DEPLOY.get("tasks").get("collector")
+        if run_collector is None
+        else run_collector
+    )
 
     # force_run 强制运行，若不指定该参数，则以“是否单机部署”决定“是否运行force_run”
     # 既默认单机模式下开启force_run
@@ -224,19 +246,19 @@ def manage_task(
     # 若本机开启了采集器权限则创建协程空间
     # 若从control-deploy进入此函数，则说明本机必定具备创建协程空间权限
     if force_run:
-        if (response == 'offload') and (Middleware.poseidon.qsize() > 0):
-            logger.info(f'<TaskManager> ForceRun || <{class_}>采集任务启动')
+        if (response == "offload") and (Middleware.poseidon.qsize() > 0):
+            logger.info(f"<TaskManager> ForceRun || <{class_}>采集任务启动")
             ShuntRelease(work_queue=Middleware.poseidon).interface()
-        logger.success(f'<TaskManager> ForceWorkFinish || <{class_}>采集任务结束')
+        logger.success(f"<TaskManager> ForceWorkFinish || <{class_}>采集任务结束")
         return True
 
     # if 'force_run' is False and the node has the permissions of collector
     if collector_permission:
         # if task queue can be work
-        if (response == 'offload') and (Middleware.poseidon.qsize() > 0):
-            logger.info('<TaskManager> Run || 采集任务启动')
+        if (response == "offload") and (Middleware.poseidon.qsize() > 0):
+            logger.info("<TaskManager> Run || 采集任务启动")
             ShuntRelease(work_queue=Middleware.poseidon).interface()
-        logger.success('<TaskManager> Finish || 采集任务结束')
+        logger.success("<TaskManager> Finish || 采集任务结束")
         return True
     # logger.warning(f"<TaskManager> Hijack<{class_}> || 当前节点不具备采集权限")
     return False

@@ -1,19 +1,30 @@
-__all__ = ['RedisClient', 'RedisDataDisasterTolerance']
+__all__ = ["RedisClient", "RedisDataDisasterTolerance"]
 
 from typing import List, Tuple
 
 import redis
 
-from src.BusinessCentralLayer.setting import REDIS_MASTER, REDIS_SECRET_KEY, TIME_ZONE_CN, CRAWLER_SEQUENCE, logger
+from src.BusinessCentralLayer.setting import (
+    REDIS_MASTER,
+    REDIS_SECRET_KEY,
+    TIME_ZONE_CN,
+    CRAWLER_SEQUENCE,
+    logger,
+)
 
 REDIS_CLIENT_VERSION = redis.__version__
-IS_REDIS_VERSION_2 = REDIS_CLIENT_VERSION.startswith('2.')
+IS_REDIS_VERSION_2 = REDIS_CLIENT_VERSION.startswith("2.")
 
 
 class RedisClient:
-    def __init__(self, host=REDIS_MASTER['host'], port=REDIS_MASTER['port'], password=REDIS_MASTER['password'],
-                 db=REDIS_MASTER['db'],
-                 **kwargs) -> None:
+    def __init__(
+        self,
+        host=REDIS_MASTER["host"],
+        port=REDIS_MASTER["port"],
+        password=REDIS_MASTER["password"],
+        db=REDIS_MASTER["db"],
+        **kwargs,
+    ) -> None:
         """
         init redis client
         :param host: redis host
@@ -21,8 +32,15 @@ class RedisClient:
         :param password: redis password
         """
 
-        self.db = redis.StrictRedis(host=host, port=port, password=password, decode_responses=True, db=db, **kwargs, )
-        self.subscribe = ''
+        self.db = redis.StrictRedis(
+            host=host,
+            port=port,
+            password=password,
+            decode_responses=True,
+            db=db,
+            **kwargs,
+        )
+        self.subscribe = ""
         self.crawler_seq = CRAWLER_SEQUENCE
 
     def add(self, subscribe_class=None, subscribe=None, end_time: str = None):
@@ -67,11 +85,14 @@ class RedisClient:
                     return self.subscribe
                 # 出现该错误视为redis队列被击穿 无任何可用的链接分发，中断循环
                 except IndexError:
-                    logger.critical("{}.get() IndexError".format(self.__class__.__name__))
+                    logger.critical(
+                        "{}.get() IndexError".format(self.__class__.__name__)
+                    )
                     return False
                 # 关联解除
                 finally:
                     from src.BusinessCentralLayer.middleware.subscribe_io import detach
+
                     detach(self.subscribe, beat_sync=True)
         finally:
             # 关闭连接
@@ -90,11 +111,19 @@ class RedisClient:
         if self.get_len(key_name) != 0:
             for subscribe, end_life in docker.items():
                 if self.is_stale(end_life, cross_threshold):
-                    logger.debug(f'del-({key_name})--{subscribe}')
+                    logger.debug(f"del-({key_name})--{subscribe}")
                     self.db.hdel(key_name, subscribe)
-            logger.success('<{}> UPDATE - {}({})'.format(self.__class__.__name__, key_name, self.get_len(key_name)))
+            logger.success(
+                "<{}> UPDATE - {}({})".format(
+                    self.__class__.__name__, key_name, self.get_len(key_name)
+                )
+            )
         else:
-            logger.warning('<{}> EMPTY - {}({})'.format(self.__class__.__name__, key_name, self.get_len(key_name)))
+            logger.warning(
+                "<{}> EMPTY - {}({})".format(
+                    self.__class__.__name__, key_name, self.get_len(key_name)
+                )
+            )
 
     @staticmethod
     def is_stale(subs_expiration_time: str, beyond: int = None) -> bool:
@@ -112,7 +141,9 @@ class RedisClient:
             subs_end_time = datetime.fromisoformat(subs_expiration_time)
 
             # 上海时区 -> datetime
-            now_time = datetime.fromisoformat(str(datetime.now(TIME_ZONE_CN)).split('.')[0])
+            now_time = datetime.fromisoformat(
+                str(datetime.now(TIME_ZONE_CN)).split(".")[0]
+            )
 
             # 时间比对 并返回是否过期的响应 -> bool
             if beyond and isinstance(beyond, int):
@@ -141,13 +172,13 @@ class RedisClient:
 
     def test(self) -> str:
         if self.db.ping():
-            return '欢迎使用v2ray云彩姬'
+            return "欢迎使用v2ray云彩姬"
 
     def get_driver(self) -> redis.StrictRedis:
         return self.db
 
     def update_api_status(self, api_name, date_format):
-        if api_name not in ['select', 'get', 'search', 'decouple', 'reset']:
+        if api_name not in ["select", "get", "search", "decouple", "reset"]:
             return False
         self.db.rpush(f"v2rayc_apis:{api_name}", date_format)
         self.db.incr(f"v2rayc_apis:{api_name}_num")
@@ -206,21 +237,29 @@ class RedisDataDisasterTolerance(RedisClient):
         super(RedisDataDisasterTolerance, self).__init__()
 
         from src.BusinessCentralLayer.setting import REDIS_SLAVER_DDT
-        if not REDIS_SLAVER_DDT.get('host'):
-            logger.warning('未设置数据容灾服务器，该职能将由Master执行')
+
+        if not REDIS_SLAVER_DDT.get("host"):
+            logger.warning("未设置数据容灾服务器，该职能将由Master执行")
             # 拷贝参数
             redis_virtual = REDIS_MASTER
             # 改动浅拷贝数据库
-            redis_virtual.update({'db': redis_virtual['db'] + 1})
+            redis_virtual.update({"db": redis_virtual["db"] + 1})
             logger.debug("备份重定向 --> {}".format(redis_virtual))
         else:
             redis_virtual = REDIS_SLAVER_DDT
         # 容器初始化
         self.docker = {}
         try:
-            self.acm = RedisClient(host=redis_virtual['host'], port=redis_virtual['port'],
-                                   password=redis_virtual['password'])
-            logger.info("DDT: Master({}) -> Slaver({})".format(REDIS_MASTER['host'], redis_virtual['host']))
+            self.acm = RedisClient(
+                host=redis_virtual["host"],
+                port=redis_virtual["port"],
+                password=redis_virtual["password"],
+            )
+            logger.info(
+                "DDT: Master({}) -> Slaver({})".format(
+                    REDIS_MASTER["host"], redis_virtual["host"]
+                )
+            )
         except redis.exceptions.ConnectionError as e:
             logger.exception(e)
         finally:
@@ -245,6 +284,6 @@ class RedisDataDisasterTolerance(RedisClient):
         try:
             self.acm.get_driver().hset(key_name, mapping=self.docker)
         except redis.exceptions.DataError:
-            logger.warning(f'({class_}):缓存可能被击穿或缓存为空，请系统管理员及时维护链接池！')
+            logger.warning(f"({class_}):缓存可能被击穿或缓存为空，请系统管理员及时维护链接池！")
         except redis.exceptions.ConnectionError:
             logger.error(f"redis-slave {self.redis_virtual} 或宕机")

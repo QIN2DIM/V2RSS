@@ -21,8 +21,8 @@ def preload(get_sample: bool = True):
     :param get_sample:
     :return:
     """
-    with open('staff_arch_general.txt', 'r', encoding='utf8') as f:
-        urls = [i for i in f.read().split('\n') if i]
+    with open("staff_arch_general.txt", "r", encoding="utf8") as f:
+        urls = [i for i in f.read().split("\n") if i]
     if get_sample:
         return random.choice(urls)
     return urls
@@ -46,7 +46,9 @@ def action(register_url: str = None, share_type="v2ray", output_path_csv=None):
     # 报告存储路径
     output_path_csv = get_default_heap() if output_path_csv is None else output_path_csv
     try:
-        machine = ServiceDiscovery(register_url, silence=True, output_path_csv=output_path_csv)
+        machine = ServiceDiscovery(
+            register_url, silence=True, output_path_csv=output_path_csv
+        )
         # 解析运行报告
         runtime_report = machine.get_runtime_report(share_type)
         # 缓存运行报告
@@ -84,6 +86,6 @@ def demo_with_gevent(auto_start=True):
     logger.info(f"<ServiceDiscovery> 任务结束，相关数据已缓存至-->{DEFAULT_HEAP}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     DEFAULT_HEAP = get_default_heap()
     demo_with_gevent()

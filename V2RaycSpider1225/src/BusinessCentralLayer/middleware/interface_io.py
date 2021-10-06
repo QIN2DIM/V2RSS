@@ -1,12 +1,24 @@
-__all__ = ['SystemInterface']
+__all__ = ["SystemInterface"]
 
 import multiprocessing
 import sys
 
 from redis.exceptions import ConnectionError
 
-from src.BusinessCentralLayer.setting import REDIS_SECRET_KEY, CRAWLER_SEQUENCE, SINGLE_TASK_CAP, \
-    API_DEBUG, API_PORT, API_THREADED, ENABLE_DEPLOY, ENABLE_SERVER, OPEN_HOST, logger, LAUNCH_INTERVAL, terminal_echo
+from src.BusinessCentralLayer.setting import (
+    REDIS_SECRET_KEY,
+    CRAWLER_SEQUENCE,
+    SINGLE_TASK_CAP,
+    API_DEBUG,
+    API_PORT,
+    API_THREADED,
+    ENABLE_DEPLOY,
+    ENABLE_SERVER,
+    OPEN_HOST,
+    logger,
+    LAUNCH_INTERVAL,
+    terminal_echo,
+)
 from src.BusinessLogicLayer.cluster import sailor, slavers
 from src.BusinessLogicLayer.deploy import TasksScheduler, CollectorScheduler
 from src.BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
@@ -17,7 +29,10 @@ from .redis_io import RedisClient
 # 越权参数重置
 # ----------------------------------------
 
-ACTIONS_IO = [f'{[j[0] for j in i.get("hyper_params").items() if j[-1]]}{i.get("name")}' for i in slavers.__entropy__]
+ACTIONS_IO = [
+    f'{[j[0] for j in i.get("hyper_params").items() if j[-1]]}{i.get("name")}'
+    for i in slavers.__entropy__
+]
 
 
 # ----------------------------------------
@@ -37,7 +52,9 @@ class _ContainerDegradation:
         for task_name, task_interval in launch_interval.items():
             # 未填写或填写异常数字
             if (not task_interval) or (task_interval <= 1):
-                logger.critical(f"<launch_interval>--{task_name}设置出现致命错误，即将熔断线程。间隔为空或小于1")
+                logger.critical(
+                    f"<launch_interval>--{task_name}设置出现致命错误，即将熔断线程。间隔为空或小于1"
+                )
                 raise Exception
             # 填写浮点数
             if not isinstance(task_interval, int):
@@ -61,9 +78,13 @@ class _ContainerDegradation:
     def startup_ddt_overdue(self, task_name: str = None):
         if task_name is None:
             for new_task in self.deploy_cluster:
-                RedisClient().refresh(key_name=REDIS_SECRET_KEY.format(new_task), cross_threshold=3)
+                RedisClient().refresh(
+                    key_name=REDIS_SECRET_KEY.format(new_task), cross_threshold=3
+                )
         else:
-            RedisClient().refresh(key_name=REDIS_SECRET_KEY.format(task_name), cross_threshold=3)
+            RedisClient().refresh(
+                key_name=REDIS_SECRET_KEY.format(task_name), cross_threshold=3
+            )
 
     def startup_collector(self):
         """
@@ -87,12 +108,14 @@ _cd = _ContainerDegradation()
 
 
 class _SystemEngine:
-
     def __init__(self) -> None:
-        if ENABLE_DEPLOY['global']:
+        if ENABLE_DEPLOY["global"]:
             terminal_echo(f"[SystemEngineIO] CONFIG_ENABLE_DEPLOY:{ENABLE_DEPLOY}", 1)
-            if ENABLE_DEPLOY['tasks']['collector']:
-                terminal_echo(f"[SystemEngineIO] CONFIG_COLLECTOR_PERMISSION:{CRAWLER_SEQUENCE}", 1)
+            if ENABLE_DEPLOY["tasks"]["collector"]:
+                terminal_echo(
+                    f"[SystemEngineIO] CONFIG_COLLECTOR_PERMISSION:{CRAWLER_SEQUENCE}",
+                    1,
+                )
                 for action_image in ACTIONS_IO:
                     terminal_echo(f"[SystemEngineIO] CONFIG_ACTIONS:{action_image}", 1)
 
@@ -111,10 +134,10 @@ class _SystemEngine:
     @logger.catch()
     def run_deploy() -> None:
         # 载入定时任务权限配置
-        tasks = ENABLE_DEPLOY['tasks']
+        tasks = ENABLE_DEPLOY["tasks"]
         task2function = {
-            'ddt_decouple': _cd.startup_ddt_decouple,
-            'ddt_overdue': _cd.startup_ddt_overdue,
+            "ddt_decouple": _cd.startup_ddt_decouple,
+            "ddt_overdue": _cd.startup_ddt_overdue,
         }
         try:
             # 初始化调度器
@@ -124,32 +147,40 @@ class _SystemEngine:
             interval = _cd.sync_launch_interval()
             # 添加任务
             for docker_name, permission in tasks.items():
-                logger.info(f"[Job] {docker_name} -- interval: {interval[docker_name]}s -- run: {permission}")
+                logger.info(
+                    f"[Job] {docker_name} -- interval: {interval[docker_name]}s -- run: {permission}"
+                )
                 # 若开启采集器则使用CollectorScheduler映射任务
                 # 使用久策略将此分流判断注释既可
                 if docker_name == "collector":
-                    docker_of_collector_scheduler.mapping_config({
-                        'interval': interval[docker_name],
-                        'permission': permission,
-                    })
+                    docker_of_collector_scheduler.mapping_config(
+                        {
+                            "interval": interval[docker_name],
+                            "permission": permission,
+                        }
+                    )
                     continue
                 if permission:
-                    docker_of_based_scheduler.add_job({
-                        "name": docker_name,
-                        "api": task2function[docker_name],
-                        'interval': interval[docker_name],
-                        'permission': True
-                    })
+                    docker_of_based_scheduler.add_job(
+                        {
+                            "name": docker_name,
+                            "api": task2function[docker_name],
+                            "interval": interval[docker_name],
+                            "permission": True,
+                        }
+                    )
             # 启动定时任务 要求执行采集任务时必须至少携带另一种其他部署任务
             docker_of_collector_scheduler.deploy_jobs()
             docker_of_based_scheduler.deploy_jobs()
         except ConnectionError:
-            logger.warning("<RedisIO> Network communication failure, please check the network connection.")
+            logger.warning(
+                "<RedisIO> Network communication failure, please check the network connection."
+            )
         except KeyError:
-            logger.critical(f'config中枢层配置被篡改，ENABLE_DEPLOY 配置中无对应键值对{tasks}')
+            logger.critical(f"config中枢层配置被篡改，ENABLE_DEPLOY 配置中无对应键值对{tasks}")
             sys.exit()
         except NameError:
-            logger.critical('eval()或exec()语法异常，检测变量名是否不一致。')
+            logger.critical("eval()或exec()语法异常，检测变量名是否不一致。")
 
     @staticmethod
     def run(beat_sync=True, force_run=None) -> None:
@@ -187,7 +218,10 @@ class _SystemEngine:
 
         # FIXME 节拍同步
         if not beat_sync:
-            from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistributeV0
+            from src.BusinessCentralLayer.middleware.subscribe_io import (
+                FlexibleDistributeV0,
+            )
+
             FlexibleDistributeV0().start()
 
         # 执行一次数据迁移
@@ -195,31 +229,33 @@ class _SystemEngine:
         _cd.startup_ddt_overdue()
 
         # 任务结束
-        logger.success('<Gevent>任务结束')
+        logger.success("<Gevent>任务结束")
 
     @staticmethod
     def startup(**kwargs) -> None:
         process_list = []
         try:
             # 部署定时任务
-            if ENABLE_DEPLOY['global']:
+            if ENABLE_DEPLOY["global"]:
                 process_list.append(
                     multiprocessing.Process(
-                        target=_SystemEngine.run_deploy,
-                        name='deploymentTimingTask'
-                    ))
+                        target=_SystemEngine.run_deploy, name="deploymentTimingTask"
+                    )
+                )
 
             # 部署 flask
             if ENABLE_SERVER:
-                process_list.append(multiprocessing.Process(
-                    target=_SystemEngine.run_server,
-                    name='deploymentFlaskAPI',
-                    kwargs=kwargs
-                ))
+                process_list.append(
+                    multiprocessing.Process(
+                        target=_SystemEngine.run_server,
+                        name="deploymentFlaskAPI",
+                        kwargs=kwargs,
+                    )
+                )
 
             # 执行多进程任务
             for process_ in process_list:
-                logger.success(f'<SystemProcess> Startup -- {process_.name}')
+                logger.success(f"<SystemProcess> Startup -- {process_.name}")
                 process_.start()
 
             # 添加阻塞
@@ -229,11 +265,11 @@ class _SystemEngine:
             pass
         except (KeyboardInterrupt, SystemExit):
             # FIXME 确保进程间不产生通信的情况下终止
-            logger.debug('<SystemProcess> Received keyboard interrupt signal.')
+            logger.debug("<SystemProcess> Received keyboard interrupt signal.")
             for process_ in process_list:
                 process_.terminate()
         finally:
-            logger.success('<SystemProcess> V2rss server exits completely.')
+            logger.success("<SystemProcess> V2rss server exits completely.")
 
 
 # ----------------------------------------
@@ -247,6 +283,7 @@ class SystemInterface:
         @return:
         """
         from src.BusinessViewLayer.panel.panel import PaneInterfaceIO
+
         v2raycs = PaneInterfaceIO()
         v2raycs.home_menu()
 
@@ -255,7 +292,9 @@ class SystemInterface:
         if not task_name:
             _cd.startup_ddt_overdue()
         elif not (isinstance(task_name, str) and task_name in CRAWLER_SEQUENCE):
-            logger.warning("<Interface>传入的参数（task_name）不合法，任务类型必须被指定在CRAWLER_SEQUENCE之中")
+            logger.warning(
+                "<Interface>传入的参数（task_name）不合法，任务类型必须被指定在CRAWLER_SEQUENCE之中"
+            )
         else:
             _cd.startup_ddt_overdue(task_name)
 
@@ -265,10 +304,7 @@ class SystemInterface:
 
     @staticmethod
     def run(
-            deploy_: bool = None,
-            beat_sync: bool = True,
-            force_run: bool = None,
-            **kwargs
+        deploy_: bool = None, beat_sync: bool = True, force_run: bool = None, **kwargs
     ) -> None:
         """
         主程序入口

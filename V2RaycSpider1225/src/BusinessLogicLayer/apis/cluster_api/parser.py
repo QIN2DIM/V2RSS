@@ -22,11 +22,8 @@ def parse_by_login(host, email, password, silence=None):
         url=f"https://{host}/auth/login",
         silence=silence,
         assault=True,
-        anti_slider=False
-    ).parse_by_login(
-        email=email,
-        password=password
-    )
+        anti_slider=False,
+    ).parse_by_login(email=email, password=password)
 
 
 def parse_by_register(host, silence=True, assault=True, anti_slider=True):
@@ -46,5 +43,5 @@ def parse_by_register(host, silence=True, assault=True, anti_slider=True):
         url=f"https://{host}/auth/register",
         silence=silence,
         assault=assault,
-        anti_slider=anti_slider
+        anti_slider=anti_slider,
     ).parse_by_register()

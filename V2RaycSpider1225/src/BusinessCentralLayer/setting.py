@@ -4,29 +4,94 @@ from os.path import join, dirname, exists
 
 from loguru import logger
 
-from src.config import SINGLE_DEPLOYMENT, ENABLE_DEPLOY, ENABLE_KERNEL, ENABLE_SERVER, ENABLE_DEBUG, \
-    ENABLE_REBOUND, SINGLE_TASK_CAP, LAUNCH_INTERVAL, REDIS_MASTER, REDIS_SLAVER_DDT, API_PORT, \
-    API_HOST, API_DEBUG, API_THREADED, OPEN_HOST, GARDENER_HOST, ROUTE_API, SEQ_TEST, CRAWLER_SEQUENCE, SMTP_ACCOUNT, \
-    SERVERCHAN_SCKEY, REDIS_SECRET_KEY, PROJECT_NUM, VERSION, TIME_ZONE_CN, TIME_ZONE_NY, DEFAULT_POWER, Fore, \
-    terminal_echo, PROXY_POOL, ENABLE_PROXY
+from src.config import (
+    SINGLE_DEPLOYMENT,
+    ENABLE_DEPLOY,
+    ENABLE_KERNEL,
+    ENABLE_SERVER,
+    ENABLE_DEBUG,
+    ENABLE_REBOUND,
+    SINGLE_TASK_CAP,
+    LAUNCH_INTERVAL,
+    REDIS_MASTER,
+    REDIS_SLAVER_DDT,
+    API_PORT,
+    API_HOST,
+    API_DEBUG,
+    API_THREADED,
+    OPEN_HOST,
+    GARDENER_HOST,
+    ROUTE_API,
+    SEQ_TEST,
+    CRAWLER_SEQUENCE,
+    SMTP_ACCOUNT,
+    SERVERCHAN_SCKEY,
+    REDIS_SECRET_KEY,
+    PROJECT_NUM,
+    VERSION,
+    TIME_ZONE_CN,
+    TIME_ZONE_NY,
+    DEFAULT_POWER,
+    Fore,
+    terminal_echo,
+    PROXY_POOL,
+    ENABLE_PROXY,
+)
 
 __all__ = [
     # =============================================
     # config safe load from user_yaml
     # =============================================
-    'SINGLE_DEPLOYMENT', 'ENABLE_DEPLOY', 'ENABLE_KERNEL', 'ENABLE_SERVER',
-    'ENABLE_DEBUG', 'ENABLE_REBOUND', 'SINGLE_TASK_CAP', 'LAUNCH_INTERVAL', 'REDIS_MASTER', 'REDIS_SLAVER_DDT',
-    'API_HOST', 'API_DEBUG', 'API_THREADED', 'API_PORT', 'OPEN_HOST', 'GARDENER_HOST',
-    'ROUTE_API', 'SEQ_TEST', 'CRAWLER_SEQUENCE', 'SMTP_ACCOUNT', 'SERVERCHAN_SCKEY', 'REDIS_SECRET_KEY',
-    'PROJECT_NUM', 'VERSION', 'TIME_ZONE_CN', 'TIME_ZONE_NY', 'DEFAULT_POWER', 'Fore', 'terminal_echo', 'PROXY_POOL',
-    'ENABLE_PROXY',
+    "SINGLE_DEPLOYMENT",
+    "ENABLE_DEPLOY",
+    "ENABLE_KERNEL",
+    "ENABLE_SERVER",
+    "ENABLE_DEBUG",
+    "ENABLE_REBOUND",
+    "SINGLE_TASK_CAP",
+    "LAUNCH_INTERVAL",
+    "REDIS_MASTER",
+    "REDIS_SLAVER_DDT",
+    "API_HOST",
+    "API_DEBUG",
+    "API_THREADED",
+    "API_PORT",
+    "OPEN_HOST",
+    "GARDENER_HOST",
+    "ROUTE_API",
+    "SEQ_TEST",
+    "CRAWLER_SEQUENCE",
+    "SMTP_ACCOUNT",
+    "SERVERCHAN_SCKEY",
+    "REDIS_SECRET_KEY",
+    "PROJECT_NUM",
+    "VERSION",
+    "TIME_ZONE_CN",
+    "TIME_ZONE_NY",
+    "DEFAULT_POWER",
+    "Fore",
+    "terminal_echo",
+    "PROXY_POOL",
+    "ENABLE_PROXY",
     # =============================================
     # system setting
     # =============================================
-    'CHROMEDRIVER_PATH', 'SERVER_DIR_PROJECT', 'SERVER_PATH_YAML_CONFIG', 'SERVER_PATH_YAML_CONFIG_SAMPLE',
-    'SERVER_DIR_DATABASE', 'SQLITE3_CONFIG', 'SERVER_DIR_CLIENT_DEPORT', 'SERVER_PATH_DEPOT_VCS',
-    'SERVER_DIR_DATABASE_CACHE', 'SERVER_DIR_CACHE_BGPIC', 'SERVER_PATH_DATABASE_FETCH', 'SERVER_DIR_DATABASE_LOG',
-    'NGINX_SUBSCRIBE', 'SERVER_DIR_SSPANEL_MINING', 'PROTOCOL_FLAG', 'logger'
+    "CHROMEDRIVER_PATH",
+    "SERVER_DIR_PROJECT",
+    "SERVER_PATH_YAML_CONFIG",
+    "SERVER_PATH_YAML_CONFIG_SAMPLE",
+    "SERVER_DIR_DATABASE",
+    "SQLITE3_CONFIG",
+    "SERVER_DIR_CLIENT_DEPORT",
+    "SERVER_PATH_DEPOT_VCS",
+    "SERVER_DIR_DATABASE_CACHE",
+    "SERVER_DIR_CACHE_BGPIC",
+    "SERVER_PATH_DATABASE_FETCH",
+    "SERVER_DIR_DATABASE_LOG",
+    "NGINX_SUBSCRIBE",
+    "SERVER_DIR_SSPANEL_MINING",
+    "PROTOCOL_FLAG",
+    "logger",
 ]
 # ---------------------------------------------------
 # TODO Server doc tree base on linux
@@ -60,10 +125,14 @@ __all__ = [
 # 位于孙级目录下以此类推，一般建议最多到次级。
 # ---------------------------------------------------
 if "win" in sys.platform:
-    CHROMEDRIVER_PATH = dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver.exe"
+    CHROMEDRIVER_PATH = (
+        dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver.exe"
+    )
     SERVER_DIR_PROJECT = dirname(dirname(__file__))
 else:
-    CHROMEDRIVER_PATH = dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver"
+    CHROMEDRIVER_PATH = (
+        dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver"
+    )
     SERVER_DIR_PROJECT = f"/qinse/V2RaycSpider{PROJECT_NUM}"
 # 若不存在CHROMEDRIVER_PATH指定的路径则尝试从环境变量中查找chromedriver文件
 if not exists(CHROMEDRIVER_PATH):
@@ -74,9 +143,9 @@ if not exists(CHROMEDRIVER_PATH):
 # ---------------------------------------------------
 
 # 配置文件，系统读取的是这个文件
-SERVER_PATH_YAML_CONFIG = join(SERVER_DIR_PROJECT, 'config.yaml')
+SERVER_PATH_YAML_CONFIG = join(SERVER_DIR_PROJECT, "config.yaml")
 # 配置文件模板，无用但必须存在
-SERVER_PATH_YAML_CONFIG_SAMPLE = join(SERVER_DIR_PROJECT, 'config-sample.yaml')
+SERVER_PATH_YAML_CONFIG_SAMPLE = join(SERVER_DIR_PROJECT, "config-sample.yaml")
 
 # ---------------------------------------------------
 # TODO 服务器数据库目录
@@ -85,10 +154,22 @@ SERVER_DIR_DATABASE = join(SERVER_DIR_PROJECT, "Database")
 
 # SQLite3 文件数据库配置
 SQLITE3_CONFIG = {
-    'db': join(SERVER_DIR_DATABASE, 'v2raycs.db'),
-    'table': 'v2raycs',
-    'header': ','.join(['domain', 'subs', 'class_', 'end_life', 'res_time', 'passable',
-                        'username', 'password', 'email', 'uuid PRIMARY KEY']),
+    "db": join(SERVER_DIR_DATABASE, "v2raycs.db"),
+    "table": "v2raycs",
+    "header": ",".join(
+        [
+            "domain",
+            "subs",
+            "class_",
+            "end_life",
+            "res_time",
+            "passable",
+            "username",
+            "password",
+            "email",
+            "uuid PRIMARY KEY",
+        ]
+    ),
 }
 
 # 历史客户端仓库。用于存放打包好的panel可执行文件
@@ -101,10 +182,10 @@ SERVER_PATH_DEPOT_VCS = join(SERVER_DIR_CLIENT_DEPORT, "vcs.csv")
 SERVER_DIR_DATABASE_CACHE = join(SERVER_DIR_DATABASE, "temp_cache")
 
 # 滑动验证缓存
-SERVER_DIR_CACHE_BGPIC = join(SERVER_DIR_DATABASE_CACHE, 'bg_cache')
+SERVER_DIR_CACHE_BGPIC = join(SERVER_DIR_DATABASE_CACHE, "bg_cache")
 
 # SSPanelMining组件运行缓存目录
-SERVER_DIR_SSPANEL_MINING = join(SERVER_DIR_DATABASE, 'staff_hosts')
+SERVER_DIR_SSPANEL_MINING = join(SERVER_DIR_DATABASE, "staff_hosts")
 
 # 链接获取历史
 SERVER_PATH_DATABASE_FETCH = join(SERVER_DIR_DATABASE, "CrawlFetchHistory.txt")

@@ -1,5 +1,5 @@
 """v2rss-service 脚手架入口"""
-__all__ = ['Scaffold']
+__all__ = ["Scaffold"]
 
 from gevent import monkey
 
@@ -13,19 +13,37 @@ from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
 from src.BusinessCentralLayer.middleware.subscribe_io import select_subs_to_admin
 from src.BusinessLogicLayer.apis.staff_mining import staff_api
 from src.BusinessLogicLayer.cluster.slavers import __entropy__
-from src.BusinessLogicLayer.plugins.accelerator import booster, SubscribesCleaner, SubscribeParser
+from src.BusinessLogicLayer.plugins.accelerator import (
+    booster,
+    SubscribesCleaner,
+    SubscribeParser,
+)
 
-from src.BusinessCentralLayer.setting import logger, DEFAULT_POWER, CHROMEDRIVER_PATH, \
-    REDIS_MASTER, SERVER_DIR_DATABASE_CACHE, SERVER_DIR_CLIENT_DEPORT, SERVER_PATH_DEPOT_VCS, SERVER_DIR_CACHE_BGPIC, \
-    REDIS_SLAVER_DDT, terminal_echo, SERVER_DIR_DATABASE_LOG, SERVER_DIR_SSPANEL_MINING
+from src.BusinessCentralLayer.setting import (
+    logger,
+    DEFAULT_POWER,
+    CHROMEDRIVER_PATH,
+    REDIS_MASTER,
+    SERVER_DIR_DATABASE_CACHE,
+    SERVER_DIR_CLIENT_DEPORT,
+    SERVER_PATH_DEPOT_VCS,
+    SERVER_DIR_CACHE_BGPIC,
+    REDIS_SLAVER_DDT,
+    terminal_echo,
+    SERVER_DIR_DATABASE_LOG,
+    SERVER_DIR_SSPANEL_MINING,
+)
 
 
 class _ConfigQuarantine:
     """系统环境诊断工具"""
+
     def __init__(self):
         self.root = [
-            SERVER_DIR_CLIENT_DEPORT, SERVER_PATH_DEPOT_VCS,
-            SERVER_DIR_DATABASE_CACHE, SERVER_DIR_CACHE_BGPIC
+            SERVER_DIR_CLIENT_DEPORT,
+            SERVER_PATH_DEPOT_VCS,
+            SERVER_DIR_DATABASE_CACHE,
+            SERVER_DIR_CACHE_BGPIC,
         ]
         self.flag = False
 
@@ -48,8 +66,10 @@ class _ConfigQuarantine:
                     else:
                         if child_ == SERVER_PATH_DEPOT_VCS:
                             try:
-                                with open(child_, 'w', encoding='utf-8', newline='') as fpx:
-                                    csv.writer(fpx).writerow(['version', 'title'])
+                                with open(
+                                    child_, "w", encoding="utf-8", newline=""
+                                ) as fpx:
+                                    csv.writer(fpx).writerow(["version", "title"])
                                 logger.success(f"系统文件链接成功->{child_}")
                             except Exception as ep:
                                 logger.exception(f"Exception{child_}{ep}")
@@ -63,16 +83,18 @@ class _ConfigQuarantine:
         :param call_driver: 针对 ChromeDriver 配置情况的检查
         :return:
         """
-        chromedriver_not_found_error = "<ScaffoldGuider> ForceRun || ChromedriverNotFound ||" \
-                                       "未查找到chromedriver驱动，请根据技术文档正确配置\n" \
-                                       ">>> https://github.com/QIN2DIM/V2RayCloudSpider"
+        chromedriver_not_found_error = (
+            "<ScaffoldGuider> ForceRun || ChromedriverNotFound ||"
+            "未查找到chromedriver驱动，请根据技术文档正确配置\n"
+            ">>> https://github.com/QIN2DIM/V2RayCloudSpider"
+        )
 
         # if not all(SMTP_ACCOUNT.values()):
         #     logger.warning('您未正确配置<通信邮箱>信息(SMTP_ACCOUNT)')
         # if not SERVERCHAN_SCKEY:
         #     logger.warning("您未正确配置<Server酱>的SCKEY")
         if not all([REDIS_SLAVER_DDT.get("host"), REDIS_SLAVER_DDT.get("password")]):
-            logger.warning('您未正确配置<Redis-Slave> 本项目资源拷贝功能无法使用，但不影响系统正常运行。')
+            logger.warning("您未正确配置<Redis-Slave> 本项目资源拷贝功能无法使用，但不影响系统正常运行。")
         if not all([REDIS_MASTER.get("host"), REDIS_MASTER.get("password")]):
             logger.error("您未正确配置<Redis-Master> 此配置为“云彩姬”的核心组件，请配置后重启项目！")
             sys.exit()
@@ -89,7 +111,7 @@ class _ConfigQuarantine:
         """
         try:
             if [cq for cq in reversed(self.root) if not os.path.exists(cq)]:
-                logger.warning('系统文件残缺！')
+                logger.warning("系统文件残缺！")
                 logger.debug("启动<工程重构>模块...")
                 self.set_up_file_tree(self.root)
             self.check_config()
@@ -107,7 +129,9 @@ class Scaffold:
         - 集成了各种后端服务常用的调试指令，并牵引了更加便捷的部署接口。
     """
 
-    def __init__(self, ):
+    def __init__(
+        self,
+    ):
         self.cq = _ConfigQuarantine()
 
     def build(self):
@@ -151,15 +175,15 @@ class Scaffold:
             info = {}
             if not body:
                 return False
-            nodes = body['nodes']
+            nodes = body["nodes"]
 
             # 节点数量 减去无效的注释项
             node_num = nodes.__len__() - 2 if nodes.__len__() - 2 >= 0 else 0
             info.update({"available nodes": node_num})
 
             # 缓存数据
-            cache_path = os.path.join(SERVER_DIR_DATABASE_CACHE, 'sub2node.txt')
-            with open(cache_path, 'w', encoding="utf8") as f:
+            cache_path = os.path.join(SERVER_DIR_DATABASE_CACHE, "sub2node.txt")
+            with open(cache_path, "w", encoding="utf8") as f:
                 for node in nodes:
                     f.write(f"{node}\n")
 
@@ -168,7 +192,7 @@ class Scaffold:
                 terminal_echo(node, 1)
             terminal_echo("Detail:{}".format(info), 1)
         else:
-            node = body['msg']
+            node = body["msg"]
             terminal_echo(node, 1)
 
     @staticmethod
@@ -180,8 +204,13 @@ class Scaffold:
 
         :return:
         """
-        tracer = [f"{tag[0]}\n采集类型：{info_[0]}\n存活数量：{tag[-1]}" for info_ in
-                  select_subs_to_admin(select_netloc=None, _debug=False)['info'].items() for tag in info_[-1].items()]
+        tracer = [
+            f"{tag[0]}\n采集类型：{info_[0]}\n存活数量：{tag[-1]}"
+            for info_ in select_subs_to_admin(select_netloc=None, _debug=False)[
+                "info"
+            ].items()
+            for tag in info_[-1].items()
+        ]
         for i, tag in enumerate(tracer):
             print(f">>> [{i + 1}/{tracer.__len__()}]{tag}")
 
@@ -206,7 +235,7 @@ class Scaffold:
             use_checker=True,
             use_generator=False,
         )
-        staff_api.refresh_cache(mode='de-dup')
+        staff_api.refresh_cache(mode="de-dup")
         print(f"\n\nSTAFF INFO\n{'_' * 32}")
         for element in staff_info.items():
             for i, tag in enumerate(element[-1]):
@@ -226,7 +255,9 @@ class Scaffold:
             print(f">>> [{i + 1}/{__entropy__.__len__()}]{host_['name']}")
             print(f"注册链接: {host_['register_url']}")
             print(f"存活周期: {host_['life_cycle']}天")
-            print(f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n")
+            print(
+                f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n"
+            )
 
     @staticmethod
     def ping():
@@ -238,6 +269,7 @@ class Scaffold:
         :return:
         """
         from src.BusinessCentralLayer.middleware.redis_io import RedisClient
+
         logger.info(f"<ScaffoldGuider> Ping || {RedisClient().test()}")
 
     @staticmethod
@@ -295,20 +327,22 @@ class Scaffold:
         """
         _permission = {
             "logs": input(terminal_echo("是否清除所有运行日志[y]?", 2)),
-            "cache": input(terminal_echo("是否清除所有运行缓存[y]?", 2))
+            "cache": input(terminal_echo("是否清除所有运行缓存[y]?", 2)),
         }
 
         # 清除日志 ~/database/logs
-        if os.path.exists(SERVER_DIR_DATABASE_LOG) and _permission['logs'].startswith("y"):
+        if os.path.exists(SERVER_DIR_DATABASE_LOG) and _permission["logs"].startswith(
+            "y"
+        ):
             history_logs = os.listdir(SERVER_DIR_DATABASE_LOG)
             for _log_file in history_logs:
-                if len(_log_file.split('.')) > 2:
+                if len(_log_file.split(".")) > 2:
                     _log_path = os.path.join(SERVER_DIR_DATABASE_LOG, _log_file)
                     os.remove(_log_path)
                     terminal_echo(f"清除运行日志-->{_log_path}", 3)
 
         # 清除运行缓存 ~/database/
-        if _permission['cache'].startswith("y"):
+        if _permission["cache"].startswith("y"):
             cache_blocks = {
                 # ~/database/temp_cache/
                 SERVER_DIR_DATABASE_CACHE,
@@ -374,6 +408,7 @@ class Scaffold:
         :return:
         """
         from src.BusinessViewLayer.panel.panel import startup_from_platform
+
         startup_from_platform()
 
     @staticmethod
@@ -390,6 +425,7 @@ class Scaffold:
         :return:
         """
         from src.BusinessLogicLayer.apis import scaffold_api
+
         logger.info("<ScaffoldGuider> ash | Clash订阅堆一键生成脚本")
 
         # --------------------------------------------------
