@@ -137,12 +137,15 @@ class SubscribeParser:
             return {'subs': subscribe, "nodes": nodes}
 
         # 捕获异常输入 剔除恶意链接或脏数据
+        # f'{subscribe} -- 传入的subs格式有误或不是订阅链接
         except requests.exceptions.MissingSchema:
-            print(f'{subscribe} -- 传入的subs格式有误或不是订阅链接')
+            pass
         # 链接清洗任务不能使用代理IP操作
         except requests.exceptions.ProxyError:
             raise SystemExit
-        # 并发数过大 远程主机关闭通信窗口 或是 IP被封禁，可能原因是 GeoIp 过滤屏蔽国内访问
+        # 1.远程主机关闭通信窗口，可能原因是 并发数过大；
+        # 2.IP被封禁，可能原因是 目标站点拒绝国内IP访问；
+        # 3.IP被拦截，可能原因是 目标站点拒绝代理访问；
         except requests.exceptions.ConnectionError:
             raise TypeError
         # 未知风险

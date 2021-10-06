@@ -382,9 +382,9 @@ __entropy__ = [
     # [启动] 需要滑动验证
     # ---------------------
 
-    ActionKakCloud,  # v2ray 1day5G
+    ActionKakCloud,  # v2ray 1day3G
 
-    ActionJs8cCloud,  # v2ray 1day 10G
+    # ActionJs8cCloud,  # v2ray 1day 10G
 
     # ---------------------
     # [停用] 公益节点
