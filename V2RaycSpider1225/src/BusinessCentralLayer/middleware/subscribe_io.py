@@ -1,10 +1,10 @@
 __all__ = [
-    'FlexibleDistributeV0',
-    'FlexibleDistributeV2',
-    'pop_subs_to_admin',
-    'detach',
-    'set_task2url_cache',
-    'select_subs_to_admin',
+    "FlexibleDistributeV0",
+    "FlexibleDistributeV2",
+    "pop_subs_to_admin",
+    "detach",
+    "set_task2url_cache",
+    "select_subs_to_admin",
 ]
 
 import threading
@@ -15,9 +15,14 @@ from uuid import uuid4
 
 from faker import Faker
 
-from src.BusinessCentralLayer.setting import logger, REDIS_SECRET_KEY, CRAWLER_SEQUENCE, NGINX_SUBSCRIBE, \
-    SQLITE3_CONFIG, TIME_ZONE_CN
-from .flow_io import FlowTransferStation
+from src.BusinessCentralLayer.setting import (
+    logger,
+    REDIS_SECRET_KEY,
+    CRAWLER_SEQUENCE,
+    NGINX_SUBSCRIBE,
+    SQLITE3_CONFIG,
+    TIME_ZONE_CN,
+)
 from .redis_io import RedisClient
 from ..middleware import work_io
 
@@ -25,7 +30,9 @@ from ..middleware import work_io
 class FlexibleDistributeV0:
     """数据交换 弹性分发"""
 
-    def __init__(self, docker: list = None, access_mapping: dict = None, beat_sync=False):
+    def __init__(
+        self, docker: list = None, access_mapping: dict = None, beat_sync=False
+    ):
         """
 
         @param docker:['domain', 'subs', 'class_', 'end_life', 'res_time', 'passable',
@@ -38,29 +45,23 @@ class FlexibleDistributeV0:
         try:
             if all(docker) and isinstance(docker, list):
                 self.work_q.zeus.put_nowait(
-                    dict(zip(SQLITE3_CONFIG['header'].split(','), docker + [str(uuid4()), ])))
+                    dict(
+                        zip(
+                            SQLITE3_CONFIG["header"].split(","),
+                            docker
+                            + [
+                                str(uuid4()),
+                            ],
+                        )
+                    )
+                )
             if beat_sync:
                 self.beat_sync = beat_sync
                 self.start()
         except TypeError:
             pass
 
-    @staticmethod
-    @logger.catch()
-    def to_sqlite3(docker: dict):
-        """
-
-        @param docker: {uuid1:{key1:value1, key2:value2, ...}, uuid2:{key1:value1, key2:value2, ...}, ...} len >= 1
-        @return:
-        """
-        try:
-            if docker.keys().__len__() >= 1:
-                docker = [tuple(data.values()) for data in docker.values()]
-                # logger.success(f'>> STORING -> Sqlite3')
-        finally:
-            FlowTransferStation(docker=docker).add()
-
-    def to_redis(self, ):
+    def to_redis(self):
         r = RedisClient().get_driver()
 
         # docker[0] 订阅类型  docker[-1] 订阅链接
@@ -83,7 +84,7 @@ class FlexibleDistributeV0:
         @return:
         """
 
-        with open(NGINX_SUBSCRIBE.format(class_), 'w', encoding='utf-8') as f:
+        with open(NGINX_SUBSCRIBE.format(class_), "w", encoding="utf-8") as f:
             f.write(subscribe)
 
     def start(self):
@@ -94,10 +95,12 @@ class FlexibleDistributeV0:
             item = self.work_q.zeus.get_nowait()
 
             # 临时拷贝
-            docker.update({item['uuid PRIMARY KEY']: item})
+            docker.update({item["uuid PRIMARY KEY"]: item})
 
             # 将数据压入redis缓存
-            self.work_q.cache_redis_queue[f"{item['class_']}"].update({item['subs']: item['end_life']})
+            self.work_q.cache_redis_queue[f"{item['class_']}"].update(
+                {item["subs"]: item["end_life"]}
+            )
 
         # 将数据推送至redis
         self.to_redis()
@@ -130,10 +133,10 @@ class FlexibleDistributeV2:
         rdb.set_alias(alias=alias, netloc=netloc)
 
     def to_nginx(self):
-        pass
+        raise NotImplementedError()
 
     def to_sqlite3(self):
-        pass
+        raise NotImplementedError()
 
 
 def set_task2url_cache(task_name, register_url, subs):
@@ -145,10 +148,11 @@ def set_task2url_cache(task_name, register_url, subs):
     @return:
     """
     from src.BusinessCentralLayer.middleware.work_io import Middleware
+
     docker = {
         urlparse(register_url).netloc: {
             "name": task_name,
-            "type": urlparse(subs).netloc
+            "type": urlparse(subs).netloc,
         }
     }
     Middleware.theseus.update(docker)
@@ -176,10 +180,14 @@ def detach(subscribe: str, beat_sync=False):
                 # 若节拍同步，立即移除订阅
                 if beat_sync:
                     r.hdel(REDIS_SECRET_KEY.format(task), sub[0])
-                    logger.debug(f'>> Detach -> {sub[0]}')
+                    logger.debug(f">> Detach -> {sub[0]}")
                 # 否则将订阅过期时间标记为过期，该链接将随下一波任一节点的ddt任务被删除
                 else:
-                    r.hset(REDIS_SECRET_KEY.format(task), sub[0], str(Faker().past_datetime()))
+                    r.hset(
+                        REDIS_SECRET_KEY.format(task),
+                        sub[0],
+                        str(Faker().past_datetime()),
+                    )
                 break
 
 
@@ -194,14 +202,16 @@ def pop_subs_to_admin(class_: str):
 
     try:
         # 获取该类型订阅剩余链接
-        remain_subs: list = RedisClient().sync_remain_subs(REDIS_SECRET_KEY.format(class_))
+        remain_subs: list = RedisClient().sync_remain_subs(
+            REDIS_SECRET_KEY.format(class_)
+        )
         while True:
             # 若无可用链接则返回错误信息
             if remain_subs.__len__() == 0:
-                logger.error(f'<SuperAdmin> --  无可用<{class_}>订阅')
-                return {'msg': 'failed', 'info': f"无可用<{class_}>订阅"}
+                logger.error(f"<SuperAdmin> --  无可用<{class_}>订阅")
+                return {"msg": "failed", "info": f"无可用<{class_}>订阅"}
             # 从池中获取(最新加入的)订阅s-e
-            subs, end_life = remain_subs.pop()
+            subs, _ = remain_subs.pop()
 
             # 将s-e加入缓冲队列，该队列将被ddt的refresh工作流同过期链接一同删除
             # 使用缓冲队列的方案保证节拍同步，防止过热操作/失误操作贯穿Redis
@@ -216,17 +226,21 @@ def pop_subs_to_admin(class_: str):
             #     continue
 
             # 使用节拍同步线程锁发起连接池回滚指令,仅生成/同步一枚原子任务
-            threading.Thread(target=manage_task, kwargs={"class_": class_, "only_sync": True}).start()
-            logger.success('管理员模式--链接分发成功')
+            threading.Thread(
+                target=manage_task, kwargs={"class_": class_, "only_sync": True}
+            ).start()
+            logger.success("管理员模式--链接分发成功")
 
             # 立即执行链接解耦，将同一账号的所有订阅移除
             # beat_sync =True立即刷新，False延迟刷新（节拍同步）
-            threading.Thread(target=detach, kwargs={"subscribe": subs, 'beat_sync': True}).start()
+            threading.Thread(
+                target=detach, kwargs={"subscribe": subs, "beat_sync": True}
+            ).start()
 
-            return {'msg': 'success', 'subscribe': subs, 'subsType': class_}
+            return {"msg": "success", "subscribe": subs, "subsType": class_}
     except Exception as e:
         logger.exception(e)
-        return {'msg': 'failed', 'info': str(e)}
+        return {"msg": "failed", "info": str(e)}
 
 
 def select_subs_to_admin(select_netloc: str = None, _debug=False) -> dict:
@@ -240,38 +254,62 @@ def select_subs_to_admin(select_netloc: str = None, _debug=False) -> dict:
     # 清洗数据
     for filed in CRAWLER_SEQUENCE:
         # 提取池内对应类型的所有订阅链接
-        filed_subs: list = RedisClient().sync_remain_subs(REDIS_SECRET_KEY.format(filed))
+        filed_subs: list = RedisClient().sync_remain_subs(
+            REDIS_SECRET_KEY.format(filed)
+        )
         # 更新汇总队列
         remain_subs += filed_subs
         # 提取subs netloc映射区间
         urls = [urlparse(i[0]).netloc for i in filed_subs]
         # 更新映射表
         mapping_subs_status.update({filed: dict(Counter(urls))})
-        mapping_subs_type.update(zip([i[0] for i in filed_subs], [filed, ] * len(filed_subs)))
+        mapping_subs_type.update(
+            zip(
+                [i[0] for i in filed_subs],
+                [
+                    filed,
+                ]
+                * len(filed_subs),
+            )
+        )
     # 初始化状态下，返回订阅池状态
     if not select_netloc:
-        rc.update_api_status(api_name="search", date_format=str(datetime.now(TIME_ZONE_CN)))
-        return {'msg': 'success', 'info': mapping_subs_status}
+        rc.update_api_status(
+            api_name="search", date_format=str(datetime.now(TIME_ZONE_CN))
+        )
+        return {"msg": "success", "info": mapping_subs_status}
     for tag in remain_subs:
         # 提取信息键
         subscribe, end_life = tag[0], tag[-1]
         # 存在对应netloc的链接并可存活至少beyond小时
-        if select_netloc in urlparse(subscribe).netloc and not RedisClient().is_stale(end_life, beyond=6):
+        if select_netloc in urlparse(subscribe).netloc and not RedisClient().is_stale(
+            end_life, beyond=6
+        ):
             logger.debug("<SubscribeIO> -- GET SUBSCRIPTION")
-            rc.update_api_status(api_name="get", date_format=str(datetime.now(TIME_ZONE_CN)))
+            rc.update_api_status(
+                api_name="get", date_format=str(datetime.now(TIME_ZONE_CN))
+            )
             try:
                 return {
-                    'msg': "success",
-                    'debug': _debug,
-                    'info': {
+                    "msg": "success",
+                    "debug": _debug,
+                    "info": {
                         "subscribe": subscribe,
                         "endLife": end_life,
-                        'subsType': mapping_subs_type[subscribe],
-                        "netloc": select_netloc
-                    }
+                        "subsType": mapping_subs_type[subscribe],
+                        "netloc": select_netloc,
+                    },
                 }
             finally:
                 if not _debug:
-                    threading.Thread(target=detach, kwargs={"subscribe": subscribe, 'beat_sync': True}).start()
+                    threading.Thread(
+                        target=detach,
+                        kwargs={"subscribe": subscribe, "beat_sync": True},
+                    ).start()
             # 无库存或误码
-    return {'msg': "failed", "netloc": select_netloc, "info": "指令错误或不存在该类型订阅", "status": mapping_subs_status}
+    return {
+        "msg": "failed",
+        "netloc": select_netloc,
+        "info": "指令错误或不存在该类型订阅",
+        "status": mapping_subs_status,
+    }

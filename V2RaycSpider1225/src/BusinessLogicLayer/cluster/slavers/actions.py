@@ -4,12 +4,12 @@
 #   - 2021-06-16 [停用]无免费节点
 # =============================================
 ActionOhrCloud = {
-    'name': "ActionOhrCloud",
-    'register_url': "https://www.ssr99.xyz/auth/register",
-    'life_cycle': 2,
-    'anti_slider': False,
-    'hyper_params': {'ssr': True, "v2ray": True},
-    'email': '@qq.com'
+    "name": "ActionOhrCloud",
+    "register_url": "https://www.ssr99.xyz/auth/register",
+    "life_cycle": 2,
+    "anti_slider": False,
+    "hyper_params": {"ssr": True, "v2ray": True},
+    "email": "@qq.com",
 }
 # =============================================
 # ActionKakCloud
@@ -18,12 +18,12 @@ ActionOhrCloud = {
 #   -
 # =============================================
 ActionKakCloud = {
-    'name': "ActionKakCloud",
-    'register_url': "https://www.kaikaiyun.icu/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': False, "v2ray": True, 'proxy': True},
-    'email': '@gmail.com'
+    "name": "ActionKakCloud",
+    "register_url": "https://www.kaikaiyun.icu/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True, "proxy": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionJfCloud
@@ -31,12 +31,12 @@ ActionKakCloud = {
 #   -2021-06-16 [停用]剩余流量不达标
 # =============================================
 ActionJfCloud = {
-    'name': "ActionJfCloud",
-    'register_url': "https://www.jafiyun.cc/auth/register",
-    'life_cycle': 1,
-    'anti_slider': False,
-    'hyper_params': {'ssr': False, "v2ray": True},
-    'email': '@gmail.com'
+    "name": "ActionJfCloud",
+    "register_url": "https://www.jafiyun.cc/auth/register",
+    "life_cycle": 1,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionN95Cloud
@@ -44,12 +44,12 @@ ActionJfCloud = {
 #   - 2021-06-16 [剔除]域名过期
 # =============================================
 ActionN95Cloud = {
-    'name': "ActionN95Cloud",
-    'register_url': "https://n95cloud.vip/auth/register",
-    'life_cycle': 1,
-    'anti_slider': False,
-    'hyper_params': {'ssr': True, "v2ray": True},
-    'email': '@gmail.com'
+    "name": "ActionN95Cloud",
+    "register_url": "https://n95cloud.vip/auth/register",
+    "life_cycle": 1,
+    "anti_slider": False,
+    "hyper_params": {"ssr": True, "v2ray": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionTheSSR
@@ -57,12 +57,12 @@ ActionN95Cloud = {
 #   - 2021-06-16 [剔除]跑路
 # =============================================
 ActionTheSSR = {
-    'name': "ActionTheSSR",
-    'register_url': "https://ssrthe.shop/auth/register",
-    'life_cycle': 1,
-    'anti_slider': False,
-    'hyper_params': {'ssr': True, "v2ray": True},
-    'email': '@qq.com'
+    "name": "ActionTheSSR",
+    "register_url": "https://ssrthe.shop/auth/register",
+    "life_cycle": 1,
+    "anti_slider": False,
+    "hyper_params": {"ssr": True, "v2ray": True},
+    "email": "@qq.com",
 }
 # =============================================
 # ActionUfoCloud
@@ -70,12 +70,12 @@ ActionTheSSR = {
 #   - 2021-06-16 [剔除]跑路
 # =============================================
 ActionUfoCloud = {
-    'name': "ActionUfoCloud",
-    'register_url': "https://ufocloud.xyz/auth/register",
-    'life_cycle': 1,
-    'anti_slider': False,
-    'hyper_params': {'ssr': False, "v2ray": True},
-    'email': '@qq.com'
+    "name": "ActionUfoCloud",
+    "register_url": "https://ufocloud.xyz/auth/register",
+    "life_cycle": 1,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@qq.com",
 }
 # =============================================
 # ActionWgCloud
@@ -83,12 +83,12 @@ ActionUfoCloud = {
 #   -2021-06-16 [剔除]拒绝注册
 # =============================================
 ActionWgCloud = {
-    'name': "ActionWgCloud",
-    'register_url': "https://www.wiougong.space/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": True},
-    'email': '@gmail.com'
+    "name": "ActionWgCloud",
+    "register_url": "https://www.wiougong.space/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": True, "v2ray": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionZuiSuCloud
@@ -96,12 +96,12 @@ ActionWgCloud = {
 #   - 2021-06-16 [剔除]站点瘫痪ERROR523
 # =============================================
 ActionZuiSuCloud = {
-    'name': "ActionZuiSuCloud",
-    'register_url': "https://zuisucloud.cloud/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": True},
-    'email': '@gmail.com'
+    "name": "ActionZuiSuCloud",
+    "register_url": "https://zuisucloud.cloud/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": True, "v2ray": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionJdSuCloud
@@ -109,12 +109,12 @@ ActionZuiSuCloud = {
 #   -2021-06-16 [停用]无免费节点
 # =============================================
 ActionJdSuCloud = {
-    'name': "ActionJdSuCloud",
-    'register_url': "https://jdycloud.xyz/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": False, 'usr_email': True},
-    'email': '@gmail.com'
+    "name": "ActionJdSuCloud",
+    "register_url": "https://jdycloud.xyz/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": True, "v2ray": False, "usr_email": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionHuoJianCloud
@@ -123,12 +123,12 @@ ActionJdSuCloud = {
 #   - 2021-06-16 [停用]特殊时期，暂时停止开放免费节点
 # =============================================
 ActionHuoJianCloud = {
-    'name': "ActionHuoJianCloud",
-    'register_url': "https://www.666hjy.com/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": False},
-    'email': '@qq.com'
+    "name": "ActionHuoJianCloud",
+    "register_url": "https://www.666hjy.com/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": True, "v2ray": False},
+    "email": "@qq.com",
 }
 # =============================================
 # ActionUUCloud
@@ -136,12 +136,12 @@ ActionHuoJianCloud = {
 #   -2021-06-16 [剔除] 拒绝注册
 # =============================================
 ActionUUCloud = {
-    'name': "ActionUUCloud",
-    'register_url': "https://www.uuyun.club/auth/register",
-    'life_cycle': 1,
-    'anti_slider': False,
-    'hyper_params': {'ssr': False, "v2ray": True},
-    'email': '@gmail.com'
+    "name": "ActionUUCloud",
+    "register_url": "https://www.uuyun.club/auth/register",
+    "life_cycle": 1,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionSuFeiCloud
@@ -149,12 +149,12 @@ ActionUUCloud = {
 #   -2020-06-16 可用流量1024MB不满足标准
 # =============================================
 ActionSuFeiCloud = {
-    'name': "ActionSuFeiCloud",
-    'register_url': "https://www.dagewokuaitule.icu/auth/register",
-    'life_cycle': 2,
-    'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": True},
-    'email': '@gmail.com'
+    "name": "ActionSuFeiCloud",
+    "register_url": "https://www.dagewokuaitule.icu/auth/register",
+    "life_cycle": 2,
+    "anti_slider": True,
+    "hyper_params": {"ssr": True, "v2ray": True},
+    "email": "@gmail.com",
 }
 
 # =============================================
@@ -163,12 +163,12 @@ ActionSuFeiCloud = {
 #   - 2021-06-16 [停用]无免费节点
 # =============================================
 ActionMiTaoCloud = {
-    'name': "ActionMiTaoCloud",
-    'register_url': "https://mitaocloud.net/auth/register",
-    'life_cycle': 1,
-    'anti_slider': False,
-    'hyper_params': {'ssr': False, "v2ray": True},
-    'email': '@gmail.com'
+    "name": "ActionMiTaoCloud",
+    "register_url": "https://mitaocloud.net/auth/register",
+    "life_cycle": 1,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionReCloud
@@ -177,12 +177,12 @@ ActionMiTaoCloud = {
 #   -
 # =============================================
 ActionReCloud = {
-    'name': "ActionReCloud",
-    'register_url': "https://www.rerere.xyz/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': False, "v2ray": True},
-    'email': '@gmail.com'
+    "name": "ActionReCloud",
+    "register_url": "https://www.rerere.xyz/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionMxCloud
@@ -190,12 +190,12 @@ ActionReCloud = {
 #   -2020-06-16 可用流量不达标
 # =============================================
 ActionMxCloud = {
-    'name': "ActionMxCloud",
-    'register_url': "https://www.mxyssr.com/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': False, "v2ray": True},
-    'email': '@gmail.com'
+    "name": "ActionMxCloud",
+    "register_url": "https://www.mxyssr.com/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionGsouCloud
@@ -203,12 +203,12 @@ ActionMxCloud = {
 #   - 2021-06-16 [停用]新增九宫格人机验证
 # =============================================
 ActionGsouCloud = {
-    'name': "ActionGsouCloud",
-    'register_url': "https://gsou.cloud/auth/register",
-    'life_cycle': 3,
-    'anti_slider': False,
-    'hyper_params': {'ssr': True, 'v2ray': False},
-    'email': "@gmail.com"
+    "name": "ActionGsouCloud",
+    "register_url": "https://gsou.cloud/auth/register",
+    "life_cycle": 3,
+    "anti_slider": False,
+    "hyper_params": {"ssr": True, "v2ray": False},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionDuosCloud
@@ -218,12 +218,12 @@ ActionGsouCloud = {
 #   -2021.08.04 [启用]
 # =============================================
 ActionDuosCloud = {
-    'name': "ActionDuosCloud",
-    'register_url': "https://www.jiuyecaody.xyz/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': False, 'v2ray': True},
-    'email': "@gmail.com"
+    "name": "ActionDuosCloud",
+    "register_url": "https://www.jiuyecaody.xyz/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionThunderCloud
@@ -231,12 +231,12 @@ ActionDuosCloud = {
 #   -2021-06-16 [剔除]框架更换
 # =============================================
 ActionThunderCloud = {
-    'name': "ActionThunderCloud",
-    'register_url': "https://sdyun.cc/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': True, 'v2ray': False},
-    'email': "@gmail.com"
+    "name": "ActionThunderCloud",
+    "register_url": "https://sdyun.cc/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": True, "v2ray": False},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionBitEbCloud
@@ -246,12 +246,12 @@ ActionThunderCloud = {
 #   -2021-07-08 [剔除]框架更换且不提供免费节点
 # =============================================
 ActionBitEbCloud = {
-    'name': "ActionBitEbCloud",
-    'register_url': "https://biteb.me/auth/register",
-    'life_cycle': 3,
-    'anti_slider': False,
-    'hyper_params': {'ssr': False, 'v2ray': True},
-    'email': "@gmail.com"
+    "name": "ActionBitEbCloud",
+    "register_url": "https://biteb.me/auth/register",
+    "life_cycle": 3,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
 }
 
 # =============================================
@@ -264,21 +264,21 @@ ActionBitEbCloud = {
 #   - 2021.07.14 [观察] 拒绝注册
 # =============================================
 ActionJssForSSRCloud = {
-    'name': "ActionJssForSSRCloud",
-    'register_url': "https://www.jssr.cc/auth/register",
-    'life_cycle': 2,
-    'anti_slider': True,
-    'hyper_params': {'ssr': True, 'v2ray': False},
-    'email': "@gmail.com"
+    "name": "ActionJssForSSRCloud",
+    "register_url": "https://www.jssr.cc/auth/register",
+    "life_cycle": 2,
+    "anti_slider": True,
+    "hyper_params": {"ssr": True, "v2ray": False},
+    "email": "@gmail.com",
 }
 
 ActionJssForV2rayCloud = {
-    'name': "ActionJssForV2rayCloud",
-    'register_url': "https://www.jssr.cc/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': False, 'v2ray': True},
-    'email': "@gmail.com"
+    "name": "ActionJssForV2rayCloud",
+    "register_url": "https://www.jssr.cc/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
 }
 
 # =============================================
@@ -287,12 +287,12 @@ ActionJssForV2rayCloud = {
 #   -2021-06-16 [剔除] 邮箱验证
 # =============================================
 Action7ccCloud = {
-    'name': "Action7ccCloud",
-    'register_url': "https://7cc.buzz/auth/register",
-    'life_cycle': 5,
-    'anti_slider': False,
-    'hyper_params': {'ssr': False, 'v2ray': True},
-    'email': "@qq.com"
+    "name": "Action7ccCloud",
+    "register_url": "https://7cc.buzz/auth/register",
+    "life_cycle": 5,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@qq.com",
 }
 # =============================================
 # ActionPPCloud
@@ -300,20 +300,20 @@ Action7ccCloud = {
 #   -2021-07-18 [Create] 更新实例
 # =============================================
 ActionPPForV2rayCloud = {
-    'name': "ActionPPForV2rayCloud",
-    'register_url': "https://www.ppyun.fun/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': False, 'v2ray': True},
-    'email': "@gmail.com"
+    "name": "ActionPPForV2rayCloud",
+    "register_url": "https://www.ppyun.fun/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
 }
 ActionPPForSSRCloud = {
-    'name': "ActionPPForSSRCloud",
-    'register_url': "https://www.ppyun.fun/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': True, 'v2ray': False},
-    'email': "@gmail.com"
+    "name": "ActionPPForSSRCloud",
+    "register_url": "https://www.ppyun.fun/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": True, "v2ray": False},
+    "email": "@gmail.com",
 }
 # =============================================
 # ActionAaxCloud
@@ -321,13 +321,13 @@ ActionPPForSSRCloud = {
 #   -2021-07-18 [Create] 更新实例
 # =============================================
 ActionAaxCloud = {
-    'name': "ActionAaxCloud",
-    'register_url': "https://aaxc.club/auth/register",
-    'life_cycle': 1,
-    'anti_slider': False,
-    'hyper_params': {'ssr': False, 'v2ray': True},
-    'email': "@gmail.com",
-    'feature': 'prism',
+    "name": "ActionAaxCloud",
+    "register_url": "https://aaxc.club/auth/register",
+    "life_cycle": 1,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
+    "feature": "prism",
 }
 # =============================================
 # ActionJs8cCloud
@@ -335,12 +335,12 @@ ActionAaxCloud = {
 #   -2021-09-24 [Create] 更新实例
 # =============================================
 ActionJs8cCloud = {
-    'name': "ActionJs8cCloud",
-    'register_url': "https://js8c.xyz/auth/register",
-    'life_cycle': 1,
-    'anti_slider': True,
-    'hyper_params': {'ssr': False, 'v2ray': True, 'usr_email': True},
-    'email': "@gmail.com",
+    "name": "ActionJs8cCloud",
+    "register_url": "https://js8c.xyz/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True},
+    "email": "@gmail.com",
 }
 
 # =============================================
@@ -349,12 +349,12 @@ ActionJs8cCloud = {
 #   -2021-09-24 [Create] 更新实例
 # =============================================
 ActionZZCloud = {
-    'name': "ActionZZCloud",
-    'register_url': "https://zz12.xyz/auth/register",
-    'life_cycle': 6,
-    'anti_slider': False,
-    'hyper_params': {'ssr': False, 'v2ray': True},
-    'email': "@gmail.com",
+    "name": "ActionZZCloud",
+    "register_url": "https://zz12.xyz/auth/register",
+    "life_cycle": 6,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
 }
 
 # =============================================
@@ -363,12 +363,12 @@ ActionZZCloud = {
 #   -2021-09-24 [Create] 更新实例
 # =============================================
 ActionMaoQCloud = {
-    'name': "ActionMaoQCloud",
-    'register_url': "https://maoqiang.xyz/auth/register",
-    'life_cycle': 2,
-    'anti_slider': False,
-    'hyper_params': {'ssr': True, 'v2ray': False, 'usr_email': True},
-    'email': "@gmail.com",
+    "name": "ActionMaoQCloud",
+    "register_url": "https://maoqiang.xyz/auth/register",
+    "life_cycle": 2,
+    "anti_slider": False,
+    "hyper_params": {"ssr": True, "v2ray": False, "usr_email": True},
+    "email": "@gmail.com",
 }
 
 __entropy__ = [
@@ -381,22 +381,17 @@ __entropy__ = [
     # ---------------------
     # [启动] 需要滑动验证
     # ---------------------
-
-    ActionKakCloud,  # v2ray 1day5G
-
-    ActionJs8cCloud,  # v2ray 1day 10G
-
+    ActionKakCloud,  # v2ray 1day3G
+    # ActionJs8cCloud,  # v2ray 1day 10G
     # ---------------------
     # [停用] 公益节点
     # ---------------------
-
     # ---------------------
     # [停用] 需要其他类型验证
     # ---------------------
     # ActionGsouCloud,
     # Action7ccCloud,
     # ActionHuoJianCloud,
-
     # ---------------------
     # [停用] 未达标
     # ---------------------
@@ -404,11 +399,9 @@ __entropy__ = [
     # ActionDuosCloud,  # v2ray 1day2G
     # ActionJssForV2rayCloud,  # v2ray 1day 2G
     # ActionMxCloud,  # v2ray 1day 2G
-
     # 无免费节点
     # ActionOhrCloud,
     # ActionMiTaoCloud,
-
     # ---------------------
     # [剔除] 框架更换
     # ---------------------
@@ -420,20 +413,16 @@ __entropy__ = [
     # ActionTheSSR,
     # ActionUfoCloud,
     # ActionPPForV2rayCloud,  # v2ray 1day2G
-
     # 域名过期
     # ActionN95Cloud,
     # ActionSuFeiCloud,
-
     # 拒绝注册
     # ActionUUCloud,
     # ActionWgCloud,
-
     # 站点瘫痪
     # ActionZuiSuCloud,
     # ActionReCloud,  # v2ray 1day10G
     # ActionThunderCloud,
     # ActionJdSuCloud,
     # ActionJfCloud,
-
 ]

@@ -12,10 +12,21 @@ from .core import SliderValidator, By, ec
 
 
 class GeeTest3(SliderValidator):
-
-    def __init__(self, driver, debug=False, business_name="GeeTest_v3", full_img_path=None, notch_img_path=None):
-        super(GeeTest3, self).__init__(driver=driver, debug=debug, full_img_path=full_img_path,
-                                       notch_img_path=notch_img_path, business_name=business_name)
+    def __init__(
+        self,
+        driver,
+        debug=False,
+        business_name="GeeTest_v3",
+        full_img_path=None,
+        notch_img_path=None,
+    ):
+        super(GeeTest3, self).__init__(
+            driver=driver,
+            debug=debug,
+            full_img_path=full_img_path,
+            notch_img_path=notch_img_path,
+            business_name=business_name,
+        )
         self.threshold = 60
         self.offset = 35
 
@@ -37,14 +48,18 @@ class GeeTest3(SliderValidator):
         :return: base64 数据
         """
         # 防止图片未加载完就下载一张空图
-        bg_img = ''
+        bg_img = ""
         while len(bg_img) < 5000:
-            get_img_js = 'return document.getElementsByClassName("' + class_name + '")[0].toDataURL("image/png");'
+            get_img_js = (
+                'return document.getElementsByClassName("'
+                + class_name
+                + '")[0].toDataURL("image/png");'
+            )
             bg_img = self.api.execute_script(get_img_js)
             time.sleep(0.5)
         if contain_type:
             return bg_img
-        return bg_img[bg_img.find(',') + 1:]
+        return bg_img[bg_img.find(",") + 1 :]
 
     def capture_full_img(self):
         element_class_name = "geetest_canvas_fullbg geetest_fade geetest_absolute"
@@ -71,7 +86,7 @@ class GeeTest3(SliderValidator):
         raise NoSuchElementException
 
     def activate_validator(self):
-        self.api.find_element_by_class_name('geetest_radar_tip').click()
+        self.api.find_element_by_class_name("geetest_radar_tip").click()
         time.sleep(0.5)
 
     def is_success(self):
@@ -79,10 +94,12 @@ class GeeTest3(SliderValidator):
 
         :return:
         """
-        button_text2 = self.api.find_element_by_class_name('geetest_success_radar_tip_content')
+        button_text2 = self.api.find_element_by_class_name(
+            "geetest_success_radar_tip_content"
+        )
         text2 = button_text2.text
 
-        if text2 == '验证成功':
+        if text2 == "验证成功":
             return True
         return False
 
@@ -90,8 +107,12 @@ class GeeTest3(SliderValidator):
         # 唤醒Geetest 点击唤出
         self.activate_validator()
         # 加载元素
-        self.wait.until(ec.presence_of_element_located((By.CLASS_NAME, 'geetest_canvas_slice')))
-        self.wait.until(ec.presence_of_element_located((By.CLASS_NAME, 'geetest_canvas_fullbg')))
+        self.wait.until(
+            ec.presence_of_element_located((By.CLASS_NAME, "geetest_canvas_slice"))
+        )
+        self.wait.until(
+            ec.presence_of_element_located((By.CLASS_NAME, "geetest_canvas_fullbg"))
+        )
         # 获取完整&有缺口的截图并存储
         full_img_path = self.capture_full_img()
         notch_img_path = self.capture_notch_img()
@@ -106,13 +127,13 @@ class GeeTest3(SliderValidator):
             solution=self.operator_sport_v1,
             # 计算所需的物理量初始值字典
             phys_params={
-                'boundary': boundary,
-                'current_coordinate': 0,
-                'mid': boundary * 3.3 / 4,
-                't': 0.5,
-                'alpha_factor': 3.4011,
-                'beta_factor': 3.5211,
-            }
+                "boundary": boundary,
+                "current_coordinate": 0,
+                "mid": boundary * 3.3 / 4,
+                "t": 0.5,
+                "alpha_factor": 3.4011,
+                "beta_factor": 3.5211,
+            },
         )
         # 获取滑块对象
         slider = self.capture_slider(class_name="geetest_slider_button")
@@ -124,7 +145,7 @@ class GeeTest3(SliderValidator):
             boundary=boundary,
             use_imitate=True,
             is_hold=False,
-            momentum_convergence=False
+            momentum_convergence=False,
         )
         # 执行成功，结束重试循环
         if self.is_success():

@@ -1,12 +1,16 @@
 """
 采集服务的定时任务管理模块
 """
-__all__ = ['TasksScheduler', 'CollectorScheduler']
+__all__ = ["TasksScheduler", "CollectorScheduler"]
 
 from datetime import datetime, timedelta
 
 import gevent
-from apscheduler.events import EVENT_JOB_SUBMITTED, EVENT_JOB_MAX_INSTANCES, EVENT_JOB_ERROR
+from apscheduler.events import (
+    EVENT_JOB_SUBMITTED,
+    EVENT_JOB_MAX_INSTANCES,
+    EVENT_JOB_ERROR,
+)
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.schedulers.gevent import GeventScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -73,7 +77,7 @@ class TasksScheduler:
         except (KeyboardInterrupt, SystemExit):
             self.scheduler.shutdown(wait=True)
         except Exception as err:
-            logger.exception(f'<BlockingScheduler>||{err}')
+            logger.exception(f"<BlockingScheduler>||{err}")
         finally:
             logger.success("<Scheduler> The echo-loop running ends.")
 
@@ -85,8 +89,12 @@ class TasksScheduler:
         for i, docker in enumerate(self.dockers):
             # 清洗参数
             docker_api = False if docker.get("api") is None else docker.get("api")
-            docker_name = f"docker_{i}" if docker.get("name") is None else docker.get("name")
-            docker_interval = 60 if docker.get("interval") is None else docker.get("interval")
+            docker_name = (
+                f"docker_{i}" if docker.get("name") is None else docker.get("name")
+            )
+            docker_interval = (
+                60 if docker.get("interval") is None else docker.get("interval")
+            )
             if not docker_api:
                 continue
             # 添加任务
@@ -125,7 +133,7 @@ class CollectorScheduler(TasksScheduler):
         # setting of scheduler
         # ----------------------
         self.scheduler = GeventScheduler()
-        self.echo_id = 'echo-loop'
+        self.echo_id = "echo-loop"
         self.misfire_grace_time = None
 
     # ------------------------------------
@@ -134,11 +142,11 @@ class CollectorScheduler(TasksScheduler):
 
     def mapping_config(self, job_config: dict):
         # 调整任务权限
-        self.is_pending = job_config.get('permission')
+        self.is_pending = job_config.get("permission")
         # 采集功率
-        self.power = job_config.get('power')
+        self.power = job_config.get("power")
         # 启动间隔
-        self.sync_step: int = job_config.get('interval')
+        self.sync_step: int = job_config.get("interval")
         # 运行时长
         self.echo_limit = int(self.sync_step * (1 + self.threshold))
         # 游离极限
@@ -150,14 +158,19 @@ class CollectorScheduler(TasksScheduler):
             return False
         try:
             self.echo()
-            self.scheduler.add_listener(self.monitor, EVENT_JOB_MAX_INSTANCES | EVENT_JOB_SUBMITTED | EVENT_JOB_ERROR)
-            logger.success("<CollectorScheduler> The echo-monitor was created successfully.")
+            self.scheduler.add_listener(
+                self.monitor,
+                EVENT_JOB_MAX_INSTANCES | EVENT_JOB_SUBMITTED | EVENT_JOB_ERROR,
+            )
+            logger.success(
+                "<CollectorScheduler> The echo-monitor was created successfully."
+            )
             self.scheduler.start()
         except (KeyboardInterrupt, SystemExit):
             self.scheduler.shutdown(wait=True)
             logger.success("<Scheduler> The echo-loop running ends.")
         except Exception as err:
-            logger.exception(f'<BlockingScheduler>||{err}')
+            logger.exception(f"<BlockingScheduler>||{err}")
 
     def echo(self):
         # run the echo-loop
@@ -181,34 +194,56 @@ class CollectorScheduler(TasksScheduler):
             "queue_size": self.work_q.qsize(),
             "running_jobs": len(self.running_jobs),
             "is_running": self.is_running,
-            "message": "queue_size[{}] running_jobs[{}] is_running[{}]"
+            "message": "queue_size[{}] running_jobs[{}] is_running[{}]",
         }
         # logger.debug(f"<CollectorScheduler> {debug_log}")
-        log_message = debug_log.get('message').format(self.work_q.qsize(), len(self.running_jobs), self.is_running)
+        message_ = debug_log.get("message")
+        log_message = (
+            message_.format(
+                self.work_q.qsize(), len(self.running_jobs), self.is_running
+            )
+            if message_
+            else ""
+        )
         logger.debug(f"<CollectorScheduler> {log_message}")
         if len(self.running_jobs) != 0:
-            logger.debug("<CollectorScheduler> The listener jobs of collector start to work.")
+            logger.debug(
+                "<CollectorScheduler> The listener jobs of collector start to work."
+            )
             # 遍历执行队列
             runtime_state = list(self.running_jobs.items())
             for id_, instance_ in runtime_state:
                 # 识别超时任务
-                is_timeout = instance_['start-time'] + timedelta(
-                    seconds=instance_['running-limit']) < datetime.now()
+                is_timeout = (
+                    instance_["start-time"]
+                    + timedelta(seconds=instance_["running-limit"])
+                    < datetime.now()
+                )
                 if is_timeout:
                     try:
                         # 退出游离实例
-                        instance_['api'].quit()
+                        instance_["api"].quit()
                         # 移除任务标签
                         self.running_jobs.pop(id_)
-                        logger.debug(f">> Kill <{instance_['name']}> --> unresponsive session_id:{id_}")
+                        logger.debug(
+                            f">> Kill <{instance_['name']}> --> unresponsive session_id:{id_}"
+                        )
                     # 外部中断运行实体，拒绝实体内的自愈方案并主动捕获异常ConnectionRefusedError
                     except Exception as e:
                         logger.warning(f"ERROR <{instance_['name']}> --> {e}")
-            if (not self.is_running) and (len(self.running_jobs) == 0) and (self.work_q.qsize() == 0):
+            if (
+                (not self.is_running)
+                and (len(self.running_jobs) == 0)
+                and (self.work_q.qsize() == 0)
+            ):
                 self.scheduler.remove_job(job_id=self.echo_id)
                 self.echo()
-                logger.warning("<CollectorScheduler> The echo-loop job of collector has been reset.")
-            logger.debug("<CollectorScheduler> The listener jobs of collector goes to sleep.")
+                logger.warning(
+                    "<CollectorScheduler> The echo-loop job of collector has been reset."
+                )
+            logger.debug(
+                "<CollectorScheduler> The listener jobs of collector goes to sleep."
+            )
 
     # ------------------------------------
     # Coroutine Job API
@@ -275,7 +310,7 @@ class CollectorScheduler(TasksScheduler):
         :return:
         """
         # 根据特征选择不同的解决方案
-        if atomic.get("feature") == 'prism':
+        if atomic.get("feature") == "prism":
             alice = Prism(atomic, assault=True, silence=True)
         else:
             alice = devil_king_armed(atomic, assault=True, silence=True)
@@ -294,7 +329,7 @@ class CollectorScheduler(TasksScheduler):
                     "api": api,
                     "start-time": start_time,
                     "running-limit": running_limit,
-                    "name": alice_name
+                    "name": alice_name,
                 }
             }
         )

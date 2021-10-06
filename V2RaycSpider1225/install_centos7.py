@@ -24,7 +24,7 @@ try:
     from bs4 import BeautifulSoup
 
 except ImportError:
-    os.system("pip install requests bs4")
+    os.system(shlex.quote("pip install requests bs4"))
     print("---> If something goes wrong, please restart the script.")
     import requests
     from bs4 import BeautifulSoup

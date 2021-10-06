@@ -13,8 +13,15 @@ from ..support.staff_collector import StaffCollector
 
 
 class StaffChecker:
-    def __init__(self, task_docker, work_q: Queue = None, output_dir: str = None, power: int = 16, debug: bool = False,
-                 work_name: str = 'classify_urls'):
+    def __init__(
+        self,
+        task_docker,
+        work_q: Queue = None,
+        output_dir: str = None,
+        power: int = 16,
+        debug: bool = False,
+        work_name: str = "classify_urls",
+    ):
         # 任务容器：queue
         self.work_q = work_q if work_q else Queue()
         # 任务容器：迭代器
@@ -36,9 +43,15 @@ class StaffChecker:
         self._path_cls_verity_email = os.path.join(_classifier_dir, "verity_email.txt")
         self._path_cls_verity_sms = os.path.join(_classifier_dir, "verity_sms.txt")
         self._path_cls_others = os.path.join(_classifier_dir, "other_arch.txt")
-        self._path_cls_staff_arch_slider = os.path.join(_classifier_dir, "staff_arch_slider.txt")
-        self._path_cls_staff_arch_general = os.path.join(_classifier_dir, "staff_arch_general.txt")
-        self._path_cls_staff_arch_inc = os.path.join(_classifier_dir, "staff_arch_inc.txt")
+        self._path_cls_staff_arch_slider = os.path.join(
+            _classifier_dir, "staff_arch_slider.txt"
+        )
+        self._path_cls_staff_arch_general = os.path.join(
+            _classifier_dir, "staff_arch_general.txt"
+        )
+        self._path_cls_staff_arch_inc = os.path.join(
+            _classifier_dir, "staff_arch_inc.txt"
+        )
         # 用于进一步清洗reCAPTCHA的缓存容器
         self.queue_staff_arch_pending = []
 
@@ -52,8 +65,10 @@ class StaffChecker:
         :param url:
         :return:
         """
-        headers = {"user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-                                 " (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67"}
+        headers = {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            " (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67"
+        }
         proxies = {"http": None, "https": None}
         # 剔除不安全站点
         if not url.startswith("https"):
@@ -61,7 +76,7 @@ class StaffChecker:
         try:
             # res = requests.get(url, headers=headers, timeout=20)
             res = requests.get(url, headers=headers, timeout=20, proxies=proxies)
-            soup = BeautifulSoup(res.text, 'html.parser')
+            soup = BeautifulSoup(res.text, "html.parser")
 
             # ====================================================
             # Function: filter_live_urls
@@ -79,32 +94,40 @@ class StaffChecker:
             # Function: classify_urls
             # ====================================================
             # classify: 包含EMAIL邮箱验证模块的源
-            if soup.find_all("button", id='email_verify') or soup.find_all("button", id="send-code"):
-                with open(self._path_cls_verity_email, 'a', encoding="utf8") as f:
+            if soup.find_all("button", id="email_verify") or soup.find_all(
+                "button", id="send-code"
+            ):
+                with open(self._path_cls_verity_email, "a", encoding="utf8") as f:
                     f.write(f"{url}\n")
             # classify: 包含SMS短信验证模块的源 [???]
             elif soup.find_all("button", id="send_sms_code"):
-                with open(self._path_cls_verity_sms, 'a', encoding="utf8") as f:
+                with open(self._path_cls_verity_sms, "a", encoding="utf8") as f:
                     f.write(f"{url}\n")
             # classify: STAFF原生架构
             elif "已经有账号了" in res.text:
                 # classify: 包含geetest-slider滑动验证
                 if ("geetest" in res.text) and ("滑动" in res.text):
-                    with open(self._path_cls_staff_arch_slider, 'a', encoding="utf8") as f:
+                    with open(
+                        self._path_cls_staff_arch_slider, "a", encoding="utf8"
+                    ) as f:
                         f.write(f"{url}\n")
                 # classify: 无验证的STAFF ARCH
                 else:
                     self.queue_staff_arch_pending.append(url)
                     if "邀请码" in res.text:
-                        with open(self._path_cls_staff_arch_inc, 'a', encoding="utf8") as f:
+                        with open(
+                            self._path_cls_staff_arch_inc, "a", encoding="utf8"
+                        ) as f:
                             f.write(f"{url}\n")
                     else:
-                        with open(self._path_cls_staff_arch_general, 'a', encoding="utf8") as f:
+                        with open(
+                            self._path_cls_staff_arch_general, "a", encoding="utf8"
+                        ) as f:
                             f.write(f"{url}\n")
             # classify: 基于其他解决方案的源
             else:
                 self.queue_staff_arch_pending.append(url)
-                with open(self._path_cls_others, 'a', encoding="utf8") as f:
+                with open(self._path_cls_others, "a", encoding="utf8") as f:
                     f.write(f"{url}\n")
         except requests.exceptions.RequestException:
             self._doctor(url)
@@ -134,7 +157,9 @@ class StaffChecker:
         while not self.work_q.empty():
             url = self.work_q.get_nowait()
             self.classify_urls(url)
-            print(f"loop[{self.max_queue_size - self.work_q.qsize()}/{self.max_queue_size}] --> {url}")
+            print(
+                f"loop[{self.max_queue_size - self.work_q.qsize()}/{self.max_queue_size}] --> {url}"
+            )
 
     # --------------------------------------------------
     # Private API
@@ -172,14 +197,16 @@ class StaffChecker:
 
 class IdentifyRecaptcha(StaffChecker):
     def __init__(
-            self, task_docker,
-            chromedriver_path: str = None,
-            output_path: str = None,
-            power: int = 8,
-            silence: bool = True
+        self,
+        task_docker,
+        chromedriver_path: str = None,
+        output_path: str = None,
+        power: int = 8,
+        silence: bool = True,
     ):
-        super(IdentifyRecaptcha, self).__init__(task_docker=task_docker, power=power, debug=False,
-                                                work_name="is_reCAPTCHA")
+        super(IdentifyRecaptcha, self).__init__(
+            task_docker=task_docker, power=power, debug=False, work_name="is_reCAPTCHA"
+        )
 
         # Initialize the Selenium operation handle parameters.
         self._chromedriver_path = chromedriver_path
@@ -193,21 +220,21 @@ class IdentifyRecaptcha(StaffChecker):
 
     def is_recaptcha(self, url):
         """
-       Determine whether the target site contains reCAPTCHA man-machine verification
+        Determine whether the target site contains reCAPTCHA man-machine verification
 
-       Under normal circumstances, a staff site will only contain one man-machine verification scheme.
+        Under normal circumstances, a staff site will only contain one man-machine verification scheme.
 
-       For example, if "slider verification" appears on the target site,
-       the human-machine verification of "puzzle click" will not be used.
+        For example, if "slider verification" appears on the target site,
+        the human-machine verification of "puzzle click" will not be used.
 
-       :param url:
-       :return:
-       """
+        :param url:
+        :return:
+        """
         # Get Selenium operation handle.
         api = StaffCollector(
             cache_path="",
             chromedriver_path=self._chromedriver_path,
-            silence=self._silence
+            silence=self._silence,
         ).set_spider_options()
         # Start the test process.
         try:
@@ -216,9 +243,11 @@ class IdentifyRecaptcha(StaffChecker):
             for _ in range(self._retry_num):
                 try:
                     time.sleep(1)
-                    is_recaptcha = "recaptcha" in api.find_element_by_xpath("//div//iframe").get_attribute("src")
+                    is_recaptcha = "recaptcha" in api.find_element_by_xpath(
+                        "//div//iframe"
+                    ).get_attribute("src")
                     self._is_recaptcha_dict.update({url: is_recaptcha})
-                    with open(self._output_path, 'a', encoding='utf8') as f:
+                    with open(self._output_path, "a", encoding="utf8") as f:
                         f.write(f"{url}\n")
                     break
                 except NoSuchElementException:
@@ -238,14 +267,19 @@ class IdentifyRecaptcha(StaffChecker):
 
 class StaffEntropyGenerator(StaffChecker):
     def __init__(
-            self, task_docker,
-            chromedriver_path: str = None,
-            output_path: str = None,
-            power: int = 8,
-            silence: bool = True
+        self,
+        task_docker,
+        chromedriver_path: str = None,
+        output_path: str = None,
+        power: int = 8,
+        silence: bool = True,
     ):
-        super(StaffEntropyGenerator, self).__init__(task_docker=task_docker, power=power, debug=False,
-                                                    work_name="generate_entropy")
+        super(StaffEntropyGenerator, self).__init__(
+            task_docker=task_docker,
+            power=power,
+            debug=False,
+            work_name="generate_entropy",
+        )
 
         self._output_path = output_path
         # Initialize the Selenium operation handle parameters.
@@ -260,18 +294,18 @@ class StaffEntropyGenerator(StaffChecker):
         """
         # Entropy template
         _mould = {
-            'name': urlparse(url).netloc.replace(".", "").title(),
-            'register_url': url,
-            'life_cycle': 1,
-            'anti_slider': True,
-            'hyper_params': {'ssr': True, "v2ray": False, 'usr_email': False},
-            'email': '@gmail.com'
+            "name": urlparse(url).netloc.replace(".", "").title(),
+            "register_url": url,
+            "life_cycle": 1,
+            "anti_slider": True,
+            "hyper_params": {"ssr": True, "v2ray": False, "usr_email": False},
+            "email": "@gmail.com",
         }
         # Get Selenium operation handle
         api = StaffCollector(
             cache_path="",
             chromedriver_path=self._chromedriver_path,
-            silence=self._silence
+            silence=self._silence,
         ).set_spider_options()
         # Start the test process
         api.get(url)
