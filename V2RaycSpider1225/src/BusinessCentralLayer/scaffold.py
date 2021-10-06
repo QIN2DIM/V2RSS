@@ -110,14 +110,14 @@ class Scaffold:
     def __init__(self, ):
         self.cq = _ConfigQuarantine()
 
-    def build(self):
-        """
-        [实验功能] 为 CentOS7 操作系统用户自动下载 v2rss server 运行所需组件。
-
-
-
-        :return:
-        """
+    # def build(self):
+    #     """
+    #     [实验功能] 为 CentOS7 操作系统用户自动下载 v2rss server 运行所需组件。
+    #
+    #
+    #
+    #     :return:
+    #     """
 
     # ----------------------------------
     # Tools for dev
@@ -362,43 +362,43 @@ class Scaffold:
     # ----------------------------------
     # Front-end debugging interface
     # ----------------------------------
-    @staticmethod
-    def panel():
-        """
-        打开 panel 调试面板。
+    # @staticmethod
+    # def panel():
+    #     """
+    #     打开 panel 调试面板。
+    #
+    #     仅可在 Windows 操作系统上运行。
+    #
+    #     Usage: python main.py panel
+    #
+    #     :return:
+    #     """
+    #     from src.BusinessViewLayer.panel.panel import startup_from_platform
+    #     startup_from_platform()
 
-        仅可在 Windows 操作系统上运行。
-
-        Usage: python main.py panel
-
-        :return:
-        """
-        from src.BusinessViewLayer.panel.panel import startup_from_platform
-        startup_from_platform()
-
-    @staticmethod
-    def ash():
-        """
-        一键拉取、合并、自动更新 Clash for Windows 订阅文件。
-
-        1. 仅可在 Windows 操作系统上运行。
-        2. 清洗订阅池，并将所有类型的节点分享链接合并转写为 Clash.yaml配置文件，
-        借由 URL Scheme 自动打开 Clash 并下载更新配置文件。
-
-        Usage: python main.py ash
-
-        :return:
-        """
-        from src.BusinessLogicLayer.apis import scaffold_api
-        logger.info("<ScaffoldGuider> ash | Clash订阅堆一键生成脚本")
-
-        # --------------------------------------------------
-        # 参数清洗
-        # --------------------------------------------------
-        # if 'win' not in sys.platform:
-        #     return
-
-        # --------------------------------------------------
-        # 运行脚本
-        # --------------------------------------------------
-        return scaffold_api.ash(debug=True, decouple=True)
+    # @staticmethod
+    # def ash():
+    #     """
+    #     一键拉取、合并、自动更新 Clash for Windows 订阅文件。
+    #
+    #     1. 仅可在 Windows 操作系统上运行。
+    #     2. 清洗订阅池，并将所有类型的节点分享链接合并转写为 Clash.yaml配置文件，
+    #     借由 URL Scheme 自动打开 Clash 并下载更新配置文件。
+    #
+    #     Usage: python main.py ash
+    #
+    #     :return:
+    #     """
+    #     from src.BusinessLogicLayer.apis import scaffold_api
+    #     logger.info("<ScaffoldGuider> ash | Clash订阅堆一键生成脚本")
+    #
+    #     # --------------------------------------------------
+    #     # 参数清洗
+    #     # --------------------------------------------------
+    #     # if 'win' not in sys.platform:
+    #     #     return
+    #
+    #     # --------------------------------------------------
+    #     # 运行脚本
+    #     # --------------------------------------------------
+    #     return scaffold_api.ash(debug=True, decouple=True)
