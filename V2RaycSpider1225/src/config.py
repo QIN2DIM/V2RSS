@@ -1,13 +1,39 @@
 """
 读取yaml配置文件，生成全局静态变量。
 """
-__all__ = ['SINGLE_DEPLOYMENT', 'ENABLE_DEPLOY', 'ENABLE_KERNEL', 'ENABLE_SERVER',
-           'ENABLE_DEBUG', 'ENABLE_REBOUND', 'SINGLE_TASK_CAP', 'LAUNCH_INTERVAL', 'REDIS_MASTER', 'REDIS_SLAVER_DDT',
-           'API_HOST', 'API_DEBUG', 'API_THREADED', 'API_PORT', 'OPEN_HOST', 'GARDENER_HOST',
-           'ROUTE_API', 'SEQ_TEST', 'CRAWLER_SEQUENCE', 'SMTP_ACCOUNT', 'SERVERCHAN_SCKEY', 'REDIS_SECRET_KEY',
-           'PROJECT_NUM', 'VERSION', 'TIME_ZONE_CN', 'TIME_ZONE_NY', 'DEFAULT_POWER', 'Fore', 'terminal_echo',
-           'PROXY_POOL', 'ENABLE_PROXY',
-           ]
+__all__ = [
+    'SINGLE_DEPLOYMENT',
+    'ENABLE_DEPLOY',
+    'ENABLE_KERNEL',
+    'ENABLE_SERVER',
+    'ENABLE_DEBUG',
+    'ENABLE_REBOUND',
+    'SINGLE_TASK_CAP',
+    'LAUNCH_INTERVAL',
+    'REDIS_MASTER',
+    'REDIS_SLAVER_DDT',
+    'API_HOST',
+    'API_DEBUG',
+    'API_THREADED',
+    'API_PORT',
+    'OPEN_HOST',
+    'GARDENER_HOST',
+    'ROUTE_API',
+    'SEQ_TEST',
+    'CRAWLER_SEQUENCE',
+    'SMTP_ACCOUNT',
+    'SERVERCHAN_SCKEY',
+    'REDIS_SECRET_KEY',
+    'PROJECT_NUM',
+    'VERSION',
+    'TIME_ZONE_CN',
+    'TIME_ZONE_NY',
+    'DEFAULT_POWER',
+    'Fore',
+    'terminal_echo',
+    'PROXY_POOL',
+    'ENABLE_PROXY',
+]
 
 import os
 import shutil
@@ -77,17 +103,19 @@ except FileNotFoundError:
         import requests
         from requests import exceptions as res_error
 
-        res_ = requests.get("https://curly-shape-d178.qinse.workers.dev/https://raw.githubusercontent.com/"
-                            "QIN2DIM/V2RayCloudSpider/master/V2RaycSpider1225/src/config-sample.yaml")
+        res_ = requests.get(
+            "https://curly-shape-d178.qinse.workers.dev/https://raw.githubusercontent.com/"
+            "QIN2DIM/V2RayCloudSpider/master/V2RaycSpider1225/src/config-sample.yaml"
+        )
         with open(sample_, 'wb') as fp:
             fp.write(res_.content)
         terminal_echo("配置模板拉取成功,请重启项目", 1)
-    except (res_error.ConnectionError, res_error.HTTPError, res_error.RequestException) as e_:
+    except (res_error.ConnectionError, res_error.HTTPError,
+            res_error.RequestException) as e_:
         terminal_echo("配置模板自动拉取失败，请检查本地网络", 0)
         print(f">>> error:{e_}")
     finally:
         sys.exit()
-
 """
 ================================================ ʕ•ﻌ•ʔ ================================================
                             (·▽·)欢迎使用V2Ray云彩姬，请跟随提示合理配置项目启动参数
@@ -209,7 +237,8 @@ Audit: Binding to all interfaces detected with hardcoded values
  development phase. This prevents others from targeting 
  your application and executing SQL injections against your project.
 """
-OPEN_HOST: str = "127.0.0.1" if (API_DEBUG is True) or ("win" in sys.platform) else "0.0.0.0"
+OPEN_HOST: str = "127.0.0.1" if (API_DEBUG is True) or (
+    "win" in sys.platform) else "0.0.0.0"
 # ---------------------------------------------------
 # TODO (√)The domain name used to deploy the gardener
 # 园丁系统部署域名，当启动该项功能时，必须配置如: www.bbq.club
@@ -275,7 +304,6 @@ SERVERCHAN_SCKEY: str = config_['SERVERCHAN_SCKEY']
 #   -- 若您不知如何查看Chrome版本或在参考blog后仍遇到预料之外的问题请在issue中留言或通过检索解决。
 #       >> Project：https://github.com/QIN2DIM/V2RayCloudSpider
 # ---------------------------------------------------
-
 """
 ================================================== ʕ•ﻌ•ʔ ==================================================
                         如果您并非<V2RayCloudSpider>项目开发者 请勿修改以下变量的默认参数

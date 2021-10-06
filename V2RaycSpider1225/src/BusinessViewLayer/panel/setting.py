@@ -8,7 +8,6 @@ import os
 import PySimpleGUI as sg
 import pytz
 from loguru import logger
-
 """********************************* Panel Path *********************************"""
 """
 # 工程目录(系统核心文件，请勿删改)基于Windows10设计
@@ -25,7 +24,8 @@ from loguru import logger
             --[V2Ray云彩姬.exe]
 """
 # 软件本地根目录
-PROJECT_ROOT = os.path.join(os.path.expanduser("~"), "Documents\\V2RayCloudSpider")
+PROJECT_ROOT = os.path.join(os.path.expanduser("~"),
+                            "Documents\\V2RayCloudSpider")
 
 # 软件本地日志目录
 DIR_LOG = os.path.join(PROJECT_ROOT, "logs")
@@ -53,7 +53,8 @@ DIR_DATABASE = os.path.join(PROJECT_ROOT, "database")
 DIR_DEFAULT_DOWNLOAD = os.path.join(PROJECT_ROOT, "client")
 
 # panel 于本地的订阅请求历史
-PATH_FETCH_REQUESTS_HISTORY = os.path.join(DIR_DATABASE, "FetchRequestsHistory.txt")
+PATH_FETCH_REQUESTS_HISTORY = os.path.join(DIR_DATABASE,
+                                           "FetchRequestsHistory.txt")
 
 # panel 于本地的机场生态缓存文件
 PATH_FETCH_AIR_ECOLOGY = os.path.join(DIR_DATABASE, "FetchAirEcologyInfo.csv")

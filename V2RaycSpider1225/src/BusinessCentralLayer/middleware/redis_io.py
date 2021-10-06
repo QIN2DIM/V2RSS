@@ -11,7 +11,10 @@ IS_REDIS_VERSION_2 = REDIS_CLIENT_VERSION.startswith('2.')
 
 
 class RedisClient:
-    def __init__(self, host=REDIS_MASTER['host'], port=REDIS_MASTER['port'], password=REDIS_MASTER['password'],
+    def __init__(self,
+                 host=REDIS_MASTER['host'],
+                 port=REDIS_MASTER['port'],
+                 password=REDIS_MASTER['password'],
                  db=REDIS_MASTER['db'],
                  **kwargs) -> None:
         """
@@ -21,7 +24,14 @@ class RedisClient:
         :param password: redis password
         """
 
-        self.db = redis.StrictRedis(host=host, port=port, password=password, decode_responses=True, db=db, **kwargs, )
+        self.db = redis.StrictRedis(
+            host=host,
+            port=port,
+            password=password,
+            decode_responses=True,
+            db=db,
+            **kwargs,
+        )
         self.subscribe = ''
         self.crawler_seq = CRAWLER_SEQUENCE
 
@@ -50,7 +60,8 @@ class RedisClient:
                 target_raw: dict = self.db.hgetall(key_name)
                 try:
                     # 弹出并捕获 <离当前时间> <最远一次入库>的订阅连接 既订阅链接并未按end_life排序
-                    self.subscribe, end_life = list(target_raw.items()).pop(pop_)
+                    self.subscribe, end_life = list(
+                        target_raw.items()).pop(pop_)
 
                     # end_life: requests_time(采集时间点) + vip_crontab(机场会员时长(账号试用时长))
 
@@ -67,7 +78,8 @@ class RedisClient:
                     return self.subscribe
                 # 出现该错误视为redis队列被击穿 无任何可用的链接分发，中断循环
                 except IndexError:
-                    logger.critical("{}.get() IndexError".format(self.__class__.__name__))
+                    logger.critical("{}.get() IndexError".format(
+                        self.__class__.__name__))
                     return False
                 # 关联解除
                 finally:
@@ -92,9 +104,11 @@ class RedisClient:
                 if self.is_stale(end_life, cross_threshold):
                     logger.debug(f'del-({key_name})--{subscribe}')
                     self.db.hdel(key_name, subscribe)
-            logger.success('<{}> UPDATE - {}({})'.format(self.__class__.__name__, key_name, self.get_len(key_name)))
+            logger.success('<{}> UPDATE - {}({})'.format(
+                self.__class__.__name__, key_name, self.get_len(key_name)))
         else:
-            logger.warning('<{}> EMPTY - {}({})'.format(self.__class__.__name__, key_name, self.get_len(key_name)))
+            logger.warning('<{}> EMPTY - {}({})'.format(
+                self.__class__.__name__, key_name, self.get_len(key_name)))
 
     @staticmethod
     def is_stale(subs_expiration_time: str, beyond: int = None) -> bool:
@@ -112,7 +126,8 @@ class RedisClient:
             subs_end_time = datetime.fromisoformat(subs_expiration_time)
 
             # 上海时区 -> datetime
-            now_time = datetime.fromisoformat(str(datetime.now(TIME_ZONE_CN)).split('.')[0])
+            now_time = datetime.fromisoformat(
+                str(datetime.now(TIME_ZONE_CN)).split('.')[0])
 
             # 时间比对 并返回是否过期的响应 -> bool
             if beyond and isinstance(beyond, int):
@@ -131,7 +146,8 @@ class RedisClient:
         response = {}
         if class_ is None:
             for key_ in CRAWLER_SEQUENCE:
-                response.update({key_: self.get_len(REDIS_SECRET_KEY.format(key_))})
+                response.update(
+                    {key_: self.get_len(REDIS_SECRET_KEY.format(key_))})
         else:
             response[class_] = self.get_len(REDIS_SECRET_KEY.format(class_))
         return response
@@ -218,9 +234,11 @@ class RedisDataDisasterTolerance(RedisClient):
         # 容器初始化
         self.docker = {}
         try:
-            self.acm = RedisClient(host=redis_virtual['host'], port=redis_virtual['port'],
+            self.acm = RedisClient(host=redis_virtual['host'],
+                                   port=redis_virtual['port'],
                                    password=redis_virtual['password'])
-            logger.info("DDT: Master({}) -> Slaver({})".format(REDIS_MASTER['host'], redis_virtual['host']))
+            logger.info("DDT: Master({}) -> Slaver({})".format(
+                REDIS_MASTER['host'], redis_virtual['host']))
         except redis.exceptions.ConnectionError as e:
             logger.exception(e)
         finally:

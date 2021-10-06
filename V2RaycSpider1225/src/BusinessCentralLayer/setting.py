@@ -14,19 +14,56 @@ __all__ = [
     # =============================================
     # config safe load from user_yaml
     # =============================================
-    'SINGLE_DEPLOYMENT', 'ENABLE_DEPLOY', 'ENABLE_KERNEL', 'ENABLE_SERVER',
-    'ENABLE_DEBUG', 'ENABLE_REBOUND', 'SINGLE_TASK_CAP', 'LAUNCH_INTERVAL', 'REDIS_MASTER', 'REDIS_SLAVER_DDT',
-    'API_HOST', 'API_DEBUG', 'API_THREADED', 'API_PORT', 'OPEN_HOST', 'GARDENER_HOST',
-    'ROUTE_API', 'SEQ_TEST', 'CRAWLER_SEQUENCE', 'SMTP_ACCOUNT', 'SERVERCHAN_SCKEY', 'REDIS_SECRET_KEY',
-    'PROJECT_NUM', 'VERSION', 'TIME_ZONE_CN', 'TIME_ZONE_NY', 'DEFAULT_POWER', 'Fore', 'terminal_echo', 'PROXY_POOL',
+    'SINGLE_DEPLOYMENT',
+    'ENABLE_DEPLOY',
+    'ENABLE_KERNEL',
+    'ENABLE_SERVER',
+    'ENABLE_DEBUG',
+    'ENABLE_REBOUND',
+    'SINGLE_TASK_CAP',
+    'LAUNCH_INTERVAL',
+    'REDIS_MASTER',
+    'REDIS_SLAVER_DDT',
+    'API_HOST',
+    'API_DEBUG',
+    'API_THREADED',
+    'API_PORT',
+    'OPEN_HOST',
+    'GARDENER_HOST',
+    'ROUTE_API',
+    'SEQ_TEST',
+    'CRAWLER_SEQUENCE',
+    'SMTP_ACCOUNT',
+    'SERVERCHAN_SCKEY',
+    'REDIS_SECRET_KEY',
+    'PROJECT_NUM',
+    'VERSION',
+    'TIME_ZONE_CN',
+    'TIME_ZONE_NY',
+    'DEFAULT_POWER',
+    'Fore',
+    'terminal_echo',
+    'PROXY_POOL',
     'ENABLE_PROXY',
     # =============================================
     # system setting
     # =============================================
-    'CHROMEDRIVER_PATH', 'SERVER_DIR_PROJECT', 'SERVER_PATH_YAML_CONFIG', 'SERVER_PATH_YAML_CONFIG_SAMPLE',
-    'SERVER_DIR_DATABASE', 'SQLITE3_CONFIG', 'SERVER_DIR_CLIENT_DEPORT', 'SERVER_PATH_DEPOT_VCS',
-    'SERVER_DIR_DATABASE_CACHE', 'SERVER_DIR_CACHE_BGPIC', 'SERVER_PATH_DATABASE_FETCH', 'SERVER_DIR_DATABASE_LOG',
-    'NGINX_SUBSCRIBE', 'SERVER_DIR_SSPANEL_MINING', 'PROTOCOL_FLAG', 'logger'
+    'CHROMEDRIVER_PATH',
+    'SERVER_DIR_PROJECT',
+    'SERVER_PATH_YAML_CONFIG',
+    'SERVER_PATH_YAML_CONFIG_SAMPLE',
+    'SERVER_DIR_DATABASE',
+    'SQLITE3_CONFIG',
+    'SERVER_DIR_CLIENT_DEPORT',
+    'SERVER_PATH_DEPOT_VCS',
+    'SERVER_DIR_DATABASE_CACHE',
+    'SERVER_DIR_CACHE_BGPIC',
+    'SERVER_PATH_DATABASE_FETCH',
+    'SERVER_DIR_DATABASE_LOG',
+    'NGINX_SUBSCRIBE',
+    'SERVER_DIR_SSPANEL_MINING',
+    'PROTOCOL_FLAG',
+    'logger'
 ]
 # ---------------------------------------------------
 # TODO Server doc tree base on linux
@@ -60,10 +97,12 @@ __all__ = [
 # 位于孙级目录下以此类推，一般建议最多到次级。
 # ---------------------------------------------------
 if "win" in sys.platform:
-    CHROMEDRIVER_PATH = dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver.exe"
+    CHROMEDRIVER_PATH = dirname(
+        dirname(__file__)) + "/BusinessCentralLayer/chromedriver.exe"
     SERVER_DIR_PROJECT = dirname(dirname(__file__))
 else:
-    CHROMEDRIVER_PATH = dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver"
+    CHROMEDRIVER_PATH = dirname(
+        dirname(__file__)) + "/BusinessCentralLayer/chromedriver"
     SERVER_DIR_PROJECT = f"/qinse/V2RaycSpider{PROJECT_NUM}"
 # 若不存在CHROMEDRIVER_PATH指定的路径则尝试从环境变量中查找chromedriver文件
 if not exists(CHROMEDRIVER_PATH):
@@ -85,10 +124,15 @@ SERVER_DIR_DATABASE = join(SERVER_DIR_PROJECT, "Database")
 
 # SQLite3 文件数据库配置
 SQLITE3_CONFIG = {
-    'db': join(SERVER_DIR_DATABASE, 'v2raycs.db'),
-    'table': 'v2raycs',
-    'header': ','.join(['domain', 'subs', 'class_', 'end_life', 'res_time', 'passable',
-                        'username', 'password', 'email', 'uuid PRIMARY KEY']),
+    'db':
+    join(SERVER_DIR_DATABASE, 'v2raycs.db'),
+    'table':
+    'v2raycs',
+    'header':
+    ','.join([
+        'domain', 'subs', 'class_', 'end_life', 'res_time', 'passable',
+        'username', 'password', 'email', 'uuid PRIMARY KEY'
+    ]),
 }
 
 # 历史客户端仓库。用于存放打包好的panel可执行文件

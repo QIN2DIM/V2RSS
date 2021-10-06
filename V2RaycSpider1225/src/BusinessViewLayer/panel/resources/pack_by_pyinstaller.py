@@ -4,5 +4,4 @@
 # Github     : https://github.com/QIN2DIM
 # Description:
 
-
 # pyinstaller ./panel.py -F -w -i ./pack/logo.ico --clean --log-level WARN -n v2rss --key

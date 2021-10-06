@@ -18,11 +18,17 @@ from src.BusinessLogicLayer.cluster.master import ActionMasterGeneral
 
 class SSPanelParser(ActionMasterGeneral):
     def __init__(self, url, silence=False, assault=True, anti_slider=True):
-        super(SSPanelParser, self).__init__(url, silence, assault, anti_slider=anti_slider, )
+        super(SSPanelParser, self).__init__(
+            url,
+            silence,
+            assault,
+            anti_slider=anti_slider,
+        )
 
         self.obj_parser = {}
         self.cache_db_name = "parser_cache"
-        self.cache_db_path = self.create_cache_db(database_dir=SERVER_DIR_DATABASE)
+        self.cache_db_path = self.create_cache_db(
+            database_dir=SERVER_DIR_DATABASE)
 
     def create_cache_db(self, database_dir=None):
         database_dir = "database" if database_dir is None else database_dir
@@ -57,7 +63,8 @@ class SSPanelParser(ActionMasterGeneral):
         while True:
             try:
                 i += 1
-                card_body = api.find_elements_by_xpath("//div[@class='card-body']")[:2]
+                card_body = api.find_elements_by_xpath(
+                    "//div[@class='card-body']")[:2]
                 card_body = [tag.text.strip() for tag in card_body]
                 fluid.update(card_body)
                 fluid_density.append(len(fluid))
@@ -66,7 +73,10 @@ class SSPanelParser(ActionMasterGeneral):
                     continue
                 # 流体相对均衡
                 if max(fluid_density[:10]) == min(fluid_density[:10]):
-                    self.obj_parser.update({"time": card_body[0], "flow": card_body[-1]})
+                    self.obj_parser.update({
+                        "time": card_body[0],
+                        "flow": card_body[-1]
+                    })
                     break
             except StaleElementReferenceException:
                 pass
@@ -79,16 +89,20 @@ class SSPanelParser(ActionMasterGeneral):
         # 解析站点名称
         # ----------------------------------------
         try:
-            parse_name = api.find_element_by_xpath("//aside//div[@class='sidebar-brand']").text.strip()
+            parse_name = api.find_element_by_xpath(
+                "//aside//div[@class='sidebar-brand']").text.strip()
             self.obj_parser.update({"parse_name": parse_name})
         except WebDriverException:
-            logger.error(f"<SSPanelParserError> Site name resolution failed -- {self.register_url}")
+            logger.error(
+                f"<SSPanelParserError> Site name resolution failed -- {self.register_url}"
+            )
         # ----------------------------------------
         # 解析站点公告
         # ----------------------------------------
         reference_links = {}
         try:
-            card_body = api.find_elements_by_xpath("//div[@class='card-body']")[4]
+            card_body = api.find_elements_by_xpath(
+                "//div[@class='card-body']")[4]
             self.obj_parser.update({"desc": card_body.text.strip()})
 
             related_href = card_body.find_elements_by_tag_name("a")
@@ -102,7 +116,9 @@ class SSPanelParser(ActionMasterGeneral):
                     reference_links.update({href: href_desc})
             self.obj_parser.update({"reference_links": reference_links})
         except WebDriverException:
-            logger.error(f"<SSPanelParserError> Site announcement parsing error -- {self.register_url}")
+            logger.error(
+                f"<SSPanelParserError> Site announcement parsing error -- {self.register_url}"
+            )
 
         # ----------------------------------------
         # 解析[链接导入]
@@ -114,14 +130,21 @@ class SSPanelParser(ActionMasterGeneral):
             soup = BeautifulSoup(api.page_source, 'html.parser')
             for i in soup.find_all("a"):
                 if i.get("data-clipboard-text"):
-                    subscribes.update({i.get("data-clipboard-text"): i.text.strip()})
+                    subscribes.update(
+                        {i.get("data-clipboard-text"): i.text.strip()})
             # 识别支持的订阅类型
             buttons = api.find_elements_by_xpath("//div[@class='card'][2]//a")
             for tag in buttons:
                 support_ = tag.get_attribute("class")
                 if support_:
-                    support_ = [i for i in [i for i in support_.split() if i.startswith("btn-")] if
-                                i not in ['btn-icon', 'btn-primary', 'btn-lg', 'btn-round', 'btn-progress']]
+                    support_ = [
+                        i for i in
+                        [i for i in support_.split() if i.startswith("btn-")]
+                        if i not in [
+                            'btn-icon', 'btn-primary', 'btn-lg', 'btn-round',
+                            'btn-progress'
+                        ]
+                    ]
                     if len(support_) == 1:
                         class_name = support_[0].replace("btn-", "")
                         support.append(class_name)
@@ -131,17 +154,20 @@ class SSPanelParser(ActionMasterGeneral):
                     support.append("surge")
                 if "ssr" in tag.lower():
                     support.append("ssr")
-            self.obj_parser.update({"subscribes": subscribes, "support": list(set(support))})
+            self.obj_parser.update({
+                "subscribes": subscribes,
+                "support": list(set(support))
+            })
         except WebDriverException:
-            logger.error(f"<SSPanelParserError> Site subscription resolution failed -- {self.register_url}")
+            logger.error(
+                f"<SSPanelParserError> Site subscription resolution failed -- {self.register_url}"
+            )
 
-        self.obj_parser.update(
-            {
-                "email": self.email,
-                "password": self.password,
-                "recently_login": datetime.now(tz=TIME_ZONE_CN)
-            }
-        )
+        self.obj_parser.update({
+            "email": self.email,
+            "password": self.password,
+            "recently_login": datetime.now(tz=TIME_ZONE_CN)
+        })
 
         return self.obj_parser
 
@@ -152,7 +178,6 @@ class SSPanelParser(ActionMasterGeneral):
         return self.seep('register', self.parse, **kwargs)
 
     def refresh_cookie(self, **kwargs):
-
         def get_cookie():
             cookies = kwargs.get("api")
             return json.dumps(cookies.get_cookies()) if cookies else {}
@@ -164,7 +189,9 @@ class SSPanelParser(ActionMasterGeneral):
         api = self.set_spider_option()
         # 执行核心业务逻辑
         try:
-            self.get_html_handle(api=api, url=self.register_url, wait_seconds=45)
+            self.get_html_handle(api=api,
+                                 url=self.register_url,
+                                 wait_seconds=45)
             if method == 'login':
                 self.sign_in(api, **kwargs)
             elif method == 'register':

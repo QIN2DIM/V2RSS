@@ -84,9 +84,12 @@ class TasksScheduler:
         """
         for i, docker in enumerate(self.dockers):
             # 清洗参数
-            docker_api = False if docker.get("api") is None else docker.get("api")
-            docker_name = f"docker_{i}" if docker.get("name") is None else docker.get("name")
-            docker_interval = 60 if docker.get("interval") is None else docker.get("interval")
+            docker_api = False if docker.get("api") is None else docker.get(
+                "api")
+            docker_name = f"docker_{i}" if docker.get(
+                "name") is None else docker.get("name")
+            docker_interval = 60 if docker.get(
+                "interval") is None else docker.get("interval")
             if not docker_api:
                 continue
             # 添加任务
@@ -150,8 +153,12 @@ class CollectorScheduler(TasksScheduler):
             return False
         try:
             self.echo()
-            self.scheduler.add_listener(self.monitor, EVENT_JOB_MAX_INSTANCES | EVENT_JOB_SUBMITTED | EVENT_JOB_ERROR)
-            logger.success("<CollectorScheduler> The echo-monitor was created successfully.")
+            self.scheduler.add_listener(
+                self.monitor, EVENT_JOB_MAX_INSTANCES | EVENT_JOB_SUBMITTED
+                | EVENT_JOB_ERROR)
+            logger.success(
+                "<CollectorScheduler> The echo-monitor was created successfully."
+            )
             self.scheduler.start()
         except (KeyboardInterrupt, SystemExit):
             self.scheduler.shutdown(wait=True)
@@ -185,10 +192,14 @@ class CollectorScheduler(TasksScheduler):
         }
         # logger.debug(f"<CollectorScheduler> {debug_log}")
         message_ = debug_log.get('message')
-        log_message = message_.format(self.work_q.qsize(), len(self.running_jobs), self.is_running) if message_ else ""
+        log_message = message_.format(self.work_q.qsize(),
+                                      len(self.running_jobs),
+                                      self.is_running) if message_ else ""
         logger.debug(f"<CollectorScheduler> {log_message}")
         if len(self.running_jobs) != 0:
-            logger.debug("<CollectorScheduler> The listener jobs of collector start to work.")
+            logger.debug(
+                "<CollectorScheduler> The listener jobs of collector start to work."
+            )
             # 遍历执行队列
             runtime_state = list(self.running_jobs.items())
             for id_, instance_ in runtime_state:
@@ -201,15 +212,22 @@ class CollectorScheduler(TasksScheduler):
                         instance_['api'].quit()
                         # 移除任务标签
                         self.running_jobs.pop(id_)
-                        logger.debug(f">> Kill <{instance_['name']}> --> unresponsive session_id:{id_}")
+                        logger.debug(
+                            f">> Kill <{instance_['name']}> --> unresponsive session_id:{id_}"
+                        )
                     # 外部中断运行实体，拒绝实体内的自愈方案并主动捕获异常ConnectionRefusedError
                     except Exception as e:
                         logger.warning(f"ERROR <{instance_['name']}> --> {e}")
-            if (not self.is_running) and (len(self.running_jobs) == 0) and (self.work_q.qsize() == 0):
+            if (not self.is_running) and (len(self.running_jobs)
+                                          == 0) and (self.work_q.qsize() == 0):
                 self.scheduler.remove_job(job_id=self.echo_id)
                 self.echo()
-                logger.warning("<CollectorScheduler> The echo-loop job of collector has been reset.")
-            logger.debug("<CollectorScheduler> The listener jobs of collector goes to sleep.")
+                logger.warning(
+                    "<CollectorScheduler> The echo-loop job of collector has been reset."
+                )
+            logger.debug(
+                "<CollectorScheduler> The listener jobs of collector goes to sleep."
+            )
 
     # ------------------------------------
     # Coroutine Job API
@@ -230,12 +248,14 @@ class CollectorScheduler(TasksScheduler):
         # 重载任务队列 with weight
         instances = reset_task()
         if not instances:
-            logger.debug("<CollectorScheduler> The echo-loop collector goes to sleep.")
+            logger.debug(
+                "<CollectorScheduler> The echo-loop collector goes to sleep.")
             return False
         # 重载协程队列
         self.is_running = self.offload_task(instances)
         if self.is_running is False:
-            logger.debug("<CollectorScheduler> The echo-loop collector goes to sleep.")
+            logger.debug(
+                "<CollectorScheduler> The echo-loop collector goes to sleep.")
             return False
         # ===========================
         # 配置launcher
@@ -287,18 +307,17 @@ class CollectorScheduler(TasksScheduler):
         alice_name = alice.action_name
         start_time = datetime.now()
         # running_limit = alice.work_clock_max_wait + self.echo_limit
-        running_limit = int(sum([alice.work_clock_max_wait, self.echo_limit]) / 2)
+        running_limit = int(
+            sum([alice.work_clock_max_wait, self.echo_limit]) / 2)
         # 更新运行状态
-        self.running_jobs.update(
-            {
-                alice_id: {
-                    "api": api,
-                    "start-time": start_time,
-                    "running-limit": running_limit,
-                    "name": alice_name
-                }
+        self.running_jobs.update({
+            alice_id: {
+                "api": api,
+                "start-time": start_time,
+                "running-limit": running_limit,
+                "name": alice_name
             }
-        )
+        })
         try:
             # :)清理桌面
             alice.run(api)
@@ -309,6 +328,7 @@ class CollectorScheduler(TasksScheduler):
             try:
                 # :)签退下班
                 self.running_jobs.pop(alice_id)
-                logger.debug(f">> Detach <{alice_name}> --> [session_id] {alice_id}")
-            except (KeyError,):
+                logger.debug(
+                    f">> Detach <{alice_name}> --> [session_id] {alice_id}")
+            except (KeyError, ):
                 pass

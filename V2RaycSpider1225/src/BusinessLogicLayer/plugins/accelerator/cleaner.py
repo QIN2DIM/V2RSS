@@ -13,15 +13,15 @@ from src.BusinessCentralLayer.middleware.redis_io import RedisClient
 from src.BusinessCentralLayer.setting import REDIS_SECRET_KEY, CRAWLER_SEQUENCE, logger, terminal_echo
 from .core import CoroutineSpeedup
 
-WHITELIST = [
-    "www.kaikaiyun.cyou"
-]
+WHITELIST = ["www.kaikaiyun.cyou"]
 
 
 class SubscribesCleaner(CoroutineSpeedup):
     """解耦清洗插件：国内IP调用很可能出现性能滑坡"""
-
-    def __init__(self, debug=False, whitelist: list = None, threshold: int = 4):
+    def __init__(self,
+                 debug=False,
+                 whitelist: list = None,
+                 threshold: int = 4):
         """
 
         :param debug:
@@ -47,13 +47,17 @@ class SubscribesCleaner(CoroutineSpeedup):
         try:
             # 白名单对象，拒绝清除
             if subs in self.whitelist:
-                logger.info(f"<SubscribeCleaner> Mission pass cause by whitelist:{self.whitelist} | {subs}")
+                logger.info(
+                    f"<SubscribeCleaner> Mission pass cause by whitelist:{self.whitelist} | {subs}"
+                )
             else:
                 self.rc.hdel(key_, subs)
                 # terminal_echo(f"detach -> {subs} {err_}", 3)
                 logger.debug(f"<SubscribeCleaner> detach -> {subs} {err_}")
         except redis_error.ConnectionError:
-            logger.critical("<SubscribeCleaner> The local network communication is abnormal.")
+            logger.critical(
+                "<SubscribeCleaner> The local network communication is abnormal."
+            )
 
     def control_driver(self, task):
         """
@@ -67,9 +71,12 @@ class SubscribesCleaner(CoroutineSpeedup):
             node_info: dict = SubscribeParser(sub_info[0]).parse_subscribe()
             # 订阅解耦
             if node_info['nodes'].__len__() <= self.threshold:
-                self._del_subs(sub_info[-1], sub_info[0], "decouple active removal")
+                self._del_subs(sub_info[-1], sub_info[0],
+                               "decouple active removal")
             elif self.debug:
-                terminal_echo(f"valid -- {node_info['subs']} -- {len(node_info['nodes'])}", 1)
+                terminal_echo(
+                    f"valid -- {node_info['subs']} -- {len(node_info['nodes'])}",
+                    1)
         except (UnicodeDecodeError, TypeError) as e:
             # 对于已标记“解析错误”的订阅 更新其请求次数
             if self.temp_cache.get(sub_info[0]):
@@ -106,7 +113,9 @@ class SubscribeParser:
             return True
         return False
 
-    def parse_subscribe(self, subscribe: str = None, auto_base64=False) -> dict:
+    def parse_subscribe(self,
+                        subscribe: str = None,
+                        auto_base64=False) -> dict:
         """
         将订阅链接解析成节点数据
         :param subscribe:
@@ -120,8 +129,9 @@ class SubscribeParser:
 
         # 订阅类型
         headers = {
-            'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
-                          " Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.53",
+            'User-Agent':
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+            " Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.53",
         }
         # 流量不通过系统代理
         proxies = {'http': None, 'https': None}
@@ -132,7 +142,10 @@ class SubscribeParser:
 
             # 解析订阅
             nodes_bytes = base64.decodebytes(res.content)
-            nodes = [self.parse_share_link(i, auto_base64)['msg'] for i in nodes_bytes.decode("utf8").split("\n") if i]
+            nodes = [
+                self.parse_share_link(i, auto_base64)['msg']
+                for i in nodes_bytes.decode("utf8").split("\n") if i
+            ]
 
             return {'subs': subscribe, "nodes": nodes}
 
@@ -152,7 +165,9 @@ class SubscribeParser:
         except requests.exceptions.RequestException as e:
             logger.error(f"{subscribe} -- {e}")
 
-    def parse_share_link(self, node: str = None, auto_parse: bool = True) -> dict:
+    def parse_share_link(self,
+                         node: str = None,
+                         auto_parse: bool = True) -> dict:
         """
 
         :param auto_parse: 自动进行 BASE64 解密工作
@@ -174,6 +189,9 @@ class SubscribeParser:
     def parse_out(self, auto_base64=True) -> dict:
         response = self.is_subscribe(self.url)
         return {
-            "is_subscribe": response,
-            "body": self.parse_subscribe(auto_base64=auto_base64) if response else self.parse_share_link()
+            "is_subscribe":
+            response,
+            "body":
+            self.parse_subscribe(auto_base64=auto_base64)
+            if response else self.parse_share_link()
         }

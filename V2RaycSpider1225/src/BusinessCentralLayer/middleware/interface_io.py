@@ -17,7 +17,10 @@ from .redis_io import RedisClient
 # 越权参数重置
 # ----------------------------------------
 
-ACTIONS_IO = [f'{[j[0] for j in i.get("hyper_params").items() if j[-1]]}{i.get("name")}' for i in slavers.__entropy__]
+ACTIONS_IO = [
+    f'{[j[0] for j in i.get("hyper_params").items() if j[-1]]}{i.get("name")}'
+    for i in slavers.__entropy__
+]
 
 
 # ----------------------------------------
@@ -37,11 +40,13 @@ class _ContainerDegradation:
         for task_name, task_interval in launch_interval.items():
             # 未填写或填写异常数字
             if (not task_interval) or (task_interval <= 1):
-                logger.critical(f"<launch_interval>--{task_name}设置出现致命错误，即将熔断线程。间隔为空或小于1")
+                logger.critical(
+                    f"<launch_interval>--{task_name}设置出现致命错误，即将熔断线程。间隔为空或小于1")
                 raise Exception
             # 填写浮点数
             if not isinstance(task_interval, int):
-                logger.warning(f"<launch_interval>--{task_name}任务间隔应为整型int，参数已拟合")
+                logger.warning(
+                    f"<launch_interval>--{task_name}任务间隔应为整型int，参数已拟合")
                 # 尝试类型转换若不中则赋一个默认值 60s
                 try:
                     launch_interval.update({task_name: int(task_interval)})
@@ -49,7 +54,8 @@ class _ContainerDegradation:
                     launch_interval.update({task_name: 60})
             # 填写过小的任务间隔数，既设定的发动频次过高，主动拦截并修正为最低容错 60s/run
             if task_interval < 60:
-                logger.warning(f"<launch_interval>--{task_name}任务频次过高，应不少于60/次,参数已拟合")
+                logger.warning(
+                    f"<launch_interval>--{task_name}任务频次过高，应不少于60/次,参数已拟合")
                 launch_interval.update({task_name: 60})
 
         return launch_interval
@@ -61,9 +67,12 @@ class _ContainerDegradation:
     def startup_ddt_overdue(self, task_name: str = None):
         if task_name is None:
             for new_task in self.deploy_cluster:
-                RedisClient().refresh(key_name=REDIS_SECRET_KEY.format(new_task), cross_threshold=3)
+                RedisClient().refresh(
+                    key_name=REDIS_SECRET_KEY.format(new_task),
+                    cross_threshold=3)
         else:
-            RedisClient().refresh(key_name=REDIS_SECRET_KEY.format(task_name), cross_threshold=3)
+            RedisClient().refresh(key_name=REDIS_SECRET_KEY.format(task_name),
+                                  cross_threshold=3)
 
     def startup_collector(self):
         """
@@ -87,14 +96,17 @@ _cd = _ContainerDegradation()
 
 
 class _SystemEngine:
-
     def __init__(self) -> None:
         if ENABLE_DEPLOY['global']:
-            terminal_echo(f"[SystemEngineIO] CONFIG_ENABLE_DEPLOY:{ENABLE_DEPLOY}", 1)
+            terminal_echo(
+                f"[SystemEngineIO] CONFIG_ENABLE_DEPLOY:{ENABLE_DEPLOY}", 1)
             if ENABLE_DEPLOY['tasks']['collector']:
-                terminal_echo(f"[SystemEngineIO] CONFIG_COLLECTOR_PERMISSION:{CRAWLER_SEQUENCE}", 1)
+                terminal_echo(
+                    f"[SystemEngineIO] CONFIG_COLLECTOR_PERMISSION:{CRAWLER_SEQUENCE}",
+                    1)
                 for action_image in ACTIONS_IO:
-                    terminal_echo(f"[SystemEngineIO] CONFIG_ACTIONS:{action_image}", 1)
+                    terminal_echo(
+                        f"[SystemEngineIO] CONFIG_ACTIONS:{action_image}", 1)
 
         logger.success("<SystemEngineIO> Startup coroutine engine.")
         logger.success("<SystemEngineIO> Service core loading completed.")
@@ -124,27 +136,37 @@ class _SystemEngine:
             interval = _cd.sync_launch_interval()
             # 添加任务
             for docker_name, permission in tasks.items():
-                logger.info(f"[Job] {docker_name} -- interval: {interval[docker_name]}s -- run: {permission}")
+                logger.info(
+                    f"[Job] {docker_name} -- interval: {interval[docker_name]}s -- run: {permission}"
+                )
                 # 若开启采集器则使用CollectorScheduler映射任务
                 # 使用久策略将此分流判断注释既可
                 if docker_name == "collector":
                     docker_of_collector_scheduler.mapping_config({
-                        'interval': interval[docker_name],
-                        'permission': permission,
+                        'interval':
+                        interval[docker_name],
+                        'permission':
+                        permission,
                     })
                     continue
                 if permission:
                     docker_of_based_scheduler.add_job({
-                        "name": docker_name,
-                        "api": task2function[docker_name],
-                        'interval': interval[docker_name],
-                        'permission': True
+                        "name":
+                        docker_name,
+                        "api":
+                        task2function[docker_name],
+                        'interval':
+                        interval[docker_name],
+                        'permission':
+                        True
                     })
             # 启动定时任务 要求执行采集任务时必须至少携带另一种其他部署任务
             docker_of_collector_scheduler.deploy_jobs()
             docker_of_based_scheduler.deploy_jobs()
         except ConnectionError:
-            logger.warning("<RedisIO> Network communication failure, please check the network connection.")
+            logger.warning(
+                "<RedisIO> Network communication failure, please check the network connection."
+            )
         except KeyError:
             logger.critical(f'config中枢层配置被篡改，ENABLE_DEPLOY 配置中无对应键值对{tasks}')
             sys.exit()
@@ -183,7 +205,9 @@ class _SystemEngine:
         # 同步任务队列(广度优先)
         # 这是一次越权执行，无论本机是否具备collector权限都将执行一轮协程空间的创建任务
         for class_ in CRAWLER_SEQUENCE:
-            sailor.manage_task(class_=class_, beat_sync=beat_sync, force_run=force_run)
+            sailor.manage_task(class_=class_,
+                               beat_sync=beat_sync,
+                               force_run=force_run)
 
         # FIXME 节拍同步
         if not beat_sync:
@@ -204,18 +228,15 @@ class _SystemEngine:
             # 部署定时任务
             if ENABLE_DEPLOY['global']:
                 process_list.append(
-                    multiprocessing.Process(
-                        target=_SystemEngine.run_deploy,
-                        name='deploymentTimingTask'
-                    ))
+                    multiprocessing.Process(target=_SystemEngine.run_deploy,
+                                            name='deploymentTimingTask'))
 
             # 部署 flask
             if ENABLE_SERVER:
-                process_list.append(multiprocessing.Process(
-                    target=_SystemEngine.run_server,
-                    name='deploymentFlaskAPI',
-                    kwargs=kwargs
-                ))
+                process_list.append(
+                    multiprocessing.Process(target=_SystemEngine.run_server,
+                                            name='deploymentFlaskAPI',
+                                            kwargs=kwargs))
 
             # 执行多进程任务
             for process_ in process_list:
@@ -254,8 +275,10 @@ class SystemInterface:
     def ddt(task_name: str = None):
         if not task_name:
             _cd.startup_ddt_overdue()
-        elif not (isinstance(task_name, str) and task_name in CRAWLER_SEQUENCE):
-            logger.warning("<Interface>传入的参数（task_name）不合法，任务类型必须被指定在CRAWLER_SEQUENCE之中")
+        elif not (isinstance(task_name, str)
+                  and task_name in CRAWLER_SEQUENCE):
+            logger.warning(
+                "<Interface>传入的参数（task_name）不合法，任务类型必须被指定在CRAWLER_SEQUENCE之中")
         else:
             _cd.startup_ddt_overdue(task_name)
 
@@ -264,12 +287,10 @@ class SystemInterface:
         _cd.startup_ddt_decouple(debug=debug, power=power)
 
     @staticmethod
-    def run(
-            deploy_: bool = None,
+    def run(deploy_: bool = None,
             beat_sync: bool = True,
             force_run: bool = None,
-            **kwargs
-    ) -> None:
+            **kwargs) -> None:
         """
         主程序入口
         @param force_run:以debug身份强制运行采集器

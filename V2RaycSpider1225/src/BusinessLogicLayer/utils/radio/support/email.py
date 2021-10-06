@@ -4,7 +4,10 @@ from email.mime.text import MIMEText
 from typing import List
 
 
-def send_email(msg, to_: List[str] or str or set, smtp_account: dict, headers: str = None):
+def send_email(msg,
+               to_: List[str] or str or set,
+               smtp_account: dict,
+               headers: str = None):
     """
     发送运维信息，该函数仅用于发送简单文本信息
     :param smtp_account: {‘email’: "", 'sid': ""}
@@ -31,7 +34,9 @@ def send_email(msg, to_: List[str] or str or set, smtp_account: dict, headers: s
     if to_ == 'self':
         to_ = set(sender, )
     if isinstance(to_, str):
-        to_ = [to_, ]
+        to_ = [
+            to_,
+        ]
     if isinstance(to_, list):
         to_ = set(to_)
     if not isinstance(to_, set):

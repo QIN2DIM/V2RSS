@@ -52,23 +52,27 @@ def _update_entropy(rc=None, entropy=None):
     try:
         atomic_queue = []
         for entity_ in entropy.copy():
-            work_filed = [f"{j[0].upper()}" for j in entity_['hyper_params'].items() if j[-1]]
+            work_filed = [
+                f"{j[0].upper()}" for j in entity_['hyper_params'].items()
+                if j[-1]
+            ]
             work_filed = "&".join(work_filed).strip()
             atomic_item = f"|{work_filed}| {entity_['name']}"
             atomic_queue.append(atomic_item)
         # 更新列表
         if rc is None:
             rc = RedisClient()
-        rc.get_driver().set(name=REDIS_SECRET_KEY.format("__entropy__"), value="$".join(atomic_queue))
+        rc.get_driver().set(name=REDIS_SECRET_KEY.format("__entropy__"),
+                            value="$".join(atomic_queue))
     except Exception as e:
         logger.exception(e)
 
 
 def sync_actions(
-        class_: str,
-        mode_sync: str = None,
-        only_sync=False,
-        beat_sync=True,
+    class_: str,
+    mode_sync: str = None,
+    only_sync=False,
+    beat_sync=True,
 ):
     """
 
@@ -78,7 +82,8 @@ def sync_actions(
     @param beat_sync:
     @return:
     """
-    logger.info(f"<TaskManager> Sync{mode_sync.title()} || 正在同步<{class_}>任务队列...")
+    logger.info(
+        f"<TaskManager> Sync{mode_sync.title()} || 正在同步<{class_}>任务队列...")
 
     # ================================================
     # 节拍停顿 原子同步
@@ -94,7 +99,8 @@ def sync_actions(
     # 公示即将发动的采集任务数据
     _update_entropy(rc=rc, entropy=__entropy__)
     # 通由工厂读取映射表批量生产采集器运行实体
-    sync_queue: list = ActionShunt(class_, silence=True, beat_sync=beat_sync).shunt()
+    sync_queue: list = ActionShunt(class_, silence=True,
+                                   beat_sync=beat_sync).shunt()
     # 打乱任务序列
     random.shuffle(sync_queue)
 
@@ -103,7 +109,8 @@ def sync_actions(
     # ================================================
     if mode_sync == 'upload':
         # fixme:临时方案:解决链接溢出问题
-        if round(rc.get_len(REDIS_SECRET_KEY.format(class_)) * 1.25) > SINGLE_TASK_CAP:
+        if round(rc.get_len(REDIS_SECRET_KEY.format(class_)) *
+                 1.25) > SINGLE_TASK_CAP:
             logger.warning("<TaskManager> UploadHijack -- 连接池任务即将溢出，上传任务被劫持")
             return None
         # 持续实例化采集任务
@@ -128,14 +135,20 @@ def sync_actions(
                 if _state != 'continue':
                     return _state
                 if async_queue.__len__() == 0:
-                    async_queue = ActionShunt(atomic, silence=True, beat_sync=beat_sync).shunt()
+                    async_queue = ActionShunt(atomic,
+                                              silence=True,
+                                              beat_sync=beat_sync).shunt()
                     random.shuffle(async_queue)
                 # 将采集器实体推送至Poseidon本机消息队列
                 Middleware.poseidon.put_nowait(async_queue.pop())
-                logger.info(f'<TaskManager> offload atomic<{atomic}>({Middleware.poseidon.qsize()})')
+                logger.info(
+                    f'<TaskManager> offload atomic<{atomic}>({Middleware.poseidon.qsize()})'
+                )
                 # 节拍同步线程锁
                 if only_sync:
-                    logger.warning(f"<TaskManager> OnlySync -- <{atomic}>触发节拍同步线程锁，仅下载一枚原子任务")
+                    logger.warning(
+                        f"<TaskManager> OnlySync -- <{atomic}>触发节拍同步线程锁，仅下载一枚原子任务"
+                    )
                     return 'offload'
             else:
                 return 'offload'
@@ -158,20 +171,19 @@ def sync_actions(
 
             # 节拍同步线程锁
             if only_sync:
-                logger.warning(f"<TaskManager> OnlySync -- <{class_}>触发节拍同步线程锁，仅下载一枚原子任务")
+                logger.warning(
+                    f"<TaskManager> OnlySync -- <{class_}>触发节拍同步线程锁，仅下载一枚原子任务")
                 return 'stop'
 
         return 'offload'
 
 
 @logger.catch()
-def manage_task(
-        class_: str = 'v2ray',
-        only_sync=False,
-        run_collector=None,
-        beat_sync=True,
-        force_run=None
-) -> bool:
+def manage_task(class_: str = 'v2ray',
+                only_sync=False,
+                run_collector=None,
+                beat_sync=True,
+                force_run=None) -> bool:
     """
     加载任务
     @param force_run: debug模式下的强制运行，可逃逸队列满载检测
@@ -190,7 +202,8 @@ def manage_task(
         return False
 
     # collector_permission 审核采集权限，允许越权传参。当手动指定参数时，可授予本机采集权限，否则使用配置权限
-    collector_permission: bool = ENABLE_DEPLOY.get('tasks').get('collector') if run_collector is None else run_collector
+    collector_permission: bool = ENABLE_DEPLOY.get('tasks').get(
+        'collector') if run_collector is None else run_collector
 
     # force_run 强制运行，若不指定该参数，则以“是否单机部署”决定“是否运行force_run”
     # 既默认单机模式下开启force_run

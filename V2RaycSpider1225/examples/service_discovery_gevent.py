@@ -44,9 +44,12 @@ def action(register_url: str = None, share_type="v2ray", output_path_csv=None):
     # If the parameter `register_url` is none, the sample is loaded.
     register_url = preload() if register_url is None else register_url
     # 报告存储路径
-    output_path_csv = get_default_heap() if output_path_csv is None else output_path_csv
+    output_path_csv = get_default_heap(
+    ) if output_path_csv is None else output_path_csv
     try:
-        machine = ServiceDiscovery(register_url, silence=True, output_path_csv=output_path_csv)
+        machine = ServiceDiscovery(register_url,
+                                   silence=True,
+                                   output_path_csv=output_path_csv)
         # 解析运行报告
         runtime_report = machine.get_runtime_report(share_type)
         # 缓存运行报告

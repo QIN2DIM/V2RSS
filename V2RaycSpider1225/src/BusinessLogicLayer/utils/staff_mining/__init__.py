@@ -8,4 +8,7 @@ from .support.staff_collector import StaffCollector
 
 __version__ = 'v0.1.1'
 
-__all__ = ['StaffCollector', 'IdentifyRecaptcha', 'StaffEntropyGenerator', 'StaffChecker', 'exceptions']
+__all__ = [
+    'StaffCollector', 'IdentifyRecaptcha', 'StaffEntropyGenerator',
+    'StaffChecker', 'exceptions'
+]

@@ -9,9 +9,13 @@ from .core import CoroutineSpeedup
 
 class ShuntRelease(CoroutineSpeedup):
     """accelerator性能释放关口"""
-
-    def __init__(self, work_queue=None, task_docker: list = None, power: int = DEFAULT_POWER):
-        super(ShuntRelease, self).__init__(work_q=work_queue, task_docker=task_docker, power=power)
+    def __init__(self,
+                 work_queue=None,
+                 task_docker: list = None,
+                 power: int = DEFAULT_POWER):
+        super(ShuntRelease, self).__init__(work_q=work_queue,
+                                           task_docker=task_docker,
+                                           power=power)
 
     def control_driver(self, task):
         try:
@@ -22,9 +26,9 @@ class ShuntRelease(CoroutineSpeedup):
 
 class ForceRunRelease(CoroutineSpeedup):
     """collector管理器实例化关口"""
-
     def __init__(self, task_docker: list = None, power: int = DEFAULT_POWER):
-        super(ForceRunRelease, self).__init__(task_docker=task_docker, power=power)
+        super(ForceRunRelease, self).__init__(task_docker=task_docker,
+                                              power=power)
 
         from src.BusinessLogicLayer.cluster.sailor import manage_task
 

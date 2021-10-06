@@ -7,4 +7,6 @@ from src.BusinessLogicLayer.utils.armour import GeeTestAdapter
 from .info_forgers import flow_probe
 from .info_forgers import get_header
 
-__all__ = ['GeeTest3', 'get_header', 'GeeTest2', 'GeeTestAdapter', 'flow_probe']
+__all__ = [
+    'GeeTest3', 'get_header', 'GeeTest2', 'GeeTestAdapter', 'flow_probe'
+]

@@ -32,18 +32,19 @@ class ActionShunt:
     # -----------------------------------------
 
     @staticmethod
-    def generate_entity(atomic: dict, silence=True, beat_sync=True, assault=False):
-        return ActionMasterGeneral(
-            silence=silence,
-            beat_sync=beat_sync,
-            action_name=atomic['name'],
-            register_url=atomic['register_url'],
-            anti_slider=atomic['anti_slider'],
-            life_cycle=atomic['life_cycle'],
-            email=atomic['email'],
-            hyper_params=atomic['hyper_params'],
-            assault=assault
-        ).run
+    def generate_entity(atomic: dict,
+                        silence=True,
+                        beat_sync=True,
+                        assault=False):
+        return ActionMasterGeneral(silence=silence,
+                                   beat_sync=beat_sync,
+                                   action_name=atomic['name'],
+                                   register_url=atomic['register_url'],
+                                   anti_slider=atomic['anti_slider'],
+                                   life_cycle=atomic['life_cycle'],
+                                   email=atomic['email'],
+                                   hyper_params=atomic['hyper_params'],
+                                   assault=assault).run
 
     def shunt(self):
         self._shunt_action()
@@ -76,24 +77,46 @@ class ActionShunt:
                     atomic['hyper_params'][passable_trace] = False
 
             # 根据步态特征实例化任务
-            entity_ = self.generate_entity(atomic=atomic, silence=self.silence, beat_sync=self.beat_sync)
+            entity_ = self.generate_entity(atomic=atomic,
+                                           silence=self.silence,
+                                           beat_sync=self.beat_sync)
             # 将实例化任务加入待执行队列
             self.shunt_seq.append(entity_)
 
 
 class DevilKingArmed(ActionMasterGeneral):
+    def __init__(
+        self,
+        register_url,
+        chromedriver_path,
+        silence: bool = True,
+        assault: bool = False,
+        beat_sync: bool = True,
+        email: str = None,
+        life_cycle: int = None,
+        anti_slider: bool = False,
+        hyper_params: dict = None,
+        action_name: str = None,
+        debug: bool = False,
+    ):
+        super(DevilKingArmed,
+              self).__init__(register_url=register_url,
+                             chromedriver_path=chromedriver_path,
+                             silence=silence,
+                             assault=assault,
+                             beat_sync=beat_sync,
+                             email=email,
+                             life_cycle=life_cycle,
+                             anti_slider=anti_slider,
+                             hyper_params=hyper_params,
+                             action_name=action_name,
+                             debug=debug)
 
-    def __init__(self, register_url, chromedriver_path,
-                 silence: bool = True, assault: bool = False, beat_sync: bool = True,
-                 email: str = None, life_cycle: int = None, anti_slider: bool = False,
-                 hyper_params: dict = None, action_name: str = None, debug: bool = False, ):
-        super(DevilKingArmed, self).__init__(register_url=register_url, chromedriver_path=chromedriver_path,
-                                             silence=silence, assault=assault, beat_sync=beat_sync,
-                                             email=email, life_cycle=life_cycle, anti_slider=anti_slider,
-                                             hyper_params=hyper_params, action_name=action_name, debug=debug)
 
-
-def devil_king_armed(atomic: dict, silence=True, beat_sync=True, assault=False):
+def devil_king_armed(atomic: dict,
+                     silence=True,
+                     beat_sync=True,
+                     assault=False):
     return DevilKingArmed(
         beat_sync=beat_sync,
         assault=assault,
@@ -114,7 +137,8 @@ def reset_task() -> list:
     from src.BusinessCentralLayer.setting import SINGLE_TASK_CAP, REDIS_SECRET_KEY
 
     rc = RedisClient()
-    running_state = dict(zip(CRAWLER_SEQUENCE, [[] for _ in range(len(CRAWLER_SEQUENCE))]))
+    running_state = dict(
+        zip(CRAWLER_SEQUENCE, [[] for _ in range(len(CRAWLER_SEQUENCE))]))
     action_list = __entropy__.copy()
     qsize = len(action_list)
     random.shuffle(action_list)
@@ -122,10 +146,12 @@ def reset_task() -> list:
         # 进行各个类型的实体任务的分类
         for task_name in CRAWLER_SEQUENCE:
             # 获取池中对应类型的数据剩余
-            storage_remain: int = rc.get_len(REDIS_SECRET_KEY.format(f'{task_name}'))
+            storage_remain: int = rc.get_len(
+                REDIS_SECRET_KEY.format(f'{task_name}'))
             # 进行各个类型的实体任务的分类
             for atomic in action_list:
-                permission = {} if atomic.get('hyper_params') is None else atomic.get('hyper_params')
+                permission = {} if atomic.get(
+                    'hyper_params') is None else atomic.get('hyper_params')
                 if permission.get(task_name) is True:
                     running_state[task_name].append(atomic)
             # 在库数据溢出 返回空执行队列
@@ -138,7 +164,9 @@ def reset_task() -> list:
                 running_state[task_name].pop()
                 qsize -= 1
 
-        instances = [atomic for i in list(running_state.values()) if i for atomic in i]
+        instances = [
+            atomic for i in list(running_state.values()) if i for atomic in i
+        ]
         return instances
     # 网络异常，主动捕获RedisClient()的连接错误
     except ConnectionError:

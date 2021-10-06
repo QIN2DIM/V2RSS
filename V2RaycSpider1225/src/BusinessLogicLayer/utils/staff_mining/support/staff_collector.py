@@ -14,7 +14,11 @@ from ..common.exceptions import CollectorSwitchError
 
 
 class StaffCollector:
-    def __init__(self, cache_path: str, chromedriver_path: str, silence: bool = True, debug: bool = False):
+    def __init__(self,
+                 cache_path: str,
+                 chromedriver_path: str,
+                 silence: bool = True,
+                 debug: bool = False):
         """
 
         :param cache_path:
@@ -70,7 +74,8 @@ class StaffCollector:
                 try:
                     ActionChains(api).send_keys(Keys.END).perform()
                     time.sleep(0.5)
-                    page_switchers = api.find_elements_by_xpath("//a[@id='pnnext']")
+                    page_switchers = api.find_elements_by_xpath(
+                        "//a[@id='pnnext']")
                     next_page_bottom = page_switchers[-1]
                     next_page_bottom.click()
                     break
@@ -87,7 +92,9 @@ class StaffCollector:
     def _capture_host(self, api: Chrome):
         time.sleep(1)
         # hosts = api.find_elements_by_xpath("//span[@class='qXLe6d dXDvrc']//span[@class='fYyStc']")
-        hosts = api.find_elements_by_xpath("//div[contains(@class,'NJjxre')]//cite[@class='iUh30 Zu0yb qLRx3b tjvcx']")
+        hosts = api.find_elements_by_xpath(
+            "//div[contains(@class,'NJjxre')]//cite[@class='iUh30 Zu0yb qLRx3b tjvcx']"
+        )
 
         with open(self.cache_path, 'a', encoding='utf8') as f:
             for host in hosts:
@@ -108,8 +115,10 @@ class StaffCollector:
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
         options.add_argument('--log-level=3')
         # 更换头部
-        options.add_argument("user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                             "(KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36 Edg/92.0.902.78'")
+        options.add_argument(
+            "user-agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36 Edg/92.0.902.78'"
+        )
         # 静默启动
         if self.silence is True:
             options.add_argument('--headless')
@@ -119,17 +128,21 @@ class StaffCollector:
         # 抑制自动化控制特征
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option('useAutomationExtension', False)
-        options.add_experimental_option('excludeSwitches', ['enable-automation'])
+        options.add_experimental_option('excludeSwitches',
+                                        ['enable-automation'])
 
         try:
-            _api = Chrome(options=options, executable_path=self.CHROMEDRIVER_PATH)
-            _api.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-                "source": """
+            _api = Chrome(options=options,
+                          executable_path=self.CHROMEDRIVER_PATH)
+            _api.execute_cdp_cmd(
+                "Page.addScriptToEvaluateOnNewDocument", {
+                    "source":
+                    """
                            Object.defineProperty(navigator, 'webdriver', {
                              get: () => undefined
                            })
                          """
-            })
+                })
             return _api
         except WebDriverException as e:
             if "chromedriver" in str(e):
@@ -149,14 +162,12 @@ class StaffCollector:
         # API 实例化
         api = self.set_spider_options()
         # 进度条 初始化
-        loop_progress = tqdm(
-            total=page_num,
-            desc="STAFF COLLECTOR",
-            ncols=150,
-            unit="piece",
-            dynamic_ncols=False,
-            leave=True
-        )
+        loop_progress = tqdm(total=page_num,
+                             desc="STAFF COLLECTOR",
+                             ncols=150,
+                             unit="piece",
+                             dynamic_ncols=False,
+                             leave=True)
         loop_progress.set_postfix({"status": "__initialize__"})
 
         try:

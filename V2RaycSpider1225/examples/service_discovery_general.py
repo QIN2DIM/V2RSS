@@ -30,7 +30,10 @@ def preload(get_sample: bool = True):
     return urls
 
 
-def demo(register_url: str = preload(), silence=True, share_type="v2ray", start_cache: bool = False):
+def demo(register_url: str = preload(),
+         silence=True,
+         share_type="v2ray",
+         start_cache: bool = False):
     """
 
     :param start_cache:

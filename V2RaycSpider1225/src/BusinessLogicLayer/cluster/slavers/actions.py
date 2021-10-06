@@ -8,7 +8,10 @@ ActionOhrCloud = {
     'register_url': "https://www.ssr99.xyz/auth/register",
     'life_cycle': 2,
     'anti_slider': False,
-    'hyper_params': {'ssr': True, "v2ray": True},
+    'hyper_params': {
+        'ssr': True,
+        "v2ray": True
+    },
     'email': '@qq.com'
 }
 # =============================================
@@ -22,7 +25,11 @@ ActionKakCloud = {
     'register_url': "https://www.kaikaiyun.icu/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': False, "v2ray": True, 'proxy': True},
+    'hyper_params': {
+        'ssr': False,
+        "v2ray": True,
+        'proxy': True
+    },
     'email': '@gmail.com'
 }
 # =============================================
@@ -35,7 +42,10 @@ ActionJfCloud = {
     'register_url': "https://www.jafiyun.cc/auth/register",
     'life_cycle': 1,
     'anti_slider': False,
-    'hyper_params': {'ssr': False, "v2ray": True},
+    'hyper_params': {
+        'ssr': False,
+        "v2ray": True
+    },
     'email': '@gmail.com'
 }
 # =============================================
@@ -48,7 +58,10 @@ ActionN95Cloud = {
     'register_url': "https://n95cloud.vip/auth/register",
     'life_cycle': 1,
     'anti_slider': False,
-    'hyper_params': {'ssr': True, "v2ray": True},
+    'hyper_params': {
+        'ssr': True,
+        "v2ray": True
+    },
     'email': '@gmail.com'
 }
 # =============================================
@@ -61,7 +74,10 @@ ActionTheSSR = {
     'register_url': "https://ssrthe.shop/auth/register",
     'life_cycle': 1,
     'anti_slider': False,
-    'hyper_params': {'ssr': True, "v2ray": True},
+    'hyper_params': {
+        'ssr': True,
+        "v2ray": True
+    },
     'email': '@qq.com'
 }
 # =============================================
@@ -74,7 +90,10 @@ ActionUfoCloud = {
     'register_url': "https://ufocloud.xyz/auth/register",
     'life_cycle': 1,
     'anti_slider': False,
-    'hyper_params': {'ssr': False, "v2ray": True},
+    'hyper_params': {
+        'ssr': False,
+        "v2ray": True
+    },
     'email': '@qq.com'
 }
 # =============================================
@@ -87,7 +106,10 @@ ActionWgCloud = {
     'register_url': "https://www.wiougong.space/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": True},
+    'hyper_params': {
+        'ssr': True,
+        "v2ray": True
+    },
     'email': '@gmail.com'
 }
 # =============================================
@@ -100,7 +122,10 @@ ActionZuiSuCloud = {
     'register_url': "https://zuisucloud.cloud/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": True},
+    'hyper_params': {
+        'ssr': True,
+        "v2ray": True
+    },
     'email': '@gmail.com'
 }
 # =============================================
@@ -113,7 +138,11 @@ ActionJdSuCloud = {
     'register_url': "https://jdycloud.xyz/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": False, 'usr_email': True},
+    'hyper_params': {
+        'ssr': True,
+        "v2ray": False,
+        'usr_email': True
+    },
     'email': '@gmail.com'
 }
 # =============================================
@@ -127,7 +156,10 @@ ActionHuoJianCloud = {
     'register_url': "https://www.666hjy.com/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": False},
+    'hyper_params': {
+        'ssr': True,
+        "v2ray": False
+    },
     'email': '@qq.com'
 }
 # =============================================
@@ -140,7 +172,10 @@ ActionUUCloud = {
     'register_url': "https://www.uuyun.club/auth/register",
     'life_cycle': 1,
     'anti_slider': False,
-    'hyper_params': {'ssr': False, "v2ray": True},
+    'hyper_params': {
+        'ssr': False,
+        "v2ray": True
+    },
     'email': '@gmail.com'
 }
 # =============================================
@@ -153,7 +188,10 @@ ActionSuFeiCloud = {
     'register_url': "https://www.dagewokuaitule.icu/auth/register",
     'life_cycle': 2,
     'anti_slider': True,
-    'hyper_params': {'ssr': True, "v2ray": True},
+    'hyper_params': {
+        'ssr': True,
+        "v2ray": True
+    },
     'email': '@gmail.com'
 }
 
@@ -167,7 +205,10 @@ ActionMiTaoCloud = {
     'register_url': "https://mitaocloud.net/auth/register",
     'life_cycle': 1,
     'anti_slider': False,
-    'hyper_params': {'ssr': False, "v2ray": True},
+    'hyper_params': {
+        'ssr': False,
+        "v2ray": True
+    },
     'email': '@gmail.com'
 }
 # =============================================
@@ -181,7 +222,10 @@ ActionReCloud = {
     'register_url': "https://www.rerere.xyz/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': False, "v2ray": True},
+    'hyper_params': {
+        'ssr': False,
+        "v2ray": True
+    },
     'email': '@gmail.com'
 }
 # =============================================
@@ -194,7 +238,10 @@ ActionMxCloud = {
     'register_url': "https://www.mxyssr.com/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': False, "v2ray": True},
+    'hyper_params': {
+        'ssr': False,
+        "v2ray": True
+    },
     'email': '@gmail.com'
 }
 # =============================================
@@ -207,7 +254,10 @@ ActionGsouCloud = {
     'register_url': "https://gsou.cloud/auth/register",
     'life_cycle': 3,
     'anti_slider': False,
-    'hyper_params': {'ssr': True, 'v2ray': False},
+    'hyper_params': {
+        'ssr': True,
+        'v2ray': False
+    },
     'email': "@gmail.com"
 }
 # =============================================
@@ -222,7 +272,10 @@ ActionDuosCloud = {
     'register_url': "https://www.jiuyecaody.xyz/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': False, 'v2ray': True},
+    'hyper_params': {
+        'ssr': False,
+        'v2ray': True
+    },
     'email': "@gmail.com"
 }
 # =============================================
@@ -235,7 +288,10 @@ ActionThunderCloud = {
     'register_url': "https://sdyun.cc/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': True, 'v2ray': False},
+    'hyper_params': {
+        'ssr': True,
+        'v2ray': False
+    },
     'email': "@gmail.com"
 }
 # =============================================
@@ -250,7 +306,10 @@ ActionBitEbCloud = {
     'register_url': "https://biteb.me/auth/register",
     'life_cycle': 3,
     'anti_slider': False,
-    'hyper_params': {'ssr': False, 'v2ray': True},
+    'hyper_params': {
+        'ssr': False,
+        'v2ray': True
+    },
     'email': "@gmail.com"
 }
 
@@ -268,7 +327,10 @@ ActionJssForSSRCloud = {
     'register_url': "https://www.jssr.cc/auth/register",
     'life_cycle': 2,
     'anti_slider': True,
-    'hyper_params': {'ssr': True, 'v2ray': False},
+    'hyper_params': {
+        'ssr': True,
+        'v2ray': False
+    },
     'email': "@gmail.com"
 }
 
@@ -277,7 +339,10 @@ ActionJssForV2rayCloud = {
     'register_url': "https://www.jssr.cc/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': False, 'v2ray': True},
+    'hyper_params': {
+        'ssr': False,
+        'v2ray': True
+    },
     'email': "@gmail.com"
 }
 
@@ -291,7 +356,10 @@ Action7ccCloud = {
     'register_url': "https://7cc.buzz/auth/register",
     'life_cycle': 5,
     'anti_slider': False,
-    'hyper_params': {'ssr': False, 'v2ray': True},
+    'hyper_params': {
+        'ssr': False,
+        'v2ray': True
+    },
     'email': "@qq.com"
 }
 # =============================================
@@ -304,7 +372,10 @@ ActionPPForV2rayCloud = {
     'register_url': "https://www.ppyun.fun/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': False, 'v2ray': True},
+    'hyper_params': {
+        'ssr': False,
+        'v2ray': True
+    },
     'email': "@gmail.com"
 }
 ActionPPForSSRCloud = {
@@ -312,7 +383,10 @@ ActionPPForSSRCloud = {
     'register_url': "https://www.ppyun.fun/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': True, 'v2ray': False},
+    'hyper_params': {
+        'ssr': True,
+        'v2ray': False
+    },
     'email': "@gmail.com"
 }
 # =============================================
@@ -325,7 +399,10 @@ ActionAaxCloud = {
     'register_url': "https://aaxc.club/auth/register",
     'life_cycle': 1,
     'anti_slider': False,
-    'hyper_params': {'ssr': False, 'v2ray': True},
+    'hyper_params': {
+        'ssr': False,
+        'v2ray': True
+    },
     'email': "@gmail.com",
     'feature': 'prism',
 }
@@ -339,7 +416,11 @@ ActionJs8cCloud = {
     'register_url': "https://js8c.xyz/auth/register",
     'life_cycle': 1,
     'anti_slider': True,
-    'hyper_params': {'ssr': False, 'v2ray': True, 'usr_email': True},
+    'hyper_params': {
+        'ssr': False,
+        'v2ray': True,
+        'usr_email': True
+    },
     'email': "@gmail.com",
 }
 
@@ -353,7 +434,10 @@ ActionZZCloud = {
     'register_url': "https://zz12.xyz/auth/register",
     'life_cycle': 6,
     'anti_slider': False,
-    'hyper_params': {'ssr': False, 'v2ray': True},
+    'hyper_params': {
+        'ssr': False,
+        'v2ray': True
+    },
     'email': "@gmail.com",
 }
 
@@ -367,7 +451,11 @@ ActionMaoQCloud = {
     'register_url': "https://maoqiang.xyz/auth/register",
     'life_cycle': 2,
     'anti_slider': False,
-    'hyper_params': {'ssr': True, 'v2ray': False, 'usr_email': True},
+    'hyper_params': {
+        'ssr': True,
+        'v2ray': False,
+        'usr_email': True
+    },
     'email': "@gmail.com",
 }
 
@@ -381,7 +469,6 @@ __entropy__ = [
     # ---------------------
     # [启动] 需要滑动验证
     # ---------------------
-
     ActionKakCloud,  # v2ray 1day3G
 
     # ActionJs8cCloud,  # v2ray 1day 10G
@@ -435,5 +522,4 @@ __entropy__ = [
     # ActionThunderCloud,
     # ActionJdSuCloud,
     # ActionJfCloud,
-
 ]

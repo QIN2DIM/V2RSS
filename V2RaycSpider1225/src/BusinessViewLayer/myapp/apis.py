@@ -3,7 +3,6 @@ __all__ = [
     'apis_admin_get_subs_v2',
     'apis_admin_get_subs_v2_debug',
     "apis_admin_get_entropy",
-
     'apis_get_subs_num',
     'apis_version_manager',
     'apis_capture_subscribe',
@@ -28,27 +27,24 @@ def apis_capture_subscribe(style: dict) -> dict:
 
         # 读取缓存文件
         try:
-            with open(NGINX_SUBSCRIBE.format(style.get('type')), 'r', encoding='utf-8') as f:
-                response.update(
-                    {'info': f.read(), 'msg': 'success'})
+            with open(NGINX_SUBSCRIBE.format(style.get('type')),
+                      'r',
+                      encoding='utf-8') as f:
+                response.update({'info': f.read(), 'msg': 'success'})
         # error 文件路径有误或文件缺失
         except FileNotFoundError:
-            response.update(
-                {'info': 'Server denied access'})
+            response.update({'info': 'Server denied access'})
     # 接口错误引用，type-value is None
     else:
-        response.update(
-            {'info': 'Request parameter error'})
+        response.update({'info': 'Request parameter error'})
 
     return response
 
 
-def apis_version_manager(
-        vcs_path: str = SERVER_PATH_DEPOT_VCS,
-        usr_version: str = None,
-        encoding='utf8',
-        header=True
-) -> dict:
+def apis_version_manager(vcs_path: str = SERVER_PATH_DEPOT_VCS,
+                         usr_version: str = None,
+                         encoding='utf8',
+                         header=True) -> dict:
     """
     默认使用csv文件存储版本数据，视最后一行数据为最新版本,而client使用 ！= 判断版本新旧。
     @param vcs_path: 传入vcs版本管理文件的地址
@@ -58,8 +54,13 @@ def apis_version_manager(
     @return: 返回最新软件的版本号以及下载地址
     """
 
-    response = {'msg': 'success', 'version-server': '',
-                'version-usr': usr_version, 'url': '', 'need_update': False}
+    response = {
+        'msg': 'success',
+        'version-server': '',
+        'version-usr': usr_version,
+        'url': '',
+        'need_update': False
+    }
     try:
         # TODO 1.打开回溯文件
         with open(vcs_path, 'r', encoding=encoding) as f:
@@ -67,11 +68,15 @@ def apis_version_manager(
 
         # TODO 2.获取服务器文件版本号以及下载地址
         if header:
-            response.update(
-                {'version-server': data[1:][-1][0], 'url': data[1:][-1][1]})
+            response.update({
+                'version-server': data[1:][-1][0],
+                'url': data[1:][-1][1]
+            })
         else:
-            response.update(
-                {'version-server': data[-1][0], 'url': data[-1][1]})
+            response.update({
+                'version-server': data[-1][0],
+                'url': data[-1][1]
+            })
 
         # TODO 3. response params of Get methods
         if not usr_version:
@@ -93,7 +98,8 @@ def apis_version_manager(
     return response
 
 
-def apis_refresh_broadcast(show_path: str = NGINX_SUBSCRIBE, hyper_params: dict = None):
+def apis_refresh_broadcast(show_path: str = NGINX_SUBSCRIBE,
+                           hyper_params: dict = None):
     response = {"msg": "failed", "info": ""}
     hyper_admin = hyper_params.get('admin')
     new_subs = hyper_params.get("subs")
@@ -103,7 +109,10 @@ def apis_refresh_broadcast(show_path: str = NGINX_SUBSCRIBE, hyper_params: dict 
     try:
         with open(show_path, 'w', encoding='utf8') as f:
             f.write(new_subs)
-            response.update({'msg': 'success', 'info': f'upload new subs: {new_subs}'})
+            response.update({
+                'msg': 'success',
+                'info': f'upload new subs: {new_subs}'
+            })
     except FileNotFoundError:
         response.update({"info": 'Traceback file is missing'})
 
@@ -111,7 +120,8 @@ def apis_refresh_broadcast(show_path: str = NGINX_SUBSCRIBE, hyper_params: dict 
 
 
 def apis_admin_get_subs(command_: str):
-    if not (command_ and isinstance(command_, str)) or command_ not in CRAWLER_SEQUENCE:
+    if not (command_
+            and isinstance(command_, str)) or command_ not in CRAWLER_SEQUENCE:
         return {"msg": "failed", "info": "参数类型错误"}
     return pop_subs_to_admin(command_)
 
@@ -121,14 +131,16 @@ def apis_get_subs_num() -> dict:
 
 
 def apis_admin_get_entropy() -> list:
-    return RedisClient().get_driver().get(REDIS_SECRET_KEY.format("__entropy__")).split("$")
+    return RedisClient().get_driver().get(
+        REDIS_SECRET_KEY.format("__entropy__")).split("$")
 
 
 def apis_admin_get_subs_v2(entropy_name: str = None) -> dict:
     return select_subs_to_admin(select_netloc=entropy_name)
 
 
-def apis_admin_get_subs_v2_debug(entropy_name: str = None, _debug=True) -> dict:
+def apis_admin_get_subs_v2_debug(entropy_name: str = None,
+                                 _debug=True) -> dict:
     """测试接口|获取链接后，该链接不会被主动移除"""
     return select_subs_to_admin(select_netloc=entropy_name, _debug=_debug)
 

@@ -15,8 +15,9 @@ import requests
 
 
 def ding_to_group(subscribe: str = "这里是V2Ray云彩姬",
-                  access_token: str = None, timestamp: str = None, sign_: str = None
-                  ):
+                  access_token: str = None,
+                  timestamp: str = None,
+                  sign_: str = None):
     """
     通过POST接口，传递必要参数，控制指定的机器人向指定的群组发送TEXT类型消息
     :param subscribe: 要发送的订阅
@@ -36,11 +37,16 @@ def ding_to_group(subscribe: str = "这里是V2Ray云彩姬",
     }
     data = {
         "msgtype": "text",
-        "text": {"content": subscribe},
+        "text": {
+            "content": subscribe
+        },
     }
     session = requests.session()
 
-    response = session.post(web_hook, headers=headers, params=params, data=json.dumps(data))
+    response = session.post(web_hook,
+                            headers=headers,
+                            params=params,
+                            data=json.dumps(data))
 
     print(response.json())
 
@@ -61,7 +67,9 @@ def calculate_the_signature(secret_key: str = None) -> dict:
     secret_enc = secret.encode('utf-8')
     string_to_sign = '{}\n{}'.format(timestamp, secret)
     string_to_sign_enc = string_to_sign.encode('utf-8')
-    hmac_code = hmac.new(secret_enc, string_to_sign_enc, digestmod=hashlib.sha256).digest()
+    hmac_code = hmac.new(secret_enc,
+                         string_to_sign_enc,
+                         digestmod=hashlib.sha256).digest()
     sign = urllib.parse.quote_plus(base64.b64encode(hmac_code))
 
     return {"timestamp": timestamp, "sign": sign}
@@ -90,16 +98,11 @@ def quick_start(secret_key: str, access_token: str):
     security_group = calculate_the_signature(secret_key=secret_key)
 
     # 通过post机器人接口发送订阅
-    ding_to_group(
-        subscribe=subscribe,
-        access_token=access_token,
-        timestamp=security_group['timestamp'],
-        sign_=security_group['sign']
-    )
+    ding_to_group(subscribe=subscribe,
+                  access_token=access_token,
+                  timestamp=security_group['timestamp'],
+                  sign_=security_group['sign'])
 
 
 if __name__ == '__main__':
-    quick_start(
-        secret_key="",
-        access_token=""
-    )
+    quick_start(secret_key="", access_token="")

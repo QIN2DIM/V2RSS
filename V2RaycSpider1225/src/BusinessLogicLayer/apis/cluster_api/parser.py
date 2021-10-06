@@ -18,15 +18,11 @@ def parse_by_login(host, email, password, silence=None):
     """
     silence = True if silence is None else silence
 
-    return SSPanelParser(
-        url=f"https://{host}/auth/login",
-        silence=silence,
-        assault=True,
-        anti_slider=False
-    ).parse_by_login(
-        email=email,
-        password=password
-    )
+    return SSPanelParser(url=f"https://{host}/auth/login",
+                         silence=silence,
+                         assault=True,
+                         anti_slider=False).parse_by_login(email=email,
+                                                           password=password)
 
 
 def parse_by_register(host, silence=True, assault=True, anti_slider=True):
@@ -42,9 +38,7 @@ def parse_by_register(host, silence=True, assault=True, anti_slider=True):
     assault = True if assault is None else assault
     anti_slider = True if anti_slider is None else anti_slider
 
-    return SSPanelParser(
-        url=f"https://{host}/auth/register",
-        silence=silence,
-        assault=assault,
-        anti_slider=anti_slider
-    ).parse_by_register()
+    return SSPanelParser(url=f"https://{host}/auth/register",
+                         silence=silence,
+                         assault=assault,
+                         anti_slider=anti_slider).parse_by_register()

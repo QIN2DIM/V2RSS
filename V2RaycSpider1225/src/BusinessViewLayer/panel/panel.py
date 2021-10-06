@@ -61,7 +61,6 @@ rdb_object = None
 
 
 class ToolBox:
-
     @staticmethod
     def reset_rdb_object():
         global rdb_object
@@ -92,7 +91,10 @@ class ToolBox:
 
         # Create .txt for writing history of requester.
         if not os.path.exists(PATH_FETCH_REQUESTS_HISTORY):
-            with open(PATH_FETCH_REQUESTS_HISTORY, "w", encoding="utf-8", newline="") as f:
+            with open(PATH_FETCH_REQUESTS_HISTORY,
+                      "w",
+                      encoding="utf-8",
+                      newline="") as f:
                 f.writelines(["Time", ",", "subscribe", ",", "类型", "\n"])
 
         # Create .yaml for writing critical startup parameters of panel.
@@ -154,7 +156,9 @@ class ToolBox:
         return response
 
     @staticmethod
-    def unzip_file(zip_object: str, unzip_object: str = None, auto_fix: bool = False):
+    def unzip_file(zip_object: str,
+                   unzip_object: str = None,
+                   auto_fix: bool = False):
         """
         解压文件
         :param zip_object: 定位解压文件
@@ -162,7 +166,8 @@ class ToolBox:
         :param auto_fix: 自动扫描输出目录的乱码文件并修复
         :return:
         """
-        unzip_object = os.path.dirname(zip_object) if unzip_object is None else unzip_object
+        unzip_object = os.path.dirname(
+            zip_object) if unzip_object is None else unzip_object
 
         if not os.path.exists(unzip_object):
             os.mkdir(unzip_object)
@@ -199,14 +204,19 @@ class ToolBox:
 
 class RedisClientIO:
     def __init__(self):
-        self.db = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD, decode_responses=True,
+        self.db = redis.StrictRedis(host=REDIS_HOST,
+                                    port=REDIS_PORT,
+                                    password=REDIS_PASSWORD,
+                                    decode_responses=True,
                                     db=REDIS_DB)
 
     # --------------------
     # Private API
     # --------------------
     def _update_api_status(self, api_name):
-        if api_name not in ['select', 'get', 'search', 'decouple', 'reset', 'get-cli']:
+        if api_name not in [
+                'select', 'get', 'search', 'decouple', 'reset', 'get-cli'
+        ]:
             return False
         date_format = str(datetime.now(TIME_ZONE_CN))
         self.db.rpush(f"v2rayc_apis:{api_name}", date_format)
@@ -223,7 +233,10 @@ class RedisClientIO:
         self._update_api_status('get-cli')
 
     def upload_stream_for_gardener(self, uid, nodes):
-        self.db.hmset(f"v2rayc_gardener:{uid}", dict(zip(nodes, ["1", ] * len(nodes))))
+        self.db.hmset(f"v2rayc_gardener:{uid}",
+                      dict(zip(nodes, [
+                          "1",
+                      ] * len(nodes))))
 
     def quick_get(self, key_name) -> str:
 
@@ -237,17 +250,18 @@ class RedisClientIO:
                 # 订阅连接到期时间 -> datetime(上海时区)
                 subs_end_time = datetime.fromisoformat(end_life)
                 # 上海时区 -> datetime
-                now_time = datetime.fromisoformat(str(datetime.now(TIME_ZONE_CN)).split('.')[0])
+                now_time = datetime.fromisoformat(
+                    str(datetime.now(TIME_ZONE_CN)).split('.')[0])
                 # 时间比对 判断是否过期的响应 -> bool
-                is_stale = not subs_end_time > now_time + timedelta(hours=PRE_CLEANING_TIME)
+                is_stale = not subs_end_time > now_time + timedelta(
+                    hours=PRE_CLEANING_TIME)
                 # 返回具备足够合理的可用时长的订阅
                 if not is_stale:
                     return subscribe
             finally:
-                ThreadPoolExecutor(max_workers=1).submit(
-                    self.sync_detach_subs, key_name=key_name,
-                    subscribe=subscribe
-                )
+                ThreadPoolExecutor(max_workers=1).submit(self.sync_detach_subs,
+                                                         key_name=key_name,
+                                                         subscribe=subscribe)
 
     def get_alias(self) -> dict:
         return self.db.hgetall("v2rss:alias")
@@ -319,10 +333,12 @@ class ProcessZeus:
                 self.loads_stale_time()
             if self.stale_res_time:
                 # 计算进程解锁时间点
-                self.unlock_time = self.stale_res_time + timedelta(seconds=BAND_BATCH)
+                self.unlock_time = self.stale_res_time + timedelta(
+                    seconds=BAND_BATCH)
                 # 操作过热则冻结主进程
                 self.status_lock = self.unlock_time > datetime.now()
-        except (FileExistsError, PermissionError, FileNotFoundError, ValueError) as e:
+        except (FileExistsError, PermissionError, FileNotFoundError,
+                ValueError) as e:
             logger.exception(e)
 
     def loads_stale_time(self) -> None:
@@ -330,7 +346,8 @@ class ProcessZeus:
         #  这个模块有bug，需要进一步精确锁死方案，当前方案当文件进程被占用就会失效
         with open(PATH_FETCH_REQUESTS_HISTORY, "r", encoding="utf-8") as f:
             date_ = [
-                j.split(",")[0] for j in [i.strip() for i in f.readlines()] if j
+                j.split(",")[0] for j in [i.strip() for i in f.readlines()]
+                if j
             ].pop()
             if "-" not in date_:
                 self.stale_res_time = False
@@ -342,8 +359,12 @@ class ProcessZeus:
 
 
 class CoroutineEngine:
-    def __init__(self, work_q: Queue = None, task_docker=None, done_work: Queue = None,
-                 progress_meter_title: str = "VulcanAsh Monitor", use_global_monitor=None):
+    def __init__(self,
+                 work_q: Queue = None,
+                 task_docker=None,
+                 done_work: Queue = None,
+                 progress_meter_title: str = "VulcanAsh Monitor",
+                 use_global_monitor=None):
         # 任务容器：queue
         self.work_q = work_q if work_q else Queue()
         # 任务容器：迭代器
@@ -406,7 +427,6 @@ class CoroutineEngine:
 
 class DownloaderBR(CoroutineEngine):
     """(断点续传版本)基于协程的下载器 用于加速release文件的拉取"""
-
     def __init__(self, workspace: str, filename: str, parameters: list):
         """
 
@@ -414,8 +434,11 @@ class DownloaderBR(CoroutineEngine):
         :param filename: 压缩包名 basename
         :param parameters: 下载器配置参数
         """
-        super(DownloaderBR, self).__init__(task_docker=parameters, done_work=_done_work,
-                                           progress_meter_title=PROGRESS_METER_TITLE, )
+        super(DownloaderBR, self).__init__(
+            task_docker=parameters,
+            done_work=_done_work,
+            progress_meter_title=PROGRESS_METER_TITLE,
+        )
 
         # X.zip.download.Y
         self.filename = filename
@@ -434,19 +457,30 @@ class DownloaderBR(CoroutineEngine):
 
         if task_id is None:
             for block in os.listdir(workspace):
-                if block.startswith(f"{self.filename}{self.cache_label}") and not block.endswith(self.merge_label):
+                if block.startswith(f"{self.filename}{self.cache_label}"
+                                    ) and not block.endswith(self.merge_label):
                     block_path = os.path.join(workspace, block)
                     block_size = os.path.getsize(block_path)
                     block_id = block.split('.')[-1]
-                    breakpoint_[str(block_id)] = {"size": block_size, "path": block_path}
+                    breakpoint_[str(block_id)] = {
+                        "size": block_size,
+                        "path": block_path
+                    }
         else:
-            block_path = os.path.join(workspace, self.cache_block.format(task_id))
+            block_path = os.path.join(workspace,
+                                      self.cache_block.format(task_id))
             if os.path.exists(block_path):
                 block_size = os.path.getsize(block_path)
-                breakpoint_[str(task_id)] = {"size": block_size, "path": block_path}
+                breakpoint_[str(task_id)] = {
+                    "size": block_size,
+                    "path": block_path
+                }
         return breakpoint_
 
-    @retry(tries=3, delay=1, )
+    @retry(
+        tries=3,
+        delay=1,
+    )
     def ace_agent(self, task):
 
         # ------------------------------------
@@ -478,13 +512,17 @@ class DownloaderBR(CoroutineEngine):
         with open(cache_block_path, "wb") as f:
             for chunk in res.iter_content(1024):
                 f.write(chunk)
-        ToolBox.printer_log(f"DownloaderBR | heart_flow --> {cache_block_name} [{boundary[0]}-{boundary[-1]}]", 1)
+        ToolBox.printer_log(
+            f"DownloaderBR | heart_flow --> {cache_block_name} [{boundary[0]}-{boundary[-1]}]",
+            1)
 
         self.update_status_of_global_monitor("ace-agent")
 
     def killer(self):
         # ~/client/cache/version_id/
-        cache_blocks = [i for i in os.listdir(self.workspace) if self.cache_label in i]
+        cache_blocks = [
+            i for i in os.listdir(self.workspace) if self.cache_label in i
+        ]
         # ~/client/cache/version_id/.zip.download.merge
         merge_object = os.path.join(self.workspace, self.merge_object)
         # ~/client/cache/version_id/.zip
@@ -537,7 +575,9 @@ class PanelVersionControl:
             'Content-Type': 'application/json',
         }
 
-        res = requests.get(self.REPO_RELEASE_API, proxies=proxy_, headers=headers)
+        res = requests.get(self.REPO_RELEASE_API,
+                           proxies=proxy_,
+                           headers=headers)
 
         release_trace = res.json()
 
@@ -553,18 +593,23 @@ class PanelVersionControl:
             'sketch': data.get("body"),
             'latest_packages': data.get("assets"),
             "status": release_trace,
-            "tag2time": {release_['tag_name']: self.std_time(release_['published_at']) for release_ in release_trace}
+            "tag2time": {
+                release_['tag_name']: self.std_time(release_['published_at'])
+                for release_ in release_trace
+            }
         }
 
     @staticmethod
     def std_time(repo_time) -> datetime:
-        return datetime.fromisoformat(repo_time.replace("T", " ").replace("Z", ""))
+        return datetime.fromisoformat(
+            repo_time.replace("T", " ").replace("Z", ""))
 
     def is_need_to_update(self) -> dict:
         # 因部分分支版本号规则较为混乱，单纯比较版本id的方法确认是否有版本更新不可靠
         new_t = self.RELEASE_DESC["publish_time"]
         # 防止版本游离，作者手动删除分支，或历史遗留问题导致的版本错乱
-        old_t = self.RELEASE_DESC["tag2time"].get(f"v{PANEL_VERSION_ID_CURRENT}")
+        old_t = self.RELEASE_DESC["tag2time"].get(
+            f"v{PANEL_VERSION_ID_CURRENT}")
         # 当版本游离时，无法自动化拉取更新，需要用户自行判断是否有版本更新（提示最新版本特性），到github中下载
         return {
             "datetime_of_latest_release": new_t,
@@ -577,10 +622,14 @@ class PanelVersionControl:
         for package_ in latest_packages:
             if self.FLAG_NAME in package_['name']:
                 self.RELEASE_DESC.update({
-                    "download_url": package_.get("browser_download_url"),
-                    "latest_change_time": self.std_time(package_.get("updated_at")),
-                    "size-info": f"{round(float(package_.get('size')) / 1024 ** 2, 2)}MB",
-                    "size": package_.get('size')
+                    "download_url":
+                    package_.get("browser_download_url"),
+                    "latest_change_time":
+                    self.std_time(package_.get("updated_at")),
+                    "size-info":
+                    f"{round(float(package_.get('size')) / 1024 ** 2, 2)}MB",
+                    "size":
+                    package_.get('size')
                 })
                 break
 
@@ -590,7 +639,6 @@ class PanelVersionControl:
 
 class SubscribeRequester:
     """内嵌微型爬虫-订阅链接请求"""
-
     def __init__(self):
         # 启动GUI
         # self.Home()
@@ -610,7 +658,9 @@ class SubscribeRequester:
     def check_pool(self):
         avi_info = []
         for task_type in list(PROTOCOL_FLAG.keys()):
-            avi_info.extend(sorted([(i[-1], f"{task_type}", i[0]) for i in self.rc.sync_remain_subs(task_type)]))
+            avi_info.extend(
+                sorted([(i[-1], f"{task_type}", i[0])
+                        for i in self.rc.sync_remain_subs(task_type)]))
         if not avi_info:
             return {"status": False, "msg": []}
         return {"status": True, "msg": avi_info}
@@ -631,26 +681,31 @@ class SubscribeRequester:
 
         # 隐藏订阅 Token
         alias: dict = self.rc.get_alias()
-        sub2uid = {i[-1]: alias.get(str(urlparse(i[-1]).netloc), str(urlparse(i[-1]).netloc)) for i in avi_info}
+        sub2uid = {
+            i[-1]: alias.get(str(urlparse(i[-1]).netloc),
+                             str(urlparse(i[-1]).netloc))
+            for i in avi_info
+        }
 
         uid2sub = {i[-1]: i[0] for i in sub2uid.items()}
 
         info_canvas = [f"{i[0]}  {i[1]}  {sub2uid[i[-1]]}" for i in avi_info]
 
-        avi_info = ["".center(2, " ").join(["过期时间", "订阅类型", "订阅链接"]), ] + info_canvas
+        avi_info = [
+            "".center(2, " ").join(["过期时间", "订阅类型", "订阅链接"]),
+        ] + info_canvas
 
-        usr_choice = easygui.choicebox(
-            msg="注:审核标准为北京时区；点击获取，链接自动复制",
-            title=TITLE,
-            choices=avi_info,
-            preselect=1
-        )
+        usr_choice = easygui.choicebox(msg="注:审核标准为北京时区；点击获取，链接自动复制",
+                                       title=TITLE,
+                                       choices=avi_info,
+                                       preselect=1)
 
         logger.info(usr_choice)
 
         if "-" in usr_choice:
 
-            subscribe, task_name = uid2sub[usr_choice.split("  ")[-1]], usr_choice.split("  ")[1]
+            subscribe, task_name = uid2sub[usr_choice.split("  ")
+                                           [-1]], usr_choice.split("  ")[1]
 
             self.resp_tip(subscribe, task_name)
 
@@ -676,7 +731,9 @@ class SubscribeRequester:
         """
         # 公示分发结果
         if subscribe.strip():
-            easygui.enterbox(msg="获取成功，点击确定自动复制链接", title=TITLE, default=subscribe)
+            easygui.enterbox(msg="获取成功，点击确定自动复制链接",
+                             title=TITLE,
+                             default=subscribe)
         try:
             # 获取成功
             if "http" in subscribe:
@@ -690,10 +747,10 @@ class SubscribeRequester:
                 logger.critical("SubscribeGetException")
                 easygui.exceptionbox(
                     title=TITLE,
-                    msg="LoggerCritical:T_{}".format(str(datetime.now()).split(" ")[0])
-                        + "\n\n订阅获取异常，请重试！"
-                          "\n\n若多次重试仍不可用，请访问本项目寻求解答"
-                          "\n\n项目地址:https://github.com/QIN2DIM",
+                    msg="LoggerCritical:T_{}".format(
+                        str(datetime.now()).split(" ")[0]) + "\n\n订阅获取异常，请重试！"
+                    "\n\n若多次重试仍不可用，请访问本项目寻求解答"
+                    "\n\n项目地址:https://github.com/QIN2DIM",
                 )
         finally:
             # 返回上一页
@@ -707,13 +764,13 @@ class SubscribeRequester:
         """
         # 防止乱点
         if type_of_subscribe in PROTOCOL_FLAG:
-            self.resp_tip(self.rc.quick_get(type_of_subscribe), type_of_subscribe)
+            self.resp_tip(self.rc.quick_get(type_of_subscribe),
+                          type_of_subscribe)
         return True
 
 
 class VulcanSpiderAir(CoroutineEngine):
     """内嵌微型爬虫-查看机场生态"""
-
     def __init__(self, url2type, task_docker):
         super(VulcanSpiderAir, self).__init__(task_docker=task_docker)
 
@@ -743,22 +800,24 @@ class VulcanSpiderAir(CoroutineEngine):
         hrefs = fetch_runtime_response.get('hrefs')
 
         mode_show = ["序号    机场名    官网链接"] + [
-            "【{}】 【{}】 【{}】".format(i + 1, list(x)[0], list(x)[-1])
-            for i, x in enumerate(zip(names, hrefs))
-            if "http" in list(x)[-1]
-        ]
-
-        mode_save = [["序号", "机场名", "官网连接"], ] + [
-            [i + 1, list(x)[0], list(x)[-1]]
+            "【{}】 【{}】 【{}】".format(i + 1,
+                                    list(x)[0],
+                                    list(x)[-1])
             for i, x in enumerate(zip(names, hrefs)) if "http" in list(x)[-1]
         ]
+
+        mode_save = [
+            ["序号", "机场名", "官网连接"],
+        ] + [[i + 1, list(x)[0], list(x)[-1]]
+             for i, x in enumerate(zip(names, hrefs)) if "http" in list(x)[-1]]
 
         return {'show': mode_show, 'save': mode_save}
 
     def fetch(self, url):
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36"
+            "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36"
         }
         proxies = {"http": None, "https": None}
         try:
@@ -768,11 +827,15 @@ class VulcanSpiderAir(CoroutineEngine):
             return False
 
         # 定位项目
-        items = BeautifulSoup(res.text, "html.parser").find_all("li", class_="link-item")
+        items = BeautifulSoup(res.text,
+                              "html.parser").find_all("li", class_="link-item")
         # 机场名
-        names = [item.find("span", class_="sitename").text.strip() for item in items]
+        names = [
+            item.find("span", class_="sitename").text.strip() for item in items
+        ]
         # 获取去除邀请码的机场链接
-        hrefs = self.invite_code_cleaner([item.find("a")["href"] for item in items])
+        hrefs = self.invite_code_cleaner(
+            [item.find("a")["href"] for item in items])
 
         return {"names": names, "hrefs": hrefs}
 
@@ -795,7 +858,6 @@ class VulcanSpiderAir(CoroutineEngine):
 
 class PublicPool:
     """preview version: 通过跳板机搜集国内可访问的可靠节点信息"""
-
     @staticmethod
     def rest_protocol_vless(node_detail: str, remark=None):
         """
@@ -833,8 +895,10 @@ class PublicPool:
         iyideng_github_io = "https://raw.githubusercontent.com/iyidengme/iyidengme.github.io/master/README.md"
         res = requests.get(DEFAULT_ADAPTOR + iyideng_github_io)
         soup = BeautifulSoup(res.text, "html.parser")
-        verify_code = [i.replace(":", "\t").replace("：", "\t").split("\t")[-1]
-                       for i in soup.text.split('\n') if "验证码" in i][0]
+        verify_code = [
+            i.replace(":", "\t").replace("：", "\t").split("\t")[-1]
+            for i in soup.text.split('\n') if "验证码" in i
+        ][0]
 
         # ---------------------------------
         # get nodes
@@ -843,15 +907,22 @@ class PublicPool:
         session = requests.session()
         data = {"huoduan_verifycode": verify_code}
         headers = {
-            'user-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/92.0.4515.159 Safari/537.36 Edg/92.0.902.78",
-            'origin': "https://iyideng.win",
-            'referer': "https://iyideng.win/welfare/free-v2ray-vmess-node.html",
-            'pragma': 'no-cache',
-            'cache-control': 'no-cache',
-
+            'user-agent':
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/92.0.4515.159 Safari/537.36 Edg/92.0.902.78",
+            'origin':
+            "https://iyideng.win",
+            'referer':
+            "https://iyideng.win/welfare/free-v2ray-vmess-node.html",
+            'pragma':
+            'no-cache',
+            'cache-control':
+            'no-cache',
         }
-        response = session.post(url, headers=headers, data=data, allow_redirects=True)
+        response = session.post(url,
+                                headers=headers,
+                                data=data,
+                                allow_redirects=True)
         soup = BeautifulSoup(response.text, "html.parser")
         tree = soup.find("main").find("div")
 
@@ -916,18 +987,10 @@ class PaneInterfaceIO:
         ]
         # 机场生态首页
         self.airport_home_menu = [
-            "[1]白嫖机场",
-            "[2]高端机场",
-            "[3]机场汇总",
-            "[4]返回",
-            "[5]退出"
+            "[1]白嫖机场", "[2]高端机场", "[3]机场汇总", "[4]返回", "[5]退出"
         ]
         # 机场生态内页
-        self.airport_function_menu = [
-            "[1]查看",
-            "[2]保存",
-            "[3]返回"
-        ]
+        self.airport_function_menu = ["[1]查看", "[2]保存", "[3]返回"]
         # 根据配置信息自动选择采集模式
         self.ssr_home_menu = [
             "[1]V2Ray订阅链接",
@@ -946,7 +1009,10 @@ class PaneInterfaceIO:
         # UI功能选择
         # ----------------------------------------
         resp = True
-        usr_choice: str = easygui.choicebox("功能列表", TITLE, self.main_home_menu, preselect=1)
+        usr_choice: str = easygui.choicebox("功能列表",
+                                            TITLE,
+                                            self.main_home_menu,
+                                            preselect=1)
         logger.info(usr_choice)
         if usr_choice is None:
             return True
@@ -971,7 +1037,8 @@ class PaneInterfaceIO:
                         # childThread --> 拉起子线程交互 UI 引导安装
                         SubThreadPoolIO.update_guider()
                         # mainThread 拉取发行客户端
-                        resp = not GlobalInterfaceIO.download_release_by_adaptor()
+                        resp = not GlobalInterfaceIO.download_release_by_adaptor(
+                        )
                 else:
                     # 若用户取消更新，返回主菜单
                     if yes is False:
@@ -992,7 +1059,10 @@ class PaneInterfaceIO:
         # ----------------------------------------
         # UI功能选择
         # ----------------------------------------
-        usr_c = easygui.choicebox("功能列表", TITLE, self.airport_home_menu, preselect=0)
+        usr_c = easygui.choicebox("功能列表",
+                                  TITLE,
+                                  self.airport_home_menu,
+                                  preselect=0)
         logger.info(usr_c)
         resp = True
         try:
@@ -1027,7 +1097,10 @@ class PaneInterfaceIO:
             easygui.msgbox("无可用订阅", TITLE)
             return True
 
-        usr_choice: str = easygui.choicebox("功能列表", TITLE, self.ssr_home_menu, preselect=1)
+        usr_choice: str = easygui.choicebox("功能列表",
+                                            TITLE,
+                                            self.ssr_home_menu,
+                                            preselect=1)
         logger.info(usr_choice)
         if usr_choice is None:
             return True
@@ -1088,7 +1161,9 @@ class SubmenuAirEcology:
         呈现采集结果
         :return:
         """
-        usr_choice = easygui.choicebox(msg="选中即可跳转目标网址,部分机场需要代理才能访问", title=TITLE, choices=self.data_show)
+        usr_choice = easygui.choicebox(msg="选中即可跳转目标网址,部分机场需要代理才能访问",
+                                       title=TITLE,
+                                       choices=self.data_show)
         if usr_choice is None:
             return True
         if "http" in usr_choice:
@@ -1112,7 +1187,8 @@ class SubmenuAirEcology:
                 continue
             for type_, docker_ in _memory_docker_of_small_spider.items():
                 if type_ in self.air_type:
-                    self.data_save, self.data_show = docker_['save'], docker_['show']
+                    self.data_save, self.data_show = docker_['save'], docker_[
+                        'show']
                     break
             break
 
@@ -1133,7 +1209,6 @@ class SubmenuAirEcology:
 
 
 class GlobalInterfaceIO:
-
     @staticmethod
     def download_release_by_adaptor():
         """
@@ -1160,7 +1235,8 @@ class GlobalInterfaceIO:
         session = requests.session()
 
         # 将{文件名}用以拼接本地下载目录 ~/documents/v2rss/client/versionID/v2rss.zip
-        cache_merge = ToolBox.preload_cache(DIR_DEFAULT_DOWNLOAD, PANEL_VERSION_ID_CURRENT)
+        cache_merge = ToolBox.preload_cache(DIR_DEFAULT_DOWNLOAD,
+                                            PANEL_VERSION_ID_CURRENT)
         cache_merge = os.path.join(cache_merge, filename)
 
         # 将 CFW 全球加速接点与 release's download url 拼接
@@ -1207,18 +1283,24 @@ class GlobalInterfaceIO:
 
         # 任务暂未初始化
         while _max_queue_size == -1:
-            loop = sg.OneLineProgressMeter(
-                PROGRESS_METER_TITLE, 0, 1,
-                grab_anywhere=True, no_titlebar=True, keep_on_top=True)
+            loop = sg.OneLineProgressMeter(PROGRESS_METER_TITLE,
+                                           0,
+                                           1,
+                                           grab_anywhere=True,
+                                           no_titlebar=True,
+                                           keep_on_top=True)
             if not loop:
                 return
 
         # 任务启动
         while _max_queue_size >= _done_work.qsize():
             # loop 监听流进度，if Cancel: loop is None
-            loop = sg.OneLineProgressMeter(
-                PROGRESS_METER_TITLE, _done_work.qsize(), _max_queue_size,
-                grab_anywhere=True, no_titlebar=True, keep_on_top=True)
+            loop = sg.OneLineProgressMeter(PROGRESS_METER_TITLE,
+                                           _done_work.qsize(),
+                                           _max_queue_size,
+                                           grab_anywhere=True,
+                                           no_titlebar=True,
+                                           keep_on_top=True)
             # 如用户手动取消任务,退出流的监听状态
             if not loop and _max_queue_size >= _done_work.qsize():
                 break
@@ -1243,19 +1325,21 @@ class GlobalInterfaceIO:
         ToolBox.printer_log("API | parse download url", 1)
 
         _memory_docker_of_version_control['release'] = pvc.RELEASE_DESC
-        ToolBox.printer_log("API | The hash code of the release software was successfully compared.", 1)
+        ToolBox.printer_log(
+            "API | The hash code of the release software was successfully compared.",
+            1)
 
         if policy['result'] is True:
             need_to_update = easygui.ynbox(
-                msg=f"检测到新的安装包：{pvc.RELEASE_DESC['name']}{pvc.RELEASE_DESC['is_prerelease']},是否下载？"
-                    f"\n\n--> 软体大小：{pvc.RELEASE_DESC['size-info']}"
-                    f"\n\n--> 推送时间：{pvc.RELEASE_DESC['latest_change_time']}"
-                    f"\n\n--> 资源描述：{pvc.RELEASE_DESC['sketch']}",
+                msg=
+                f"检测到新的安装包：{pvc.RELEASE_DESC['name']}{pvc.RELEASE_DESC['is_prerelease']},是否下载？"
+                f"\n\n--> 软体大小：{pvc.RELEASE_DESC['size-info']}"
+                f"\n\n--> 推送时间：{pvc.RELEASE_DESC['latest_change_time']}"
+                f"\n\n--> 资源描述：{pvc.RELEASE_DESC['sketch']}",
                 title=TITLE,
                 choices=["[<F1>]更新", "[<F2>]退出"],
                 default_choice="[<F1>]更新",
-                cancel_choice="[<F2>退出]"
-            )
+                cancel_choice="[<F2>退出]")
 
             if need_to_update:
                 return True, policy['result']
@@ -1263,33 +1347,31 @@ class GlobalInterfaceIO:
 
         if policy['result'] is None:
             visit_repo = easygui.ynbox(
-                msg=f"Warning：{pvc.RELEASE_DESC['name']} The software update is abnormal!"
-                    f"\n\n--> 可能原因：(1)您使用的软体对应的版本标签已被作者删除，无法比较版本新旧；"
-                    f"\n\n              (2)您使用的软体已被二次编译，版本签名与分支树不符；"
-                    f"\n\n              (3)Calm down!也有可能是您目前的网络状况不佳，请稍后重试；"
-                    f"\n\n{''.center(80, '_')}"
-                    f"\n\n以下信息为当前最新版本特性，可根据实际情况访问项目仓库手动下载"
-                    f"\n\n{pvc.REPO_RELEASE_HTML}"
-                    f"\n\n--> 开源软体：{pvc.RELEASE_DESC['name']}{pvc.RELEASE_DESC['is_prerelease']}"
-                    f"\n\n--> 软体大小：{pvc.RELEASE_DESC['size-info']}"
-                    f"\n\n--> 推送时间：{pvc.RELEASE_DESC['latest_change_time']}"
-                    f"\n\n--> 资源描述：{pvc.RELEASE_DESC['sketch']}",
+                msg=
+                f"Warning：{pvc.RELEASE_DESC['name']} The software update is abnormal!"
+                f"\n\n--> 可能原因：(1)您使用的软体对应的版本标签已被作者删除，无法比较版本新旧；"
+                f"\n\n              (2)您使用的软体已被二次编译，版本签名与分支树不符；"
+                f"\n\n              (3)Calm down!也有可能是您目前的网络状况不佳，请稍后重试；"
+                f"\n\n{''.center(80, '_')}"
+                f"\n\n以下信息为当前最新版本特性，可根据实际情况访问项目仓库手动下载"
+                f"\n\n{pvc.REPO_RELEASE_HTML}"
+                f"\n\n--> 开源软体：{pvc.RELEASE_DESC['name']}{pvc.RELEASE_DESC['is_prerelease']}"
+                f"\n\n--> 软体大小：{pvc.RELEASE_DESC['size-info']}"
+                f"\n\n--> 推送时间：{pvc.RELEASE_DESC['latest_change_time']}"
+                f"\n\n--> 资源描述：{pvc.RELEASE_DESC['sketch']}",
                 title=TITLE,
                 choices=["[<F1>]访问仓库", "[<F2>]返回首页"],
                 default_choice="[<F1>]访问仓库",
-                cancel_choice="[<F2>退出]"
-            )
+                cancel_choice="[<F2>退出]")
             if visit_repo:
                 webbrowser.open(pvc.REPO_RELEASE_HTML)
                 return False, policy['result']
             return None, policy['result']
 
         if policy['result'] is False:
-            easygui.msgbox(
-                msg=f"当前软体：{TITLE} 已是最新版本！",
-                title=TITLE,
-                ok_button="确定"
-            )
+            easygui.msgbox(msg=f"当前软体：{TITLE} 已是最新版本！",
+                           title=TITLE,
+                           ok_button="确定")
             return None, policy['result']
 
     @staticmethod
@@ -1320,11 +1402,9 @@ class SubThreadPoolIO:
         客户端更新的进度条 GUI
         :return:
         """
-        threading.Thread(
-            name="updater",
-            target=GlobalInterfaceIO.api_update_guider,
-            daemon=True
-        ).start()
+        threading.Thread(name="updater",
+                         target=GlobalInterfaceIO.api_update_guider,
+                         daemon=True).start()
         ToolBox.printer_log("SubThread | api_update_guider", 1)
 
     @staticmethod
@@ -1334,11 +1414,9 @@ class SubThreadPoolIO:
         :return:
         """
         if _memory_docker_of_small_spider == {}:
-            threading.Thread(
-                name="air-spider",
-                target=GlobalInterfaceIO.api_air_ecology_spider,
-                daemon=True
-            ).start()
+            threading.Thread(name="air-spider",
+                             target=GlobalInterfaceIO.api_air_ecology_spider,
+                             daemon=True).start()
 
         ToolBox.printer_log("SubThread | air_ecology_spider", 1)
 

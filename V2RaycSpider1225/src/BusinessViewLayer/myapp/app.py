@@ -36,7 +36,9 @@ def version_manager():
     if request.method == 'GET':
         return jsonify(apis_version_manager())
     if request.method == 'POST':
-        return jsonify(apis_version_manager(usr_version=dict(request.form).get('local_version', False)))
+        return jsonify(
+            apis_version_manager(
+                usr_version=dict(request.form).get('local_version', False)))
 
 
 @app.route("/", methods=['GET'])
@@ -71,7 +73,8 @@ def admin_get_subs(command_):
 @app.route(f"/super_admin/{uuid4()}/debug/<_entropy_name>", methods=['GET'])
 def admin_get_subs_v2_debug(_entropy_name):
     """获取/debug"""
-    return jsonify(apis_admin_get_subs_v2_debug(entropy_name=_entropy_name, _debug=True))
+    return jsonify(
+        apis_admin_get_subs_v2_debug(entropy_name=_entropy_name, _debug=True))
 
 
 @app.route(f"/super_admin/{uuid4()}/<_entropy_name>", methods=['GET'])
@@ -92,6 +95,7 @@ def admin_select_subs():
 @app.route(f"/super_admin/{uuid4()}", methods=['GET'])
 def admin_get_entropy():
     return jsonify(apis_admin_get_entropy())
+
 
 # if __name__ == '__main__':
 #     app.run(host='0.0.0.0', port=6500, debug=True)

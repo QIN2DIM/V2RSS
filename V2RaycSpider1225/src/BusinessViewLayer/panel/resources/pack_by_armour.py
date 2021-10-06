@@ -6,7 +6,10 @@
 import os
 
 
-def pack_by_armor(main_file, logo_path: str = None, one_file: bool = True, headless: bool = True,
+def pack_by_armor(main_file,
+                  logo_path: str = None,
+                  one_file: bool = True,
+                  headless: bool = True,
                   obfuscate_mode: str = None):
     logo_path = "" if logo_path is None else f"-i {logo_path}"
     one_file = "-F" if one_file is True else ""
@@ -17,16 +20,17 @@ def pack_by_armor(main_file, logo_path: str = None, one_file: bool = True, headl
         'VM-s': "--advanced 3",
         'VM-a': "--advanced 4",
     }
-    obfuscate_mode = obfuscate_mapping['VM-a'] if obfuscate_mode is None else obfuscate_mapping[obfuscate_mode]
+    obfuscate_mode = obfuscate_mapping[
+        'VM-a'] if obfuscate_mode is None else obfuscate_mapping[obfuscate_mode]
 
     # os.system('pyarmor pack -e "-i flash_auto.ico -F -w" -x "--advanced 4" .\main.py')#
-    print(f'pyarmor pack -e "{logo_path} {one_file} {headless}" -x "{obfuscate_mode}" {main_file}')
-    os.system(f'pyarmor pack -e "{logo_path} {one_file} {headless}" -x "{obfuscate_mode}" {main_file}')
+    print(
+        f'pyarmor pack -e "{logo_path} {one_file} {headless}" -x "{obfuscate_mode}" {main_file}'
+    )
+    os.system(
+        f'pyarmor pack -e "{logo_path} {one_file} {headless}" -x "{obfuscate_mode}" {main_file}'
+    )
 
 
 if __name__ == '__main__':
-    pack_by_armor(
-        './panel.py',
-        'pack/logo.ico',
-        obfuscate_mode="super"
-    )
+    pack_by_armor('./panel.py', 'pack/logo.ico', obfuscate_mode="super")

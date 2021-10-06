@@ -41,15 +41,20 @@ class _ConfigQuarantine:
                 self.flag = True
                 try:
                     # 初始化文件夹
-                    if os.path.isdir(child_) or not os.path.splitext(child_)[-1]:
+                    if os.path.isdir(
+                            child_) or not os.path.splitext(child_)[-1]:
                         os.mkdir(child_)
                         logger.success(f"系统文件链接成功->{child_}")
                     # 初始化文件
                     else:
                         if child_ == SERVER_PATH_DEPOT_VCS:
                             try:
-                                with open(child_, 'w', encoding='utf-8', newline='') as fpx:
-                                    csv.writer(fpx).writerow(['version', 'title'])
+                                with open(child_,
+                                          'w',
+                                          encoding='utf-8',
+                                          newline='') as fpx:
+                                    csv.writer(fpx).writerow(
+                                        ['version', 'title'])
                                 logger.success(f"系统文件链接成功->{child_}")
                             except Exception as ep:
                                 logger.exception(f"Exception{child_}{ep}")
@@ -71,7 +76,9 @@ class _ConfigQuarantine:
         #     logger.warning('您未正确配置<通信邮箱>信息(SMTP_ACCOUNT)')
         # if not SERVERCHAN_SCKEY:
         #     logger.warning("您未正确配置<Server酱>的SCKEY")
-        if not all([REDIS_SLAVER_DDT.get("host"), REDIS_SLAVER_DDT.get("password")]):
+        if not all(
+            [REDIS_SLAVER_DDT.get("host"),
+             REDIS_SLAVER_DDT.get("password")]):
             logger.warning('您未正确配置<Redis-Slave> 本项目资源拷贝功能无法使用，但不影响系统正常运行。')
         if not all([REDIS_MASTER.get("host"), REDIS_MASTER.get("password")]):
             logger.error("您未正确配置<Redis-Master> 此配置为“云彩姬”的核心组件，请配置后重启项目！")
@@ -106,7 +113,6 @@ class Scaffold:
     v2rss-service 脚手架
         - 集成了各种后端服务常用的调试指令，并牵引了更加便捷的部署接口。
     """
-
     def __init__(self, ):
         self.cq = _ConfigQuarantine()
 
@@ -158,7 +164,8 @@ class Scaffold:
             info.update({"available nodes": node_num})
 
             # 缓存数据
-            cache_path = os.path.join(SERVER_DIR_DATABASE_CACHE, 'sub2node.txt')
+            cache_path = os.path.join(SERVER_DIR_DATABASE_CACHE,
+                                      'sub2node.txt')
             with open(cache_path, 'w', encoding="utf8") as f:
                 for node in nodes:
                     f.write(f"{node}\n")
@@ -180,8 +187,11 @@ class Scaffold:
 
         :return:
         """
-        tracer = [f"{tag[0]}\n采集类型：{info_[0]}\n存活数量：{tag[-1]}" for info_ in
-                  select_subs_to_admin(select_netloc=None, _debug=False)['info'].items() for tag in info_[-1].items()]
+        tracer = [
+            f"{tag[0]}\n采集类型：{info_[0]}\n存活数量：{tag[-1]}"
+            for info_ in select_subs_to_admin(select_netloc=None, _debug=False)
+            ['info'].items() for tag in info_[-1].items()
+        ]
         for i, tag in enumerate(tracer):
             print(f">>> [{i + 1}/{tracer.__len__()}]{tag}")
 
@@ -226,7 +236,9 @@ class Scaffold:
             print(f">>> [{i + 1}/{__entropy__.__len__()}]{host_['name']}")
             print(f"注册链接: {host_['register_url']}")
             print(f"存活周期: {host_['life_cycle']}天")
-            print(f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n")
+            print(
+                f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n"
+            )
 
     @staticmethod
     def ping():
@@ -252,7 +264,10 @@ class Scaffold:
 
         _ConfigQuarantine.check_config(call_driver=True)
         logger.info("<ScaffoldGuider> Spawn || MainCollector")
-        booster(docker=__entropy__, silence=True, power=DEFAULT_POWER, assault=True)
+        booster(docker=__entropy__,
+                silence=True,
+                power=DEFAULT_POWER,
+                assault=True)
 
     @staticmethod
     def overdue():
@@ -299,11 +314,13 @@ class Scaffold:
         }
 
         # 清除日志 ~/database/logs
-        if os.path.exists(SERVER_DIR_DATABASE_LOG) and _permission['logs'].startswith("y"):
+        if os.path.exists(SERVER_DIR_DATABASE_LOG
+                          ) and _permission['logs'].startswith("y"):
             history_logs = os.listdir(SERVER_DIR_DATABASE_LOG)
             for _log_file in history_logs:
                 if len(_log_file.split('.')) > 2:
-                    _log_path = os.path.join(SERVER_DIR_DATABASE_LOG, _log_file)
+                    _log_path = os.path.join(SERVER_DIR_DATABASE_LOG,
+                                             _log_file)
                     os.remove(_log_path)
                     terminal_echo(f"清除运行日志-->{_log_path}", 3)
 
@@ -319,7 +336,9 @@ class Scaffold:
             for block in cache_blocks:
                 # 扫描文件
                 if os.path.exists(block):
-                    _files = [os.path.join(block, i) for i in os.listdir(block)]
+                    _files = [
+                        os.path.join(block, i) for i in os.listdir(block)
+                    ]
                     # 清除文件
                     for _file in _files:
                         if os.path.isfile(_file):

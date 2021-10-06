@@ -1,4 +1,6 @@
-def serverchan(title: str = None, message: str = None, serverchan_sckey: str = None):
+def serverchan(title: str = None,
+               message: str = None,
+               serverchan_sckey: str = None):
     """
 
     :param title: 标题最大256
@@ -12,10 +14,7 @@ def serverchan(title: str = None, message: str = None, serverchan_sckey: str = N
     import requests
 
     url = f"http://sc.ftqq.com/{serverchan_sckey}.send"
-    params = {
-        'text': title,
-        'desp': message
-    }
+    params = {'text': title, 'desp': message}
     try:
         res = requests.get(url, params=params)
         res.raise_for_status()

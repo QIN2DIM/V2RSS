@@ -12,10 +12,17 @@ from .core import SliderValidator, By, ec
 
 
 class GeeTest3(SliderValidator):
-
-    def __init__(self, driver, debug=False, business_name="GeeTest_v3", full_img_path=None, notch_img_path=None):
-        super(GeeTest3, self).__init__(driver=driver, debug=debug, full_img_path=full_img_path,
-                                       notch_img_path=notch_img_path, business_name=business_name)
+    def __init__(self,
+                 driver,
+                 debug=False,
+                 business_name="GeeTest_v3",
+                 full_img_path=None,
+                 notch_img_path=None):
+        super(GeeTest3, self).__init__(driver=driver,
+                                       debug=debug,
+                                       full_img_path=full_img_path,
+                                       notch_img_path=notch_img_path,
+                                       business_name=business_name)
         self.threshold = 60
         self.offset = 35
 
@@ -79,7 +86,8 @@ class GeeTest3(SliderValidator):
 
         :return:
         """
-        button_text2 = self.api.find_element_by_class_name('geetest_success_radar_tip_content')
+        button_text2 = self.api.find_element_by_class_name(
+            'geetest_success_radar_tip_content')
         text2 = button_text2.text
 
         if text2 == '验证成功':
@@ -90,13 +98,18 @@ class GeeTest3(SliderValidator):
         # 唤醒Geetest 点击唤出
         self.activate_validator()
         # 加载元素
-        self.wait.until(ec.presence_of_element_located((By.CLASS_NAME, 'geetest_canvas_slice')))
-        self.wait.until(ec.presence_of_element_located((By.CLASS_NAME, 'geetest_canvas_fullbg')))
+        self.wait.until(
+            ec.presence_of_element_located(
+                (By.CLASS_NAME, 'geetest_canvas_slice')))
+        self.wait.until(
+            ec.presence_of_element_located(
+                (By.CLASS_NAME, 'geetest_canvas_fullbg')))
         # 获取完整&有缺口的截图并存储
         full_img_path = self.capture_full_img()
         notch_img_path = self.capture_notch_img()
         # 识别缺口左边界坐标
-        boundary = self.identify_boundary(full_img_path, notch_img_path, self.offset)
+        boundary = self.identify_boundary(full_img_path, notch_img_path,
+                                          self.offset)
         # debug模式下 可视化识别结果
         if self.debug:
             self.check_boundary(boundary)
@@ -112,20 +125,17 @@ class GeeTest3(SliderValidator):
                 't': 0.5,
                 'alpha_factor': 3.4011,
                 'beta_factor': 3.5211,
-            }
-        )
+            })
         # 获取滑块对象
         slider = self.capture_slider(class_name="geetest_slider_button")
         # 根据轨迹拖动滑块
-        self.drag_slider(
-            track=track,
-            slider=slider,
-            position=position,
-            boundary=boundary,
-            use_imitate=True,
-            is_hold=False,
-            momentum_convergence=False
-        )
+        self.drag_slider(track=track,
+                         slider=slider,
+                         position=position,
+                         boundary=boundary,
+                         use_imitate=True,
+                         is_hold=False,
+                         momentum_convergence=False)
         # 执行成功，结束重试循环
         if self.is_success():
             if self.debug:

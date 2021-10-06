@@ -5,7 +5,6 @@ class StaffMiningError(Exception):
     """
     Base webdriver exception.
     """
-
     def __init__(self, msg=None, screen=None, stacktrace=None):
         self.msg = msg
         self.screen = screen
