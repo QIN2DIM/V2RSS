@@ -5,7 +5,6 @@
 """
 import base64
 import warnings
-from typing import List
 
 import requests
 from redis import exceptions as redis_error
@@ -22,13 +21,15 @@ WHITELIST = [
 class SubscribesCleaner(CoroutineSpeedup):
     """解耦清洗插件：国内IP调用很可能出现性能滑坡"""
 
-    def __init__(self, debug=False, whitelist: list = None):
+    def __init__(self, debug=False, whitelist: list = None, threshold: int = 4):
         """
 
         :param debug:
+        :param threshold: 耦置信阈值 小于或等于这个值的订阅将被剔除
         :param whitelist: 白名单，包含 whitelist 特征的链接不被主动清扫
         """
         super(SubscribesCleaner, self).__init__()
+        self.threshold = threshold
         self.debug = debug
         self.keys = [REDIS_SECRET_KEY.format(s) for s in CRAWLER_SEQUENCE]
         self.rc = RedisClient().get_driver()
@@ -54,19 +55,18 @@ class SubscribesCleaner(CoroutineSpeedup):
         except redis_error.ConnectionError:
             logger.critical("<SubscribeCleaner> The local network communication is abnormal.")
 
-    def control_driver(self, sub_info: List[str], threshold: int = 4):
+    def control_driver(self, task):
         """
 
-        :param sub_info: [subs,key_secret_class]
-        :param threshold: 解耦置信阈值 小于或等于这个值的订阅将被剔除
+        :param task: [subs,key_secret_class]
         :return:
         """
-        super(SubscribesCleaner, self).control_driver(task=sub_info)
+        sub_info = task
         try:
             # 解析订阅
             node_info: dict = SubscribeParser(sub_info[0]).parse_subscribe()
             # 订阅解耦
-            if node_info['nodes'].__len__() <= threshold:
+            if node_info['nodes'].__len__() <= self.threshold:
                 self._del_subs(sub_info[-1], sub_info[0], "decouple active removal")
             elif self.debug:
                 terminal_echo(f"valid -- {node_info['subs']} -- {len(node_info['nodes'])}", 1)
@@ -137,12 +137,15 @@ class SubscribeParser:
             return {'subs': subscribe, "nodes": nodes}
 
         # 捕获异常输入 剔除恶意链接或脏数据
+        # f'{subscribe} -- 传入的subs格式有误或不是订阅链接
         except requests.exceptions.MissingSchema:
-            print(f'{subscribe} -- 传入的subs格式有误或不是订阅链接')
+            pass
         # 链接清洗任务不能使用代理IP操作
         except requests.exceptions.ProxyError:
             raise SystemExit
-        # 并发数过大 远程主机关闭通信窗口 或是 IP被封禁，可能原因是 GeoIp 过滤屏蔽国内访问
+        # 1.远程主机关闭通信窗口，可能原因是 并发数过大；
+        # 2.IP被封禁，可能原因是 目标站点拒绝国内IP访问；
+        # 3.IP被拦截，可能原因是 目标站点拒绝代理访问；
         except requests.exceptions.ConnectionError:
             raise TypeError
         # 未知风险

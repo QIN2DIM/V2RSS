@@ -184,7 +184,8 @@ class CollectorScheduler(TasksScheduler):
             "message": "queue_size[{}] running_jobs[{}] is_running[{}]"
         }
         # logger.debug(f"<CollectorScheduler> {debug_log}")
-        log_message = debug_log.get('message').format(self.work_q.qsize(), len(self.running_jobs), self.is_running)
+        message_ = debug_log.get('message')
+        log_message = message_.format(self.work_q.qsize(), len(self.running_jobs), self.is_running) if message_ else ""
         logger.debug(f"<CollectorScheduler> {log_message}")
         if len(self.running_jobs) != 0:
             logger.debug("<CollectorScheduler> The listener jobs of collector start to work.")

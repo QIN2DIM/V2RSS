@@ -7,7 +7,8 @@ from os.path import join
 from string import printable
 from urllib.parse import urlparse
 
-from selenium.common.exceptions import WebDriverException, NoSuchElementException, TimeoutException
+from selenium.common.exceptions import WebDriverException, NoSuchElementException, TimeoutException, \
+    SessionNotCreatedException
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -26,7 +27,7 @@ class BaseAction:
 
     def __init__(self, silence=None, assault=None, beat_sync=True, debug=None,
                  action_name=None, email_class=None, life_cycle=None, anti_slider=None,
-                 chromedriver_path=None):
+                 chromedriver_path=None, endurance=None):
         """
         设定登陆选项，初始化登陆器
         :param silence: chromedriver静默启动；linux 环境下必须启用
@@ -38,6 +39,7 @@ class BaseAction:
         :param life_cycle: 会员试用时长 trail time；
         :param anti_slider: 目标站点是否具备极验（GeeTest）滑动验证
         """
+
         # =====================================
         # Parametric Cleaning
         # =====================================
@@ -50,6 +52,7 @@ class BaseAction:
         life_cycle = 1 if life_cycle is None else life_cycle
         anti_slider = True if anti_slider is None else anti_slider
         chromedriver_path = "chromedriver" if chromedriver_path is None else chromedriver_path
+        endurance = True if endurance is None else endurance
         # =====================================
         # driver setting
         # =====================================
@@ -78,6 +81,10 @@ class BaseAction:
         self.work_clock_max_wait = 120
         # 等待注册时的容错时间
         self.timeout_retry_time = 3
+        # =====================================
+        # v-5.5.r 添加功能：数据持久化 bool
+        # =====================================
+        self.endurance = endurance
 
     def utils_slider(self, api):
         """
@@ -179,29 +186,34 @@ class BaseAction:
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option('useAutomationExtension', False)
         options.add_experimental_option('excludeSwitches', ['enable-automation'])
-        # 加速模式，增加Selenium渲染效率
-        if self.assault:
-            chrome_pref = {"profile.default_content_settings": {"Images": 2, 'javascript': 2},
-                           "profile.managed_default_content_settings": {"Images": 2}}
-            options.experimental_options['prefs'] = chrome_pref
-            d_c = DesiredCapabilities.CHROME
-            d_c['pageLoadStrategy'] = 'none'
-            _api = Chrome(
-                options=options,
-                executable_path=self.chromedriver_path,
-                desired_capabilities=d_c
-            )
-        else:
-            _api = Chrome(options=options, executable_path=self.chromedriver_path)
-        # 进一步消除操作指令头，增加隐蔽性
-        _api.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": """
-            Object.defineProperty(navigator, 'webdriver', {
-              get: () => undefined
+        try:
+            # 加速模式，增加Selenium渲染效率
+            if self.assault:
+                chrome_pref = {"profile.default_content_settings": {"Images": 2, 'javascript': 2},
+                               "profile.managed_default_content_settings": {"Images": 2}}
+                options.experimental_options['prefs'] = chrome_pref
+                d_c = DesiredCapabilities.CHROME
+                d_c['pageLoadStrategy'] = 'none'
+                _api = Chrome(
+                    options=options,
+                    executable_path=self.chromedriver_path,
+                    desired_capabilities=d_c
+                )
+            else:
+                _api = Chrome(options=options, executable_path=self.chromedriver_path)
+            # 进一步消除操作指令头，增加隐蔽性
+            _api.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+                "source": """
+                Object.defineProperty(navigator, 'webdriver', {
+                  get: () => undefined
+                })
+              """
             })
-          """
-        })
-        return _api
+            return _api
+        except SessionNotCreatedException as e:
+            logger.error(f"<{self.action_name}> 任務核心無法啓動：ChromeDriver 與 Chrome 版本不匹配。 "
+                         f"請審核您的 Chrome 版本號并於 http://npm.taobao.org/mirrors/chromedriver/ 拉取對應的驅動鏡像"
+                         f"-- {e}")
 
     @staticmethod
     def get_html_handle(api: Chrome, url, wait_seconds: int = 15):
@@ -295,6 +307,40 @@ class BaseAction:
             )))
 
     @staticmethod
+    def use_email_postfix(api: Chrome) -> bool:
+        if api.find_element_by_id("email_postfix"):
+            return True
+        return False
+
+    def rebuild_user(self, api, sleep: int = 2):
+        try:
+            if self.assault:
+                self.wait(api, 10, 'all')
+                time.sleep(sleep)
+            self.use_email_postfix(api)
+        except NoSuchElementException:
+            self.email += "@gmail.com"
+
+    @staticmethod
+    def rebuild_policy(api, _unused_subs_type, retry=0, limit=8):
+        while retry < limit:
+            try:
+                api.find_element_by_xpath("//div[@class='buttons']")
+                # case1: card_body 无返回值 --> 模式不匹配，例如存在弹窗阻挡；
+                # case2：subs_type in card_body --> 模式匹配，且存在对应类型订阅，反之则模式匹配，不存在对应类型订阅；
+                # card_body = api.find_element_by_xpath("//div[@class='buttons']")
+                # card_body = [i.text for i in card_body if subs_type in i.text.lower()]
+                # if not card_body:
+                #     logger.error("任务类型不匹配，存在异常的请求对象。"
+                #                  f"jobId=<{self.action_name}> subType={subs_type} url={self.register_url} ")
+                #     return False
+                return True
+            except NoSuchElementException:
+                time.sleep(1)
+                retry += 1
+        return RuntimeError
+
+    @staticmethod
     def check_in(api: Chrome):
         """
         机场账号每日签到
@@ -312,21 +358,28 @@ class BaseAction:
         except WebDriverException:
             pass
 
-    def load_any_subscribe(self, api: Chrome, element_xpath_str: str, href_xpath_str: str, class_: str, retry=0):
+    def load_any_subscribe(self, api: Chrome, element_xpath_str: str, href_xpath_str: str, class_: str, retry=0,
+                           timeout: int = 30):
         """
         捕获订阅并送入持久化数据池
-        @param api: ChromeDriverObject
-        @param element_xpath_str: 用于定位链接所在的标签
-        @param href_xpath_str: 用于取出目标标签的属性值，既subscribe
-        @param class_: 该subscribe类型，如`ssr`/`v2ray`/`trojan`
-        @param retry: 失败重试
-        @todo 使用 retrying 模块替代retry参数实现的功能（引入断网重连，断言重试，行为回滚...）
-        @return:
+        :param api: ChromeDriver Object
+        :param element_xpath_str: 用于定位链接所在的标签
+        :param href_xpath_str:  用于取出目标标签的属性值，既subscribe
+        :param class_: 该subscribe类型，如`ssr`/`v2ray`/`trojan`
+        :param retry: 失败重试
+        :param timeout:
+        :return:
         """
-        self.subscribe = WebDriverWait(api, 30).until(expected_conditions.presence_of_element_located((
+        # 订阅萃取
+        self.subscribe = WebDriverWait(api, timeout).until(expected_conditions.presence_of_element_located((
             By.XPATH,
             element_xpath_str
         ))).get_attribute(href_xpath_str)
+
+        # 无持久化权限，链接不送入数据库
+        if not self.endurance:
+            logger.success(">> DONE <{}> --> [{}] {}".format(self.action_name, class_, self.subscribe))
+            return
 
         # 若对象可捕捉则解析数据并持久化数据
         if self.subscribe:
@@ -343,8 +396,8 @@ class BaseAction:
                     }
                     # 分发订阅
                     FlexibleDistributeV2(image).distribute()
-                    # 数据存储成功后结束循环
                     logger.success(">> GET <{}> --> [{}] {}".format(self.action_name, class_, self.subscribe))
+                    # 数据存储成功后结束循环
                     break
                 except Exception as e:
                     logger.debug(">> FAILED <{}> --> {}:{}".format(self.action_name, class_, e))
@@ -361,7 +414,7 @@ class BaseAction:
             retry += 1
             self.load_any_subscribe(api, element_xpath_str, href_xpath_str, class_, retry)
 
-    def run(self):
+    def run(self, api=None):
         """Please rewrite this function!"""
 
         # Get register url
@@ -393,7 +446,7 @@ class ActionMasterGeneral(BaseAction):
                  silence: bool = True, assault: bool = False, beat_sync: bool = True,
                  email: str = None, life_cycle: int = None, anti_slider: bool = False,
                  hyper_params: dict = None, action_name: str = None, debug: bool = False,
-                 chromedriver_path=CHROMEDRIVER_PATH):
+                 chromedriver_path: str = CHROMEDRIVER_PATH, endurance: bool = True):
         """
 
         @param register_url: 机场注册网址，STAFF原生register接口
@@ -405,7 +458,7 @@ class ActionMasterGeneral(BaseAction):
         """
         super(ActionMasterGeneral, self).__init__(silence=silence, assault=assault, beat_sync=beat_sync,
                                                   email_class=email, life_cycle=life_cycle, anti_slider=anti_slider,
-                                                  debug=debug, chromedriver_path=chromedriver_path)
+                                                  debug=debug, chromedriver_path=chromedriver_path, endurance=endurance)
         # 任务标记
         self.action_name = "ActionMasterGeneral" if action_name is None else action_name
         # 机场注册网址
@@ -433,20 +486,22 @@ class ActionMasterGeneral(BaseAction):
         if not self.hyper_params['usr_email']:
             self.email = self.username
 
-    def capture_subscribe(self, api):
+    def capture_share_link(self, api, timeout=30):
         if self.hyper_params['v2ray']:
             self.load_any_subscribe(
                 api,
                 "//div[@class='buttons']//a[contains(@class,'v2ray')]",
                 'data-clipboard-text',
-                'v2ray'
+                'v2ray',
+                timeout=timeout
             )
         elif self.hyper_params['ssr']:
             self.load_any_subscribe(
                 api,
                 """//a[@onclick="importSublink('ssr')"]/..//a[contains(@class,'copy')]""",
                 'data-clipboard-text',
-                'ssr'
+                'ssr',
+                timeout=timeout
             )
         # elif self.hyper_params['trojan']: ...
         # elif self.hyper_params['kit']: ...
@@ -456,6 +511,8 @@ class ActionMasterGeneral(BaseAction):
         logger.debug(f">> RUN <{self.action_name}> --> beat_sync[{self.beat_sync}] feature[General]")
         # 获取任务设置
         api = self.set_spider_option(guise=self.hyper_params.get("proxy")) if api is None else api
+        if not api:
+            return
         # 执行核心业务逻辑
         try:
             # 设置弹性计时器，当目标站点未能在规定时间内渲染到预期范围时自主销毁实体
@@ -466,7 +523,7 @@ class ActionMasterGeneral(BaseAction):
             # 进入站点并等待核心元素渲染完成
             self.wait(api, 40, "//div[@class='card-body']")
             # 根据原子类型订阅的优先顺序 依次捕获
-            self.capture_subscribe(api)
+            self.capture_share_link(api)
             # 根据具体需要进行签到
             if self.hyper_params.get("check_in"):
                 self.check_in(api)

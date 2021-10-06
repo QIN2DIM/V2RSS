@@ -47,10 +47,14 @@ class SpawnBooster(CoroutineSpeedup):
             self.work_q.put_nowait(entity_)
             self.jobs.append(entity_)
 
-    def control_driver(self, entity_):
+    def control_driver(self, task):
+        """
         # 将高度抽象（压缩）的行为（Function）解压执行
         # 考虑到本例仅在人机调试时使用，故不采用任何exception捕获方案，期望错误弹出
-        entity_()
+        :param task:
+        :return:
+        """
+        task()
 
 
 def booster(docker: dict or list, silence: bool, power: int = 1, assault=False):

@@ -135,4 +135,4 @@ dmypy.json
 /V2RaycSpider1225/Database/logs
 /V2RaycSpider1225/Database/temp_cache
 /V2RaycSpider1225/Database/staff_hosts
-/V2RaycSpider1225/.idea
+.idea/
