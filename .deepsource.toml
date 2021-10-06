@@ -1,0 +1,14 @@
+version = 1
+
+exclude_patterns = ["V2RaycSpider1225/install_centos7.py"]
+
+[[analyzers]]
+name = "python"
+enabled = true
+
+  [analyzers.meta]
+  runtime_version = "3.x.x"
+
+[[transformers]]
+name = "yapf"
+enabled = true
