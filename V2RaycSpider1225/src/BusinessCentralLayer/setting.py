@@ -1,6 +1,6 @@
 """TODO 服务器后端配置"""
 import sys
-from os.path import join, dirname, exists
+from os.path import join, dirname, exists, abspath
 
 from loguru import logger
 
@@ -133,7 +133,7 @@ else:
     CHROMEDRIVER_PATH = (
         dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver"
     )
-    SERVER_DIR_PROJECT = f"/qinse/V2RaycSpider{PROJECT_NUM}"
+    SERVER_DIR_PROJECT = abspath(".")
 # 若不存在CHROMEDRIVER_PATH指定的路径则尝试从环境变量中查找chromedriver文件
 if not exists(CHROMEDRIVER_PATH):
     CHROMEDRIVER_PATH = "chromedriver"

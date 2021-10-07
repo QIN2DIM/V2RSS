@@ -67,7 +67,7 @@ class _ConfigQuarantine:
                         if child_ == SERVER_PATH_DEPOT_VCS:
                             try:
                                 with open(
-                                    child_, "w", encoding="utf-8", newline=""
+                                        child_, "w", encoding="utf-8", newline=""
                                 ) as fpx:
                                     csv.writer(fpx).writerow(["version", "title"])
                                 logger.success(f"系统文件链接成功->{child_}")
@@ -134,12 +134,14 @@ class Scaffold:
 
     def build(self):
         """
-        [实验功能] 为 CentOS7 操作系统用户自动下载 v2rss server 运行所需组件。
+        [实验功能] 为 Ubuntu 操作系统用户自动下载 v2rss server 运行所需组件。
 
 
 
         :return:
         """
+        # 初始化工作目录
+        self.cq.run()
 
     # ----------------------------------
     # Tools for dev
@@ -330,7 +332,7 @@ class Scaffold:
 
         # 清除日志 ~/database/logs
         if os.path.exists(SERVER_DIR_DATABASE_LOG) and _permission["logs"].startswith(
-            "y"
+                "y"
         ):
             history_logs = os.listdir(SERVER_DIR_DATABASE_LOG)
             for _log_file in history_logs:
