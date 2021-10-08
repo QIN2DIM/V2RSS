@@ -34,8 +34,12 @@ def set_google_chrome():
         return True
 
     # installing Google Chrome on CentOS7
-    shell_echo("wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm >/dev/null")
-    shell_echo("sudo apt localinstall google-chrome-stable_current_x86_64.rpm >/dev/null")
+    shell_echo(
+        "wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm >/dev/null"
+    )
+    shell_echo(
+        "sudo apt localinstall google-chrome-stable_current_x86_64.rpm >/dev/null"
+    )
 
 
 def set_chromedriver(unzip_path=None):
@@ -43,22 +47,30 @@ def set_chromedriver(unzip_path=None):
     unzip_path = "/usr/bin/chromedriver" if unzip_path is None else unzip_path
 
     # 读取 google-chrome 的发行版本 Such as 89.0.4389.23
-    chrome_version = "".join(os.popen("google-chrome --version").readlines()).strip().split(' ')[-1]
+    chrome_version = (
+        "".join(os.popen("google-chrome --version").readlines()).strip().split(" ")[-1]
+    )
 
     # 访问 chromedriver 镜像
     res = requests.get("http://npm.taobao.org/mirrors/chromedriver")
-    soup = BeautifulSoup(res.text, 'html.parser')
+    soup = BeautifulSoup(res.text, "html.parser")
 
     # 通过文件名清洗定位到所需版本文件的下载地址
-    options = [i.split('/')[0] for i in soup.text.split('\n') if i.startswith(chrome_version[:5])]
+    options = [
+        i.split("/")[0]
+        for i in soup.text.split("\n")
+        if i.startswith(chrome_version[:5])
+    ]
     if len(options) == 1:
         chromedriver_version = options[0]
     else:
         chromedriver_version = max(options)
 
     # 拉取 chromedriver
-    shell_echo(f"wget http://npm.taobao.org/mirrors/chromedriver/{chromedriver_version}"
-               "/chromedriver_linux64.zip >/dev/null")
+    shell_echo(
+        f"wget http://npm.taobao.org/mirrors/chromedriver/{chromedriver_version}"
+        "/chromedriver_linux64.zip >/dev/null"
+    )
 
     # 解压 chromedriver
     shell_echo("unzip chromedriver_linux64.zip >/dev/null")
@@ -93,5 +105,5 @@ def run():
     init_project()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     run()

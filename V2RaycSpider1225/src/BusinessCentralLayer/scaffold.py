@@ -67,7 +67,7 @@ class _ConfigQuarantine:
                         if child_ == SERVER_PATH_DEPOT_VCS:
                             try:
                                 with open(
-                                        child_, "w", encoding="utf-8", newline=""
+                                    child_, "w", encoding="utf-8", newline=""
                                 ) as fpx:
                                     csv.writer(fpx).writerow(["version", "title"])
                                 logger.success(f"系统文件链接成功->{child_}")
@@ -123,14 +123,38 @@ class _ConfigQuarantine:
                 sys.exit()
 
 
+def within_error(flag_name: str, key_name: str, within_list: list):
+    """
+
+    :param flag_name:
+    :param key_name:
+    :param within_list:
+    :return:
+    """
+    if key_name not in within_list:
+        logger.error(
+            f"<ScaffoldBuild> Wrong input parameter: "
+            f"--{flag_name}=`{key_name}` @ "
+            f"This parameter must be within {within_list}."
+        )
+        return False
+    return True
+
+
 class Scaffold:
     """
     v2rss-service 脚手架
         - 集成了各种后端服务常用的调试指令，并牵引了更加便捷的部署接口。
     """
 
-    def __init__(self):
+    def __init__(self, env: str = "development"):
         self.cq = _ConfigQuarantine()
+
+        if not within_error("env", env, ["development", "production"]):
+            sys.exit()
+
+        os.environ["V2RSS_ENVIRONMENT"] = env
+        self.env = env
 
     def build(self):
         """
@@ -298,8 +322,7 @@ class Scaffold:
         logger.info("<ScaffoldGuider> Overdue || Redis DDT")
         SystemInterface.ddt()
 
-    @staticmethod
-    def decouple():
+    def decouple(self):
         """
         扫描所指订阅池，清除无效订阅。
 
@@ -312,7 +335,11 @@ class Scaffold:
         :return:
         """
         logger.info("<ScaffoldGuider> Decouple || General startup")
-        SubscribesCleaner(debug=True).interface(power=DEFAULT_POWER)
+        if self.env == "development":
+            SubscribesCleaner(debug=True).interface(power=DEFAULT_POWER)
+        else:
+            SubscribesCleaner(debug=False).interface(power=DEFAULT_POWER)
+            logger.success("<ScaffoldGuider> Decouple || General startup")
 
     @staticmethod
     def clear():
@@ -332,7 +359,7 @@ class Scaffold:
 
         # 清除日志 ~/database/logs
         if os.path.exists(SERVER_DIR_DATABASE_LOG) and _permission["logs"].startswith(
-                "y"
+            "y"
         ):
             history_logs = os.listdir(SERVER_DIR_DATABASE_LOG)
             for _log_file in history_logs:

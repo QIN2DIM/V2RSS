@@ -68,7 +68,7 @@ jobs:
     - name: V2RSS overdue/decouple
       run: |
         if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} overdue; fi
-        if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} decouple; fi
+        if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} --env=production decouple; fi
     # 执行一次采集作业，检查采集模块是否正常工作；使用 Spawn 指令可不受限制地采集订阅
     - name: V2RSS spawn
       run: |

@@ -124,6 +124,7 @@ __all__ = [
 # 若位于次级目录下则 SERVER_DIR_PROJECT = dirname(__file__) 例如位于任一`Layer`下
 # 位于孙级目录下以此类推，一般建议最多到次级。
 # ---------------------------------------------------
+
 if "win" in sys.platform:
     CHROMEDRIVER_PATH = (
         dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver.exe"
@@ -196,16 +197,17 @@ SERVER_PATH_DATABASE_FETCH = join(SERVER_DIR_DATABASE, "CrawlFetchHistory.txt")
 SERVER_DIR_DATABASE_LOG = join(SERVER_DIR_DATABASE, "logs")
 
 logger.add(
+    sink=join(SERVER_DIR_DATABASE_LOG, "error.log"),
+    level="ERROR",
+    rotation="1 week",
+    encoding="utf8",
+)
+
+logger.add(
     sink=join(SERVER_DIR_DATABASE_LOG, "runtime.log"),
     level="DEBUG",
     rotation="1 day",
     retention="20 days",
-    encoding="utf8",
-)
-logger.add(
-    sink=join(SERVER_DIR_DATABASE_LOG, "error.log"),
-    level="ERROR",
-    rotation="1 week",
     encoding="utf8",
 )
 

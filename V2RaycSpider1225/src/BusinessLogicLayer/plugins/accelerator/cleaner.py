@@ -55,7 +55,6 @@ class SubscribesCleaner(CoroutineSpeedup):
                 )
             else:
                 self.rc.hdel(key_, subs)
-                # terminal_echo(f"detach -> {subs} {err_}", 3)
                 logger.debug(f"<SubscribeCleaner> detach -> {subs} {err_}")
         except redis_error.ConnectionError:
             logger.critical(
@@ -85,7 +84,8 @@ class SubscribesCleaner(CoroutineSpeedup):
                 self.temp_cache[sub_info[0]] += 1
             # 否则标记为“解析错误”的订阅
             else:
-                terminal_echo(f"recheck -- {sub_info[0]}", 2)
+                if self.debug:
+                    terminal_echo(f"recheck -- {sub_info[0]}", 2)
                 self.temp_cache[sub_info[0]] = 1
             # 若链接重试次数少于3次 重添加至任务队列尾部
             if self.temp_cache[sub_info[0]] <= 3:
@@ -98,10 +98,6 @@ class SubscribesCleaner(CoroutineSpeedup):
         except Exception as e:
             logger.warning(f"{sub_info} -- {e}")
             self._del_subs(sub_info[-1], sub_info[0], e)
-
-    def killer(self):
-        if not self.debug:
-            logger.success("<SubscribesCleaner> --> decouple compete.")
 
 
 class SubscribeParser:
@@ -129,8 +125,8 @@ class SubscribeParser:
 
         # 订阅类型
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
-            " Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.53",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.53",
         }
         # 流量不通过系统代理
         proxies = {"http": None, "https": None}

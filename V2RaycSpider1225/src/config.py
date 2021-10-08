@@ -336,6 +336,7 @@ REDIS_SECRET_KEY: str = "v2rayc_spider:{}"
 PROJECT_NUM = "1225"
 VERSION = "5.1.0"
 # ---------------------------------------------------
+
 # 时区
 TIME_ZONE_CN = pytz.timezone("Asia/Shanghai")
 TIME_ZONE_NY = pytz.timezone("America/New_York")
@@ -359,7 +360,7 @@ if not ENABLE_DEPLOY["global"]:
 #   若写为 ###，则使用默认配置，即等价于 Value = 127.0.0.1#6379##0；
 UAtheK1nG = os.getenv("UAtheK1nG")
 if UAtheK1nG and len(UAtheK1nG.split("#")) == 4:
-    keys = UAtheK1nG.split('#')
+    keys = UAtheK1nG.split("#")
     REDIS_MASTER["host"] = "127.0.0.1" if not keys[0] else keys[0].strip()
     REDIS_MASTER["password"] = "" if not keys[2] else keys[2].strip()
     try:
