@@ -348,6 +348,30 @@ if not ENABLE_DEPLOY["global"]:
     for reset_ in ENABLE_DEPLOY["tasks"].items():
         ENABLE_DEPLOY["tasks"][reset_[0]] = False
 
+# ---------------------------------------------------
+# 兼容 Workflows Secret Key 覆盖 Redis 配置
+# ---------------------------------------------------
+# Key = UAtheK1nG
+#   若取不到此 Key，则不重置 config
+# Value = hostname#port#password#db
+#   如 127.0.0.1#6379#pwd#0；
+#   若没有密码 可写为 127.0.0.1#6379##0
+#   若写为 ###，则使用默认配置，即等价于 Value = 127.0.0.1#6379##0；
+UAtheK1nG = os.getenv("UAtheK1nG")
+if UAtheK1nG and len(UAtheK1nG.split("#")) == 4:
+    keys = UAtheK1nG.split('#')
+    REDIS_MASTER["host"] = "127.0.0.1" if not keys[0] else keys[0].strip()
+    REDIS_MASTER["password"] = "" if not keys[2] else keys[2].strip()
+    try:
+        REDIS_MASTER["port"] = 6379 if not keys[1] else int(keys[1])
+    except ValueError:
+        REDIS_MASTER["port"] = 6379
+    try:
+        REDIS_MASTER["db"] = 0 if not keys[-1] else int(keys[-1])
+    except ValueError:
+        REDIS_MASTER["db"] = 0
+# ---------------------------------------------------
+
 # 主从反转
 if ENABLE_REBOUND:
     REDIS_MASTER, REDIS_SLAVER_DDT = REDIS_SLAVER_DDT, REDIS_MASTER

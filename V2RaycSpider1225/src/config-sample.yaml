@@ -25,12 +25,13 @@
 
 # ===================================================
 # >>> 符号说明
-# (√)核心参数 强制填写；不填写或填写有误无法正常启动项目
-# (*)边枝功能 可选项/使用默认配置；不填写不影响项目启动
+# [√] 核心参数 强制填写；不填写或填写有误无法正常启动项目
+# [*] 边枝功能 可选项/使用默认配置；不填写不影响项目启动
+# [x] 当前版本弃用
 # ===================================================
 
 # ---------------------------------------------------
-# TODO (√) Function Authority -- 功能权限
+# TODO [√] Function Authority -- 功能权限
 # ---------------------------------------------------
 
 # SINGLE_DEPLOYMENT 部署模式，单机部署True(默认)，分布式False
@@ -74,7 +75,7 @@ ENABLE_COROUTINE: True
 ENABLE_REBOUND: False
 
 # ---------------------------------------------------
-# TODO (√)SINGLE_TASK_CAP -- 单类订阅的队列容载极限
+# TODO [√] SINGLE_TASK_CAP -- 单类订阅的队列容载极限
 # 当某种链接的数量达到这个阈值则不会启动该类链接的采集任务
 # <Performance limit of 1xCPU 1GRAM VPS KVM>
 # Defaults type:int = 25
@@ -83,7 +84,7 @@ ENABLE_REBOUND: False
 SINGLE_TASK_CAP: 25
 
 # ---------------------------------------------------
-# TODO (√)DEPLOY_INTERVAL -- schedule任务间隔,单位秒（s）
+# TODO [√] DEPLOY_INTERVAL -- schedule任务间隔,单位秒（s）
 # 定时任务中采集任务频次： 1轮/INTERVAL_ACTION
 # Defaults type:int = 5 * 60 s 既5分钟
 #
@@ -101,20 +102,20 @@ LAUNCH_INTERVAL:
   ddt_decouple: 60
 
 # ---------------------------------------------------
-# TODO (√)Redis Cluster Configuration(SSH-BASE)
+# TODO [√] Redis Cluster Configuration(SSH-BASE)
 # 若您不知道如何配置Redis远程连接，请自行搜索或↓
 # >> https://shimo.im/docs/5bqnroJYDbU4rGqy/
 # 注：password为redis密码
 # ---------------------------------------------------
 
-# TODO (√)Settings of the Master-Redis responsible for leading the cluster
+# TODO [√] Settings of the Master-Redis responsible for leading the cluster
 REDIS_MASTER:
   host: &main_host ''
   password: &main_password ''
   port: 6379
   db: 0
 
-# TODO (*)Setting of the Slave-Redis responsible for data disaster tolerance（DDT）
+# TODO [*] Setting of the Slave-Redis responsible for data disaster tolerance（DDT）
 REDIS_SLAVER_DDT:
   # If you deploy this project on a single server
   #  host: *main_host
@@ -129,13 +130,13 @@ REDIS_SLAVER_DDT:
   db: 0
 
 # ---------------------------------------------------
-# TODO (√)Communication port for flask
+# TODO [√] Communication port for flask
 # flask开放的端口号，通信方式为HTTP
 # ---------------------------------------------------
 API_PORT: 6500
 
 # ---------------------------------------------------
-# TODO (√) PROXY_POOL setting
+# TODO [√] PROXY_POOL setting
 # PROXY_POOL 代理池通信配置，通信方式为HTTP
 # ---------------------------------------------------
 PROXY_POOL:
@@ -143,36 +144,31 @@ PROXY_POOL:
   port: 6501
 
 # ---------------------------------------------------
-# TODO (√)The domain name used to deploy the gardener
+# TODO [x] The domain name used to deploy the gardener
 # 园丁系统部署域名，当启动该项功能时，必须配置如: www.bbq.club
 # 由于性能受限，该域名必须为当前主机的域名
 # ---------------------------------------------------
 GARDENER_HOST: ''
 
 # ---------------------------------------------------
-# TODO (*)Communication port for micro-service
+# TODO [x] Communication port for micro-service
 # ---------------------------------------------------
 REC_PORT: 6600
 
 # ===================================================
-# TODO (*)Noticer -- 用于发送panic信息警报，默认发送给自己
-# 1. 当只需要发送给自己时推荐使用SERVER酱，两种通讯方式SERVER酱优先级更高
-# 2. 此项非必要填写，若为空则不会发送警告信息
+# TODO [x] Noticer -- 用于发送panic信息警报，默认发送给自己
+#   当只需要发送给自己时推荐使用SERVER酱，两种通讯方式SERVER酱优先级更高
+#   此项非必要填写，若为空则不会发送警告信息
 # ===================================================
-
-# ---------------------------------------------------
 # 1. 使用Email推送-推荐使用QQ邮箱，开启邮箱SMTP服务教程如下
 # https://service.mail.qq.com/cgi-bin/help?subtype=1&&id=28&&no=1001256
-# ---------------------------------------------------
 SMTP_ACCOUNT:
   # SMTP邮箱
   email: ''
   # SMTP授权码
   sid: ''
-
 # ---------------------------------------------------
 # 2. 使用<SERVER酱>推送，请在SERVERCHAN_SCKEY填写自己的Key
 # http://sc.ftqq.com/3.version
-# ---------------------------------------------------
 SERVERCHAN_SCKEY: ''
 
