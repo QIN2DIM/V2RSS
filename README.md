@@ -28,9 +28,9 @@
 
 - **【方案一】用户**
 
-  - 软件获取： [**Windows-64bit <约17MiB>**](https://github.com/QIN2DIM/V2RayCloudSpider/releases/download/v4.5.4/v2rss_4.5.4_Windows-64bit.zip)
+  - 软件获取： [**Windows-64bit <约17MiB>**](https://github.com/QIN2DIM/V2RayCloudSpider/releases)
 
-  - 软件使用：运行 `V2Ray云彩姬` 启动本体 -- [<V2Ray云彩姬使用说明>](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/V2Ray%E4%BA%91%E5%BD%A9%E5%A7%AC%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md)
+  - 软件使用：运行 `V2Ray云彩姬` 启动本体 -- [<云彩姬使用说明>](https://blog.echosec.top/v2rss-docs/zh/docs/user/v2rss-cli/overview/)
 
 - **【方案二】开发者**
 
@@ -48,7 +48,7 @@
 
 ## :email: 联系我们
 
-> 本项目由海南大学机器人与人工智能协会数据挖掘小组 (`A-RAI.DM`) 提供维护
+> 本项目由海南大学机器人与人工智能协会数据挖掘小组（`A-RAI.DM`）提供维护
 
 - [**Email**](mailto:RmAlkaid@outlook.com?subject=CampusDailyAutoSign-ISSUE) **||** [**Home**](https://a-rai.github.io/) **||** [**TG**](https://t.me/joinchat/HlB9SQJubb5VmNU5)
 
