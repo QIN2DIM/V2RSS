@@ -21,7 +21,7 @@
 
 ## 项目简介 👋
 
-V2RSS 是一个能对全球范围内基于 [SSPanel-Uim](https://github.com/Anankke/SSPanel-Uim) 框架产出的提供商进行垂直挖掘的「生态矿机」；能够自下而上地生成针对主流协议头的「聚合采集」任务；能够自我消化并产出相较于 [proxypool](https://github.com/zu1k/proxypool) 更加纯净可靠的代理节点；具备自主发现，服务自愈等强大的生产特性。
+[V2RSS](https://github.com/QIN2DIM/V2RayCloudSpider) 是一个能对全球范围内基于 [SSPanel-Uim](https://github.com/Anankke/SSPanel-Uim) 框架产出的提供商进行垂直挖掘的「生态矿机」；能够自下而上地生成针对主流协议头的「聚合采集」任务；能够自我消化并产出相较于 [proxypool](https://github.com/zu1k/proxypool) 更加纯净可靠的代理节点；具备自主发现，服务自愈等强大的生产特性。
 
 ## 快速上手 🛴
 
