@@ -12,36 +12,32 @@
 	<br>
 </div>
 
-
-## :carousel_horse: 项目简介
-
-> 1. 本项目软件及源码禁止在国内网络环境大范围传播；
->
-> 2. 本项目开源免费，请不要滥用接口；
+## 服务声明 🧙‍♂️
+> 1. 本项目开源免费，请不要滥用接口；
+> 
+> 2. 本项目软件及源码禁止在国内网络环境大范围传播；
 >
 > 3. 禁止任何人使用本项目及其分支提供任何形式的收费代理服务。
 
-- 针对全球范围内基于 [SSPanel-Uim](https://github.com/Anankke/SSPanel-Uim) 框架产出的机场进行垂直挖掘；
-- 理论上支持所有类型订阅的采集；
+## 项目简介 👋
 
-##  :airplane:快速上手
+V2RSS 是一个能对全球范围内基于 [SSPanel-Uim](https://github.com/Anankke/SSPanel-Uim) 框架产出的提供商进行垂直挖掘的「生态矿机」；能够自下而上地生成针对主流协议头的「聚合采集」任务；能够自我消化并产出相较于 [proxypool](https://github.com/zu1k/proxypool) 更加纯净可靠的代理节点；具备自主发现，服务自愈等强大的生产特性。
+
+## 快速上手 🛴
 
 - 用户：详见 [云彩姬使用说明](https://blog.echosec.top/v2rss-docs/zh/docs/user/v2rss-cli/overview/)。
 - 玩家：Fork 项目，根据 [技术文档](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/技术文档(demo).md) 合理配置 `config.yaml` ，使用脚手架调试并部署服务。
 
-
-## :ocean: 网上冲浪 
+## 网上冲浪 🌊
 
 - :gear: [技术文档](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/技术文档(demo).md)（更新中...）
-
 - :small_red_triangle: [注意事项](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/注意事项.md)
-
 - :loudspeaker: [更新日志](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/更新日志.md)
 - :world_map: [开源计划](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/开源计划.md)
 
-## :email: 联系我们
+## 联系我们 📧
 
 > 本项目由海南大学机器人与人工智能协会数据挖掘小组（`A-RAI.DM`）提供维护。
 
-- [**Email**](mailto:RmAlkaid@outlook.com?subject=CampusDailyAutoSign-ISSUE) **||** [**Home**](https://a-rai.github.io/) **||** [**TG**](https://t.me/joinchat/HlB9SQJubb5VmNU5)
+- [**Email**](mailto:HainanU_arai@163.com?subject=CampusDailyAutoSign-ISSUE) **||** [**Home**](https://a-rai.github.io/) **||** [**TG**](https://t.me/joinchat/HlB9SQJubb5VmNU5)
 
