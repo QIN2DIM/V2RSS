@@ -403,7 +403,6 @@ __entropy__ = [
     # ActionAaxCloud,  # v2ray [1day 10G]
     ActionZZCloud,  # v2ray [6day 100G]
     ActionAzIcoCloud,  # v2ray [1day 2G + 1000 * 2 co-invite]
-    ActionKuaiZaiCloud,  # ssr [30day 500G]
     # ---------------------
     # [启动] 需要滑动验证
     # ---------------------
@@ -418,6 +417,8 @@ __entropy__ = [
     # -->邮箱
     # Action7ccCloud,
     # ActionHuoJianCloud,
+    # ActionKuaiZaiCloud,  # ssr [30day 500G]
+
     # -->GoogleCAPTHCA
     # ActionGsouCloud,
     # ---------------------
@@ -455,32 +456,3 @@ __entropy__ = [
     # ActionTheSSR,
     # ActionUfoCloud,
 ]
-
-# co-invite
-# IF ``co-invite`` is None:
-#   实例按原模式运行
-# ELIF ``co-invite`` is True:
-#   实例启动协同邀请模式，初始化默认运行参数 gain:int=1
-#   等效于 "co-invite":{"gain":1}
-# ELIF ``co-invite`` is runtime:
-#   实例启动协同邀请模式，自定义运行参数
-#   "co-invite":{"gain":runtime}
-#   runtime ∈ [1,30]
-
-# collaborator mode
-# 借助 invite-code 邀请增益的商业模式实现订阅质量的迅速拔升
-# 1）实例运行时执行额外的后台任务，generate runtime context
-#   - runtime context: 包含实例运行时状态的上下文摘要信息。
-#     包括必要的运行参数，如 hyper-params，register-url 等
-#     包括必要的缓存信息，如 cookie，email，password 等
-# 2）运行实例在生命周期结束前将 runtime context 推送至 redis 节点
-#   - redis-stream：存储 runtime context 的消息队列缓存结构
-#   - 微观上，根据 gain 拷贝运行时对象，也即 gain = obj_number
-#   - 宏观上，gain 等于推送的信息条数
-# 3)使用新的定时服务(self-strategy)，定时扫描 redis-stream
-#   IF channel is None:
-#       任务结束
-#   ELSE:
-#       - 将任务批量同步（READ）至本地运行，batch 大小取决于本机硬件配置
-#       - 运行一个快速注册实例，完成注册后就消解实例，无需实现订阅获取行为
-#
