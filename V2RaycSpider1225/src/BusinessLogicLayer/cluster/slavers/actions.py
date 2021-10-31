@@ -15,14 +15,14 @@ ActionOhrCloud = {
 # ActionKakCloud
 # - intro: 1day 10G
 # - change log:
-#   -
+#   - 2021-10-29 1day co-invite 3 * 10 = 30G
 # =============================================
 ActionKakCloud = {
     "name": "ActionKakCloud",
     "register_url": "https://www.kaikaiyun.icu/auth/register",
     "life_cycle": 1,
     "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "proxy": True},
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 4},
     "email": "@gmail.com",
 }
 # =============================================
@@ -216,13 +216,14 @@ ActionGsouCloud = {
 # - change log:
 #   -2021.07.14 [停用]流量不达标
 #   -2021.08.04 [启用]
+#   -2021.10.29 # 1day co-invite 3 * 10 = 30G
 # =============================================
 ActionDuosCloud = {
     "name": "ActionDuosCloud",
     "register_url": "https://www.jiuyecaody.xyz/auth/register",
     "life_cycle": 1,
     "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 3},
     "email": "@gmail.com",
 }
 # =============================================
@@ -342,21 +343,6 @@ ActionJs8cCloud = {
     "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True},
     "email": "@gmail.com",
 }
-
-# =============================================
-# ActionZZCloud
-# - change log:
-#   -2021-09-24 [Create] 更新实例
-# =============================================
-ActionZZCloud = {
-    "name": "ActionZZCloud",
-    "register_url": "https://zz12.xyz/auth/register",
-    "life_cycle": 6,
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True},
-    "email": "@gmail.com",
-}
-
 # =============================================
 # ActionMaoQCloud
 # - change log:
@@ -370,59 +356,131 @@ ActionMaoQCloud = {
     "hyper_params": {"ssr": True, "v2ray": False, "usr_email": True},
     "email": "@gmail.com",
 }
-
+# =============================================
+# ActionZZCloud
+# - change log:
+#   -2021-09-24 [Create] 更新实例
+# =============================================
+ActionZZCloud = {
+    "name": "ActionZZCloud",
+    "register_url": "https://zz12.xyz/auth/register",
+    "life_cycle": 6,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
+}
+# =============================================
+# ActionAzIcoCloud
+# - change log:
+#   - 2021-10-29 [Create] 更新实例
+#   - 2021-10-29 [1day 2G + 1000 * 2 co-invite]
+# =============================================
+ActionAzIcoCloud = {
+    "name": "ActionAzIcoCloud",
+    "register_url": "https://azi.azzico.cc/auth/register",
+    "life_cycle": 1,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
+    "email": "@gmail.com",
+}
+# =============================================
+# ActionKuaiZaiCloud
+# - change log:
+#   -2021-10-29 [Create] 更新实例
+# =============================================
+ActionKuaiZaiCloud = {
+    "name": "ActionKuaiZaiCloud",
+    "register_url": "https://www.kuaizai.xyz/auth/register",
+    "life_cycle": 30,
+    "anti_slider": False,
+    "hyper_params": {"ssr": True, "v2ray": False},
+    "email": "@gmail.com",
+}
 __entropy__ = [
     # ---------------------
     # [启动] 无障碍
     # ---------------------
-    ActionAaxCloud,  # v2ray 1day 10G
-    ActionZZCloud,  # v2ray 6day100G
-    # ActionMaoQCloud,  # ssr 3day3G
+    # ActionAaxCloud,  # v2ray [1day 10G]
+    ActionZZCloud,  # v2ray [6day 100G]
+    ActionAzIcoCloud,  # v2ray [1day 2G + 1000 * 2 co-invite]
+    ActionKuaiZaiCloud,  # ssr [30day 500G]
     # ---------------------
     # [启动] 需要滑动验证
     # ---------------------
-    ActionKakCloud,  # v2ray 1day3G
-    # ActionJs8cCloud,  # v2ray 1day 10G
+    ActionDuosCloud,  # v2ray [1day co-invite 3 * 10 = 30G]
+    ActionKakCloud,  # v2ray [1day co-invite 3 * 10 = 30G]
     # ---------------------
     # [停用] 公益节点
     # ---------------------
     # ---------------------
     # [停用] 需要其他类型验证
     # ---------------------
-    # ActionGsouCloud,
+    # -->邮箱
     # Action7ccCloud,
     # ActionHuoJianCloud,
+    # -->GoogleCAPTHCA
+    # ActionGsouCloud,
     # ---------------------
     # [停用] 未达标
     # ---------------------
     # 流量不达标
-    # ActionDuosCloud,  # v2ray 1day2G
-    # ActionJssForV2rayCloud,  # v2ray 1day 2G
-    # ActionMxCloud,  # v2ray 1day 2G
+    # ActionWgCloud, # [v2ray] [1day 2G + non co-invite]
+    # ActionJdSuCloud, # [v2ray] [1day 500M + 0.1G/co-invite]
+    # ActionJssForV2rayCloud,  # [v2ray] [1day 2G + non co-invite]
+    # ActionMxCloud,  # [v2ray] [1day 2G + non co-invite]
     # 无免费节点
-    # ActionOhrCloud,
     # ActionMiTaoCloud,
     # ---------------------
     # [剔除] 框架更换
     # ---------------------
     # ActionBitEbCloud,
+    # ActionThunderCloud,
     # ---------------------
     # [剔除] 其他
     # ---------------------
-    # 跑路
-    # ActionTheSSR,
-    # ActionUfoCloud,
-    # ActionPPForV2rayCloud,  # v2ray 1day2G
     # 域名过期
     # ActionN95Cloud,
     # ActionSuFeiCloud,
-    # 拒绝注册
-    # ActionUUCloud,
-    # ActionWgCloud,
-    # 站点瘫痪
     # ActionZuiSuCloud,
+    # 拒绝注册
+    # ActionOhrCloud,
+    # 站点瘫痪
+    # ActionPPForV2rayCloud,  # v2ray 1day2G
+    # ActionMaoQCloud,
+    # 跑路
     # ActionReCloud,  # v2ray 1day10G
-    # ActionThunderCloud,
-    # ActionJdSuCloud,
     # ActionJfCloud,
+    # ActionUUCloud,
+    # ActionJs8cCloud,
+    # ActionTheSSR,
+    # ActionUfoCloud,
 ]
+
+# co-invite
+# IF ``co-invite`` is None:
+#   实例按原模式运行
+# ELIF ``co-invite`` is True:
+#   实例启动协同邀请模式，初始化默认运行参数 gain:int=1
+#   等效于 "co-invite":{"gain":1}
+# ELIF ``co-invite`` is runtime:
+#   实例启动协同邀请模式，自定义运行参数
+#   "co-invite":{"gain":runtime}
+#   runtime ∈ [1,30]
+
+# collaborator mode
+# 借助 invite-code 邀请增益的商业模式实现订阅质量的迅速拔升
+# 1）实例运行时执行额外的后台任务，generate runtime context
+#   - runtime context: 包含实例运行时状态的上下文摘要信息。
+#     包括必要的运行参数，如 hyper-params，register-url 等
+#     包括必要的缓存信息，如 cookie，email，password 等
+# 2）运行实例在生命周期结束前将 runtime context 推送至 redis 节点
+#   - redis-stream：存储 runtime context 的消息队列缓存结构
+#   - 微观上，根据 gain 拷贝运行时对象，也即 gain = obj_number
+#   - 宏观上，gain 等于推送的信息条数
+# 3)使用新的定时服务(self-strategy)，定时扫描 redis-stream
+#   IF channel is None:
+#       任务结束
+#   ELSE:
+#       - 将任务批量同步（READ）至本地运行，batch 大小取决于本机硬件配置
+#       - 运行一个快速注册实例，完成注册后就消解实例，无需实现订阅获取行为
+#

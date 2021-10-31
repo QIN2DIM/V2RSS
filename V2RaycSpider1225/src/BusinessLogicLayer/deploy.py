@@ -1,9 +1,15 @@
 """
 采集服务的定时任务管理模块
 """
-__all__ = ["TasksScheduler", "CollectorScheduler"]
+__all__ = ["TasksScheduler", "CollectorScheduler", "CollaboratorScheduler"]
 
+import ast
+import math
+import os
+import threading
+import time
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 import gevent
 from apscheduler.events import (
@@ -17,8 +23,14 @@ from apscheduler.triggers.interval import IntervalTrigger
 from gevent import monkey
 from gevent.queue import Queue
 
+from src.BusinessCentralLayer.middleware.redis_io import MessageQueue
+from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistributeV2
 from src.BusinessCentralLayer.setting import logger
-from src.BusinessLogicLayer.cluster.cook import devil_king_armed, reset_task
+from src.BusinessLogicLayer.cluster.cook import (
+    devil_king_armed,
+    reset_task,
+    DevilKingArmed,
+)
 from src.BusinessLogicLayer.cluster.prism import Prism
 
 monkey.patch_all()
@@ -114,15 +126,19 @@ class TasksScheduler:
 
 
 class CollectorScheduler(TasksScheduler):
-    def __init__(self):
+    def __init__(self, power: int = None, group_name: str = None):
         super(CollectorScheduler, self).__init__()
         # ----------------------
         # setting of collector
         # ----------------------
         # 协程数
-        self.power = 2
+        self.power = os.cpu_count() if power is None else power
         # 任务容器：queue
-        self.work_q = Queue()
+        self.workers = Queue()
+        # 超载队列
+        self.overload = Queue()
+        # 容载队列
+        self.distributor = Queue(maxsize=100)
         # 任务队列满载时刻长度
         self.max_queue_size = 0
         # running state of instance
@@ -133,8 +149,17 @@ class CollectorScheduler(TasksScheduler):
         # setting of scheduler
         # ----------------------
         self.scheduler = GeventScheduler()
-        self.echo_id = "echo-loop"
+        self.echo_id = "echo-loop[M]"
         self.misfire_grace_time = None
+        self.collector_id = "<CollectorScheduler-M>"
+        self.synergy: bool = False
+        self.log_trace = []
+        self.freeze_screen = False
+        self.max_instances = 2
+        # 协同任务配置
+        self.mq = MessageQueue(group_name)
+        self.broadcast = FlexibleDistributeV2()
+        self._runner = {"name": str(uuid4()), "hook": {}}
 
     # ------------------------------------
     # Scheduler API
@@ -163,7 +188,7 @@ class CollectorScheduler(TasksScheduler):
                 EVENT_JOB_MAX_INSTANCES | EVENT_JOB_SUBMITTED | EVENT_JOB_ERROR,
             )
             logger.success(
-                "<CollectorScheduler> The echo-monitor was created successfully."
+                f"{self.collector_id} The echo-monitor was created successfully."
             )
             self.scheduler.start()
         except (KeyboardInterrupt, SystemExit):
@@ -179,7 +204,38 @@ class CollectorScheduler(TasksScheduler):
             func=self.go,
             id=self.echo_id,
             trigger=IntervalTrigger(seconds=self.sync_step),
+            max_instances=self.max_instances,
         )
+
+    def monitor_logger(self, event):
+        debug_log = {
+            "event": event,
+            "pending_jobs": self.workers.qsize(),
+            "running_jobs": len(self.running_jobs),
+            "is_running": self.is_running,
+            "message": "queue_size[{}] running_jobs[{}] overheating_jobs[{}] is_running[{}]",
+        }
+        # logger.debug(f"<CollectorScheduler> {debug_log}")
+        message_ = debug_log.get("message")
+        log_message = (
+            message_.format(
+                self.workers.qsize(),
+                len(self.running_jobs),
+                self.distributor.qsize(),
+                self.is_running,
+            )
+            if message_
+            else ""
+        )
+        if self.freeze_screen:
+            if len(self.log_trace) > 1:
+                if log_message != self.log_trace[-1]:
+                    logger.debug(f"{self.collector_id} {log_message}")
+            else:
+                logger.debug(f"{self.collector_id} {log_message}")
+            self.log_trace.append(log_message)
+        else:
+            logger.debug(f"{self.collector_id} {log_message}")
 
     def monitor(self, event):
         """
@@ -189,27 +245,16 @@ class CollectorScheduler(TasksScheduler):
          03.
         :return:
         """
-        debug_log = {
-            "event": event,
-            "queue_size": self.work_q.qsize(),
-            "running_jobs": len(self.running_jobs),
-            "is_running": self.is_running,
-            "message": "queue_size[{}] running_jobs[{}] is_running[{}]",
-        }
-        # logger.debug(f"<CollectorScheduler> {debug_log}")
-        message_ = debug_log.get("message")
-        log_message = (
-            message_.format(
-                self.work_q.qsize(), len(self.running_jobs), self.is_running
-            )
-            if message_
-            else ""
-        )
-        logger.debug(f"<CollectorScheduler> {log_message}")
+        # Output runtime debug.
+        self.monitor_logger(event)
+
+        # ====================================================================
+        # Remove the running instance of the suspended animation state.
+        # ====================================================================
         if len(self.running_jobs) != 0:
-            logger.debug(
-                "<CollectorScheduler> The listener jobs of collector start to work."
-            )
+            # logger.debug(
+            #     f"{self.collector_id} The listener jobs of collector start to work."
+            # )
             # 遍历执行队列
             runtime_state = list(self.running_jobs.items())
             for id_, instance_ in runtime_state:
@@ -232,24 +277,71 @@ class CollectorScheduler(TasksScheduler):
                     except Exception as e:
                         logger.warning(f"ERROR <{instance_['name']}> --> {e}")
             if (
-                (not self.is_running)
-                and (len(self.running_jobs) == 0)
-                and (self.work_q.qsize() == 0)
+                not self.is_running
+                and len(self.running_jobs) == 0
+                and self.workers.qsize() == 0
             ):
                 self.scheduler.remove_job(job_id=self.echo_id)
                 self.echo()
                 logger.warning(
-                    "<CollectorScheduler> The echo-loop job of collector has been reset."
+                    f"{self.collector_id} The echo-loop job of collector has been reset."
                 )
-            logger.debug(
-                "<CollectorScheduler> The listener jobs of collector goes to sleep."
+                # self.dt_extension()
+            # logger.debug(
+            #     f"{self.collector_id} The listener jobs of collector goes to sleep."
+            # )
+
+    def dt_extension(self, cursor: int = None, log_=True):
+        transfer_num = 0
+        if not cursor:
+            while not self.distributor.empty():
+                self.workers.put_nowait(self.distributor.get())
+                transfer_num += 1
+        else:
+            for _ in range(cursor):
+                if self.distributor.empty():
+                    break
+                self.workers.put_nowait(self.distributor.get())
+                transfer_num += 1
+
+        if log_ and transfer_num != 0:
+            logger.success(
+                f"{self.collector_id} Disaster Tolerance Extension | "
+                f"Distributor[{self.distributor.qsize()}] --{transfer_num}--> Workers[{self.workers.qsize()}]"
             )
+        return transfer_num
 
     # ------------------------------------
     # Coroutine Job API
     # ------------------------------------
 
     def go(self, power: int = 8):
+        # ===========================
+        # 任务重载
+        # ===========================
+        if not self.synergy:
+            # 重载消息队列
+            instances = reset_task()
+            if not instances:
+                logger.debug(
+                    f"{self.collector_id} The echo-loop collector goes to sleep."
+                )
+                return False
+            # 重载任务队列
+            self.is_running = self.offload_task(instances)
+            if self.is_running is False:
+                logger.debug(
+                    f"{self.collector_id} The echo-loop collector goes to sleep."
+                )
+                return False
+        elif (
+            not self.is_running
+            and len(self.running_jobs) == 0
+            and self.workers.qsize() == 0
+        ):
+            # 迁移粘性任务，使用弹性协程生产实例
+            if self.dt_extension() > 0:
+                self.is_running = True
         # ===========================
         # 参数清洗
         # ===========================
@@ -259,27 +351,14 @@ class CollectorScheduler(TasksScheduler):
             power_ = self.max_queue_size if power_ > self.max_queue_size else power_
         self.power = power_
         # ===========================
-        # 任务重载
-        # ===========================
-        # 重载任务队列 with weight
-        instances = reset_task()
-        if not instances:
-            logger.debug("<CollectorScheduler> The echo-loop collector goes to sleep.")
-            return False
-        # 重载协程队列
-        self.is_running = self.offload_task(instances)
-        if self.is_running is False:
-            logger.debug("<CollectorScheduler> The echo-loop collector goes to sleep.")
-            return False
-        # ===========================
-        # 配置launcher
+        # 配置 launcher
         # ===========================
         task_list = []
-        for _ in range(power_):
-            task = gevent.spawn(self.launch)
+        for _ in range(self.power):
+            task = gevent.spawn(self.launcher)
             task_list.append(task)
         # ===========================
-        # 启动launcher
+        # 启动 launcher
         # ===========================
         gevent.joinall(task_list)
         self.is_running = False
@@ -287,20 +366,56 @@ class CollectorScheduler(TasksScheduler):
     def offload_task(self, instances: list) -> bool:
         # TODO 此处需要进行一轮收益计算，调整任务权重
         # 复制实体团
-        pending_tasks = instances.copy()
+        pending_remote = instances.copy()
         # 无待解压实体（未分发任务）
-        if len(pending_tasks) == 0:
+        if len(pending_remote) == 0:
             return False
+        # ======================================================
         # 读取实体特征加入协程工作队列
-        for atomic in pending_tasks:
-            self.work_q.put_nowait(atomic)
+        # ======================================================
+
+        # ------------------------------------------------------
+        # 在非协同模式下正常导入任务
+        # ------------------------------------------------------
+        if not self.synergy:
+            for atomic in pending_remote:
+                self.workers.put_nowait(atomic)
+        # ------------------------------------------------------
+        # 在协同模式下使用均匀队列
+        # ------------------------------------------------------
+        else:
+            # 实例超载算法，主观上认为核心数越大的基础设施应当优先级更低地执行 synergy 任务
+            # 应当将 synergy 任务分发给核心数小但形成规模的虚拟切片运行
+            limit = int((math.log2(os.cpu_count()) + 1) * 2)
+            # 本机待执行队列数
+            pending_local = self.workers.qsize() + self.running_jobs.__len__()
+            # 若已超载，反射任务
+            if pending_local >= limit:
+                for atomic in pending_remote:
+                    self.overload.put_nowait(atomic)
+            else:
+                # 可添加的数量
+                limit -= pending_local
+                if pending_remote.__len__() <= limit:
+                    # 灌入摘要数据
+                    for atomic in pending_remote:
+                        self.workers.put_nowait(atomic)
+                    # 容灾延拓
+                    self.dt_extension(cursor=limit - pending_remote.__len__())
+                else:
+                    for atomic in pending_remote[:limit]:
+                        self.workers.put_nowait(atomic)
+                    for atomic in pending_remote[limit:]:
+                        self.overload.put_nowait(atomic)
+        # ======================================================
         # 更新执行任务数
-        self.max_queue_size = self.work_q.qsize()
+        # ======================================================
+        self.max_queue_size = self.workers.qsize()
         return True
 
-    def launch(self):
-        while not self.work_q.empty():
-            atomic = self.work_q.get_nowait()
+    def launcher(self):
+        while not self.workers.empty():
+            atomic = self.workers.get_nowait()
             self.devil_king_armed(atomic)
 
     def devil_king_armed(self, atomic: dict):
@@ -309,20 +424,32 @@ class CollectorScheduler(TasksScheduler):
         :param atomic:
         :return:
         """
-        # 根据特征选择不同的解决方案
+        # ================================================
+        # [√] 调整运行实例的前置参数
+        # ================================================
+        # 任务模式切换 synergy | run
+        is_synergy = bool(atomic.get("synergy"))
+        # 假假地停一下
+        if is_synergy:
+            atomic["hyper_params"]["beat_dance"] = (
+                self.running_jobs.__len__() + 1
+            ) * 1.7
+        # ================================================
+        # [√] 生产运行实例 更新系统运行状态
+        # ================================================
+        # 根据不同的运行实例摘要信息实现不同的解决方案
         if atomic.get("feature") == "prism":
             alice = Prism(atomic, assault=True, silence=True)
         else:
             alice = devil_king_armed(atomic, assault=True, silence=True)
-        # 创建运行实体配置
+        # 初始化运行实例配置
         api = alice.set_spider_option()
-        # 标记运行实体
+        # 标记运行实例
         alice_id = api.session_id
         alice_name = alice.action_name
         start_time = datetime.now()
-        # running_limit = alice.work_clock_max_wait + self.echo_limit
         running_limit = int(sum([alice.work_clock_max_wait, self.echo_limit]) / 2)
-        # 更新运行状态
+        # ------------------------------------------------
         self.running_jobs.update(
             {
                 alice_id: {
@@ -333,16 +460,163 @@ class CollectorScheduler(TasksScheduler):
                 }
             }
         )
+        # ================================================
+        # [√] 实例投放
+        # ================================================
+        # (o゜▽゜)o☆
         try:
-            # :)清理桌面
-            alice.run(api)
-        # CTRL+C / strong anti-spider engine / is being DDOS
+            if is_synergy:
+                alice.synergy(api)
+            else:
+                alice.run(api)
+        except ConnectionError:
+            self.broadcast.to_runner(atomic)
+            logger.warning(
+                f">> Reflect <{alice_name}> ConnectionError --> [session_id] {alice_id}"
+            )
+        # (￣ε(#￣) CTRL+C / strong anti-spider engine / is being DDOS
         except Exception as e:
             logger.error(f">> ERROR <{alice_name}> --> {e}")
         finally:
+            # (/≧▽≦)/
             try:
-                # :)签退下班
                 self.running_jobs.pop(alice_id)
                 logger.debug(f">> Detach <{alice_name}> --> [session_id] {alice_id}")
             except (KeyError,):
                 pass
+
+
+class CollaboratorScheduler(CollectorScheduler):
+    def __init__(self):
+        """
+        采集器工作模式 影响到任务的读取以及执行规则。
+            - run 载入本地任务队列，根据任务容载极限进行任务剪枝，最后执行正常的采集流程。
+            - synergy 载入本地队列并剪枝后，拉取“云端”消息队列中的缓存实例，并入协程工作队列，最后执行分流的工作流程。
+            也即根据具体的 atomic 运行上下文决定运行模式。
+        """
+        super(CollaboratorScheduler, self).__init__()
+
+        # 采集器配置
+        self.echo_limit: int = 300
+        self.collector_id: str = "<CollaboratorHeartBeat-C>"
+        self.echo_id: str = "echo-loop[C]"
+        self.sync_step: int = 5
+        self.is_pending: bool = True
+        self.synergy: bool = True
+        self.freeze_screen = True
+        self.max_instances = 100
+
+    def hosting(self):
+        logger.success(f"{self.collector_id} 协同者加入聊天室！")
+
+        # 初始化上下文容器
+        context = {}
+
+        # --> 处理线程 / heartbeat
+        threading.Thread(target=self.deploy_jobs).start()
+
+        for message in self.mq.listen(count=1):
+            # 暂无可读任务
+            if not message:
+                continue
+
+            # 读取待处理任务
+            id_, task = message[0][0], message[0][-1]
+
+            # 识别由采集器发出的控制指令
+            try:
+                # 获取待解压任务
+                if task.get("pending"):
+                    context: dict = ast.literal_eval(task.get("pending"))
+
+                    # 任务在忙
+                    if self.workers.qsize() > self.power:
+                        self.broadcast.to_inviter(context)
+                        logger.debug(
+                            f"{self.collector_id} The local WorkerQueue is busy, "
+                            f"and the pending tasks have been rejected."
+                        )
+                        time.sleep(10)
+                        continue
+
+                    # 任务分流
+                    logger.debug(
+                        f"{self.collector_id} Load the remote message to be processed."
+                    )
+                    gevent.joinall([gevent.spawn(self._adaptor, context)])
+                # 获取过热任务
+                elif task.get("overload"):
+                    context: dict = ast.literal_eval(task.get("overload"))
+                    logger.debug(
+                        f"{self.collector_id} [{self.distributor.qsize() + 1}/100]"
+                        f"Loading overheating task..."
+                    )
+                    gevent.joinall([gevent.spawn(self._distribute, context)])
+            # KeyboardInterrupt 回滚异常异常终端的消息
+            except (KeyboardInterrupt,):
+                if context.get("atomic"):
+                    self.broadcast.to_inviter(context=context)
+                else:
+                    self.broadcast.to_runner(context=context)
+            except Exception as e:
+                logger.exception(e)
+            # 任务结束后必须去除 PEL
+            # 可在异常捕获中以新消息的形式广播或转移运行失败的实例上下文摘要信息
+            finally:
+                self.mq.offload_task(id_)
+
+    def _adaptor(self, context: dict):
+        # 恢复现场
+        hostname: str = context.get("hostname")
+        cookie: str = context.get("cookie")
+
+        # 标记协同任务
+        tracer = "_runner"
+        if not context.get(tracer):
+            context[tracer] = self._runner["name"]
+        if not self._runner["hook"].get(cookie):
+            self._runner["hook"].update({cookie: 0})
+
+        # 重定向 register-url
+        try:
+            invite_link = DevilKingArmed.get_invite_link(cookie, hostname)
+        # TODO AttributeError 元素获取异常，移交作业控制权
+        except AttributeError:
+            # 任务反射
+            max_trace_num = 5
+            self._runner["hook"][cookie] += 1
+            if self._runner["hook"][cookie] < 5:
+                self.broadcast.to_inviter(context=context)
+                logger.warning(
+                    f"{self.collector_id} Reflex abnormal task."
+                    f" | {tracer}=[{context[tracer]}/{max_trace_num}] cookie=[{cookie}]"
+                )
+            # 溯源消解
+            else:
+                logger.error(
+                    f"{self.collector_id} Remove anomalous tasks and coordination roots."
+                )
+                self.mq.remove_bad_code(
+                    context.get("_type", ""), context.get("_hook", "")
+                )
+            return False
+
+        # 接续任务：重置任务id
+        context["atomic"]["register_url"] = invite_link
+        context["atomic"]["synergy"] = True
+        gain = context["gain"]
+        atomic = context["atomic"]
+
+        # 回滚任务
+        pending_tasks = [atomic] * gain
+        while not self.distributor.empty():
+            pending_tasks.append(self.distributor.get())
+
+        # 分发任务：广播 NewContext 或者重载本地任务队列
+        self.is_running = self.offload_task(pending_tasks)
+        while not self.overload.empty():
+            overload_task: dict = self.overload.get_nowait()
+            self.broadcast.to_runner(overload_task)
+
+    def _distribute(self, atomic: dict):
+        self.distributor.put_nowait(atomic)

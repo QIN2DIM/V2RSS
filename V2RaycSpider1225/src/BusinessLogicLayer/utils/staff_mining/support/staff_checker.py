@@ -7,6 +7,7 @@ import gevent
 import requests
 from bs4 import BeautifulSoup
 from gevent.queue import Queue
+from selenium.webdriver.common.by import By
 
 from ..common.exceptions import NoSuchElementException
 from ..support.staff_collector import StaffCollector
@@ -243,8 +244,8 @@ class IdentifyRecaptcha(StaffChecker):
             for _ in range(self._retry_num):
                 try:
                     time.sleep(1)
-                    is_recaptcha = "recaptcha" in api.find_element_by_xpath(
-                        "//div//iframe"
+                    is_recaptcha = "recaptcha" in api.find_element(
+                        By.XPATH, "//div//iframe"
                     ).get_attribute("src")
                     self._is_recaptcha_dict.update({url: is_recaptcha})
                     with open(self._output_path, "a", encoding="utf8") as f:

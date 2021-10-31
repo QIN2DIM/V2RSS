@@ -1,40 +1,6 @@
 """
 读取yaml配置文件，生成全局静态变量。
 """
-__all__ = [
-    "SINGLE_DEPLOYMENT",
-    "ENABLE_DEPLOY",
-    "ENABLE_KERNEL",
-    "ENABLE_SERVER",
-    "ENABLE_DEBUG",
-    "ENABLE_REBOUND",
-    "SINGLE_TASK_CAP",
-    "LAUNCH_INTERVAL",
-    "REDIS_MASTER",
-    "REDIS_SLAVER_DDT",
-    "API_HOST",
-    "API_DEBUG",
-    "API_THREADED",
-    "API_PORT",
-    "OPEN_HOST",
-    "GARDENER_HOST",
-    "ROUTE_API",
-    "SEQ_TEST",
-    "CRAWLER_SEQUENCE",
-    "SMTP_ACCOUNT",
-    "SERVERCHAN_SCKEY",
-    "REDIS_SECRET_KEY",
-    "PROJECT_NUM",
-    "VERSION",
-    "TIME_ZONE_CN",
-    "TIME_ZONE_NY",
-    "DEFAULT_POWER",
-    "Fore",
-    "terminal_echo",
-    "PROXY_POOL",
-    "ENABLE_PROXY",
-]
-
 import os
 import shutil
 import sys
@@ -154,6 +120,14 @@ ENABLE_DEPLOY: dict = config_["ENABLE_DEPLOY"]
 
 # ENABLE_DEPLOY 服务器内核开关
 ENABLE_KERNEL: dict = config_["ENABLE_KERNEL"]
+
+# ICE_BREAKER 破冰船订阅权限
+ICE_BREAKER = ENABLE_KERNEL["ice-breaker"]
+
+# PERMISSION_COLLABORATOR 允许执行协同注册任务
+PERMISSION_COLLABORATOR = (
+    ICE_BREAKER["collaborator"] if ICE_BREAKER["enable"] else False
+)
 
 # ENABLE_SERVER 部署Flask
 ENABLE_SERVER: bool = config_["ENABLE_SERVER"]

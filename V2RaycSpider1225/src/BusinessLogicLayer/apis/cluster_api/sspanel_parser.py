@@ -14,6 +14,7 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 from selenium.webdriver import Chrome
+from selenium.webdriver.common.by import By
 
 from src.BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE, TIME_ZONE_CN
 from src.BusinessLogicLayer.cluster.master import ActionMasterGeneral
@@ -65,7 +66,7 @@ class SSPanelParser(ActionMasterGeneral):
         while True:
             try:
                 i += 1
-                card_body = api.find_elements_by_xpath("//div[@class='card-body']")[:2]
+                card_body = api.find_elements(By.XPATH, "//div[@class='card-body']")[:2]
                 card_body = [tag.text.strip() for tag in card_body]
                 fluid.update(card_body)
                 fluid_density.append(len(fluid))
@@ -89,8 +90,8 @@ class SSPanelParser(ActionMasterGeneral):
         # 解析站点名称
         # ----------------------------------------
         try:
-            parse_name = api.find_element_by_xpath(
-                "//aside//div[@class='sidebar-brand']"
+            parse_name = api.find_element(
+                By.XPATH, "//aside//div[@class='sidebar-brand']"
             ).text.strip()
             self.obj_parser.update({"parse_name": parse_name})
         except WebDriverException:
@@ -102,10 +103,10 @@ class SSPanelParser(ActionMasterGeneral):
         # ----------------------------------------
         reference_links = {}
         try:
-            card_body = api.find_elements_by_xpath("//div[@class='card-body']")[4]
+            card_body = api.find_elements(By.XPATH, "//div[@class='card-body']")[4]
             self.obj_parser.update({"desc": card_body.text.strip()})
 
-            related_href = card_body.find_elements_by_tag_name("a")
+            related_href = card_body.find_elements(By.TAG_NAME, "a")
             for tag in related_href:
                 href = tag.get_attribute("href")
                 if href:
@@ -132,7 +133,7 @@ class SSPanelParser(ActionMasterGeneral):
                 if i.get("data-clipboard-text"):
                     subscribes.update({i.get("data-clipboard-text"): i.text.strip()})
             # 识别支持的订阅类型
-            buttons = api.find_elements_by_xpath("//div[@class='card'][2]//a")
+            buttons = api.find_elements(By.XPATH, "//div[@class='card'][2]//a")
             for tag in buttons:
                 support_ = tag.get_attribute("class")
                 if support_:

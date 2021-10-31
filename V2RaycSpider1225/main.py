@@ -2,7 +2,7 @@
 # Time    : 2021/3/7 18:04
 # Author  : QIN2DIM
 # Github  : https://github.com/QIN2DIM
-# Description: 🚀 Welcome to use V2RayCloudSpider!
+# Description: 🚀 Welcome to use V2RSS!
 
 import fire
 

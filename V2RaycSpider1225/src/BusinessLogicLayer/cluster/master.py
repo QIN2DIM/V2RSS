@@ -7,11 +7,14 @@ from os.path import join
 from string import printable
 from urllib.parse import urlparse
 
+import requests
+from bs4 import BeautifulSoup
 from selenium.common.exceptions import (
     WebDriverException,
     NoSuchElementException,
     TimeoutException,
     SessionNotCreatedException,
+    ElementNotInteractableException,
 )
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
@@ -89,6 +92,7 @@ class BaseAction:
             email_class=email_class
         )
         self.subscribe = ""
+        self.type_ = ""
         self.register_url = ""
         self.life_cycle = life_cycle
         self.beat_sync = beat_sync
@@ -104,6 +108,8 @@ class BaseAction:
         self.work_clock_max_wait = 120
         # 等待注册时的容错时间
         self.timeout_retry_time = 3
+        # 用于兼容集群作业的节拍停顿用时
+        self.beat_dance = 0
         # =====================================
         # v-5.5.r 添加功能：数据持久化 bool
         # =====================================
@@ -269,11 +275,12 @@ class BaseAction:
         password = self.password if password is None else password
         self.wait(api, timeout=5, tag_xpath_str="//button")
 
-        api.find_element_by_id("email").send_keys(email)
-        api.find_element_by_id("password").send_keys(password)
-        api.find_element_by_tag_name("button").click()
+        api.find_element(By.ID, "email").send_keys(email)
+        api.find_element(By.ID, "password").send_keys(password)
+        api.find_element(By.TAG_NAME, "button").click()
+
         try:
-            api.find_element_by_xpath("//h2[@id='swal2-title']")
+            api.find_element(By.XPATH, "//h2[@id='swal2-title']")
             logger.error("FAILED Incorrect account or password.")
         except NoSuchElementException:
             pass
@@ -296,20 +303,27 @@ class BaseAction:
             # ======================================
             # 填充注册数据
             # ======================================
-            time.sleep(0.5)
+            time.sleep(0.5 + self.beat_dance)
+            try:
+                WebDriverWait(api, 20).until(
+                    expected_conditions.presence_of_element_located((By.ID, "name"))
+                ).send_keys(self.username)
 
-            WebDriverWait(api, 20).until(
-                expected_conditions.presence_of_element_located((By.ID, "name"))
-            ).send_keys(self.username)
+                email_ = api.find_element(By.ID, "email")
+                passwd_ = api.find_element(By.ID, "passwd")
+                repasswd_ = api.find_element(By.ID, "repasswd")
+                email_.clear()
+                email_.send_keys(self.email)
+                passwd_.clear()
+                passwd_.send_keys(self.password)
+                repasswd_.clear()
+                repasswd_.send_keys(self.password)
 
-            api.find_element_by_id("email").send_keys(self.email)
-
-            api.find_element_by_id("passwd").send_keys(self.password)
-
-            api.find_element_by_id("repasswd").send_keys(self.password)
+            except (ElementNotInteractableException, WebDriverException):
+                time.sleep(0.5 + self.beat_dance)
+                continue
 
             time.sleep(1)
-
             # ======================================
             # 依据实体抽象特征，选择相应的解决方案
             # ======================================
@@ -327,18 +341,19 @@ class BaseAction:
             # 提交注册数据，完成注册任务
             # ======================================
             # 点击注册按键
-            api.find_element_by_id("register-confirm").click()
+            api.find_element(By.ID, "register-confirm").click()
             # 重试N轮 等待[注册成功]界面的加载
             for x in range(3):
                 try:
                     time.sleep(1.5)
-                    api.find_element_by_xpath(
-                        "//button[contains(@class,'confirm')]"
+                    api.find_element(
+                        By.XPATH, "//button[contains(@class,'confirm')]"
                     ).click()
                     return True
                 except NoSuchElementException:
                     logger.debug(
-                        f"[{x + 1} / 3]{self.action_name}验证超时，{self.timeout_retry_time}s后重试"
+                        f"[{x + 1} / 3]{self.action_name}验证超时，{self.timeout_retry_time}s后重试 --> "
+                        f"session_id={api.session_id}"
                     )
                     time.sleep(self.timeout_retry_time)
                     continue
@@ -359,7 +374,7 @@ class BaseAction:
 
     @staticmethod
     def use_email_postfix(api: Chrome) -> bool:
-        if api.find_element_by_id("email_postfix"):
+        if api.find_element(By.ID, "email_postfix"):
             return True
         return False
 
@@ -401,13 +416,75 @@ class BaseAction:
         """
         try:
             time.sleep(3)
-            api.find_element_by_id("checkin-div").click()
+            api.find_element(By.ID, "checkin-div").click()
         # 加载失败
         except NoSuchElementException:
             pass
         # 出现弹窗遮挡，需要进一步处理
         except WebDriverException:
             pass
+
+    @staticmethod
+    def get_session_cookies(api: Chrome) -> str:
+        return "; ".join([f"{i['name']}={i['value']}" for i in api.get_cookies()])
+
+    @staticmethod
+    def get_invite_link(cookies: str, host: str) -> str:
+        """
+
+        :param cookies: api.get_cookies() [{"name":"xxx","value":"xxx"}, {...}, ...]
+        :param host: www.baidu.com
+        :return:
+        """
+        # cookies = " ".join([f"{i['name']}={i['value']};" for i in cookies])
+
+        invite_path = f"https://{host}/user/invite"
+        refer_path = f"https://{host}/user"
+
+        headers = {
+            "Cookie": cookies,
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+            " Chrome/95.0.4638.54 Safari/537.36 Edg/95.0.1020.30",
+            "refer_path": refer_path,
+            "sec-ch-ua": '"Microsoft Edge";v="95", "Chromium";v="95", ";Not A Brand";v="99"',
+            "sec-ch-ua-platform": "Windows",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+        }
+
+        try:
+            response = requests.get(invite_path, headers=headers)
+        except requests.exceptions.SSLError:
+            response = requests.get(invite_path, headers=headers, proxies={"https": ""})
+        soup = BeautifulSoup(response.text, "html.parser")
+        invite_link = soup.find("div", class_="hero-inner").find("a")[
+            "data-clipboard-text"
+        ]
+
+        return invite_link
+
+    @staticmethod
+    def set_collaborative_task(mirror_action: dict, gain: int = 1):
+        """
+
+        :param mirror_action: 摘要信息
+        :param gain:
+        :return:
+        """
+        FlexibleDistributeV2().set_collaborative_task((str(mirror_action),) * gain)
+
+    def runtime_flag(self, hyper_params: dict = None, protocol="RUN") -> str:
+        """
+
+        :return:
+        """
+        title = ">> {} <{}> slider={} ".format(
+            protocol, self.action_name, self.anti_slider
+        )
+        if hyper_params:
+            title += " ".join([f"{i[0]}={i[1]}" for i in hyper_params.items()])
+
+        return title
 
     def load_any_subscribe(
         self,
@@ -428,6 +505,8 @@ class BaseAction:
         :param timeout:
         :return:
         """
+        # 重定向协同任务类型
+        self.type_ = class_
         # 订阅萃取
         self.subscribe = (
             WebDriverWait(api, timeout)
@@ -462,7 +541,7 @@ class BaseAction:
                         "action": self.action_name,
                     }
                     # 分发订阅
-                    FlexibleDistributeV2(image).distribute()
+                    FlexibleDistributeV2().publish(image)
                     logger.success(
                         ">> GET <{}> --> [{}] {}".format(
                             self.action_name, class_, self.subscribe
@@ -515,130 +594,6 @@ class BaseAction:
         # Close Chrome driver and release memory
 
 
-class ActionMasterGeneral(BaseAction):
-    def __init__(
-        self,
-        register_url: str = None,
-        silence: bool = True,
-        assault: bool = False,
-        beat_sync: bool = True,
-        email: str = None,
-        life_cycle: int = None,
-        anti_slider: bool = False,
-        hyper_params: dict = None,
-        action_name: str = None,
-        debug: bool = False,
-        chromedriver_path: str = CHROMEDRIVER_PATH,
-        endurance: bool = True,
-    ):
-        """
-
-        @param register_url: 机场注册网址，STAFF原生register接口
-        @param silence: 静默启动；为True时静默访问<linux 必须启用>
-        @param anti_slider: 目标是否有反爬虫措施；默认为True BaseAction将根据目标是否具备反爬虫措施做出不同的行为
-        @param email: register页面显示的默认邮箱；常见为 @qq.com or @gmail.com
-        @param life_cycle: 会员试用时长 trail time；
-        @param hyper_params: 模型超级参数
-        """
-        super(ActionMasterGeneral, self).__init__(
-            silence=silence,
-            assault=assault,
-            beat_sync=beat_sync,
-            email_class=email,
-            life_cycle=life_cycle,
-            anti_slider=anti_slider,
-            debug=debug,
-            chromedriver_path=chromedriver_path,
-            endurance=endurance,
-        )
-        # 任务标记
-        self.action_name = "ActionMasterGeneral" if action_name is None else action_name
-        # 机场注册网址
-        self.register_url = register_url
-        # 定义模型超级参数
-        self.hyper_params = {
-            "v2ray": True,
-            "ssr": True,
-            "trojan": False,
-            # Shadowrocket
-            "rocket": False,
-            # Quantumult
-            "qtl": False,
-            # Kitsunebi
-            "kit": False,
-            # usr_email | True 需要自己输入邮箱后缀(默认为qq) False: 邮箱后缀为选择形式只需填写主段
-            "usr_email": False,
-            # check_in | 机场签到（仅在注册时签到，不提供每日维护）
-            "check_in": True,
-        }
-        # 更新模型超参数
-        if hyper_params:
-            self.hyper_params.update(hyper_params)
-        # 只需填写主段则邮箱名=用户名
-        if not self.hyper_params["usr_email"]:
-            self.email = self.username
-
-    def capture_share_link(self, api, timeout=30):
-        if self.hyper_params["v2ray"]:
-            self.load_any_subscribe(
-                api,
-                "//div[@class='buttons']//a[contains(@class,'v2ray')]",
-                "data-clipboard-text",
-                "v2ray",
-                timeout=timeout,
-            )
-        elif self.hyper_params["ssr"]:
-            self.load_any_subscribe(
-                api,
-                """//a[@onclick="importSublink('ssr')"]/..//a[contains(@class,'copy')]""",
-                "data-clipboard-text",
-                "ssr",
-                timeout=timeout,
-            )
-        # elif self.hyper_params['trojan']: ...
-        # elif self.hyper_params['kit']: ...
-        # elif self.hyper_params['qtl']: ...
-
-    def run(self, api=None):
-        logger.debug(
-            f">> RUN <{self.action_name}> --> beat_sync[{self.beat_sync}] feature[General]"
-        )
-        # 获取任务设置
-        api = (
-            self.set_spider_option(guise=self.hyper_params.get("proxy"))
-            if api is None
-            else api
-        )
-        if not api:
-            return
-        # 执行核心业务逻辑
-        try:
-            # 设置弹性计时器，当目标站点未能在规定时间内渲染到预期范围时自主销毁实体
-            # 防止云彩姬误陷“战局”被站长过肩摔
-            self.get_html_handle(api=api, url=self.register_url, wait_seconds=45)
-            # 注册账号
-            self.sign_up(api)
-            # 进入站点并等待核心元素渲染完成
-            self.wait(api, 40, "//div[@class='card-body']")
-            # 根据原子类型订阅的优先顺序 依次捕获
-            self.capture_share_link(api)
-            # 根据具体需要进行签到
-            if self.hyper_params.get("check_in"):
-                self.check_in(api)
-        except TimeoutException:
-            logger.error(
-                f">>> TimeoutException <{self.action_name}> -- {self.register_url}"
-            )
-        except WebDriverException as e:
-            logger.error(f">>> WebDriverException <{self.action_name}> -- {e}")
-        except (HTTPError, ConnectionRefusedError, ConnectionResetError):
-            pass
-        except Exception as e:
-            logger.warning(f">>> Exception <{self.action_name}> -- {e}")
-        finally:
-            api.quit()
-
-
 class AdaptiveCapture(BaseAction):
     def __init__(self, url, chromedriver_path):
         super(AdaptiveCapture, self).__init__()
@@ -661,7 +616,6 @@ class AdaptiveCapture(BaseAction):
 
     @staticmethod
     def handle_html(url, cache_source_page=False):
-        import requests
 
         headers = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
@@ -676,8 +630,6 @@ class AdaptiveCapture(BaseAction):
         res.raise_for_status()
 
     def get_type_of_anti_tool(self, url) -> dict:
-        from bs4 import BeautifulSoup
-
         report = {"url": url, "is_sspanel": None, "type": None}
         response = self.handle_html(url)
         soup = BeautifulSoup(response.text, "html.parser")
@@ -757,3 +709,173 @@ class AdaptiveCapture(BaseAction):
         #       - email,password,parser-response,job-time,work-time,cookies
         #       - subscribe: desc mapping
         # Output: cache data
+
+
+class ActionMasterGeneral(BaseAction):
+    def __init__(
+        self,
+        register_url: str = None,
+        silence: bool = True,
+        assault: bool = False,
+        beat_sync: bool = True,
+        email: str = None,
+        life_cycle: int = None,
+        anti_slider: bool = False,
+        hyper_params: dict = None,
+        action_name: str = None,
+        debug: bool = False,
+        chromedriver_path: str = CHROMEDRIVER_PATH,
+        endurance: bool = True,
+    ):
+        """
+
+        @param register_url: 机场注册网址，STAFF原生register接口
+        @param silence: 静默启动；为True时静默访问<linux 必须启用>
+        @param anti_slider: 目标是否有反爬虫措施；默认为True BaseAction将根据目标是否具备反爬虫措施做出不同的行为
+        @param email: register页面显示的默认邮箱；常见为 @qq.com or @gmail.com
+        @param life_cycle: 会员试用时长 trail time；
+        @param hyper_params: 模型超级参数
+        """
+        super(ActionMasterGeneral, self).__init__(
+            silence=silence,
+            assault=assault,
+            beat_sync=beat_sync,
+            email_class=email,
+            life_cycle=life_cycle,
+            anti_slider=anti_slider,
+            debug=debug,
+            chromedriver_path=chromedriver_path,
+            endurance=endurance,
+        )
+        # 任务标记
+        self.action_name = "ActionMasterGeneral" if action_name is None else action_name
+        # 机场注册网址
+        self.register_url = register_url
+        # 定义模型超级参数
+        self.hyper_params = {
+            "v2ray": True,
+            "ssr": True,
+            # "trojan": False,
+            # # Shadowrocket
+            # "rocket": False,
+            # # Quantumult
+            # "qtl": False,
+            # # Kitsunebi
+            # "kit": False,
+            # usr_email | True 需要自己输入邮箱后缀(默认为qq) False: 邮箱后缀为选择形式只需填写主段
+            "usr_email": False,
+            # check_in | 机场签到（仅在注册时签到，不提供每日维护）
+            "check_in": True,
+            # co-invite 协同增益模式（园丁系统子模块）
+            "co-invite": False,
+        }
+        # 更新模型超参数
+        if hyper_params:
+            self.hyper_params.update(hyper_params)
+        # 只需填写主段则邮箱名=用户名
+        if not self.hyper_params["usr_email"]:
+            self.email = self.username
+        # 切换工作模式
+        self.need_collaborator = bool(self.hyper_params["co-invite"])
+        # 集群节拍
+        self.beat_dance = self.hyper_params.get("beat_dance", 0)
+
+    def capture_share_link(self, api, timeout=30):
+        if self.hyper_params["v2ray"]:
+            self.load_any_subscribe(
+                api,
+                "//div[@class='buttons']//a[contains(@class,'v2ray')]",
+                "data-clipboard-text",
+                "v2ray",
+                timeout=timeout,
+            )
+        elif self.hyper_params["ssr"]:
+            self.load_any_subscribe(
+                api,
+                """//a[@onclick="importSublink('ssr')"]/..//a[contains(@class,'copy')]""",
+                "data-clipboard-text",
+                "ssr",
+                timeout=timeout,
+            )
+        # elif self.hyper_params['trojan']: ...
+        # elif self.hyper_params['kit']: ...
+        # elif self.hyper_params['qtl']: ...
+
+    def run(self, api=None):
+        logger.debug(self.runtime_flag(self.hyper_params))
+        # 获取任务设置
+        api = (
+            self.set_spider_option(guise=self.hyper_params.get("proxy"))
+            if api is None
+            else api
+        )
+        if not api:
+            return
+        # 执行核心业务逻辑
+        try:
+            # 设置弹性计时器，当目标站点未能在规定时间内渲染到预期范围时自主销毁实体
+            # 防止云彩姬误陷“战局”被站长过肩摔
+            self.get_html_handle(api=api, url=self.register_url, wait_seconds=45)
+            # 注册账号
+            self.sign_up(api)
+            # 进入站点并等待核心元素渲染完成
+            self.wait(api, 40, "//div[@class='card-body']")
+            # 根据原子类型订阅的优先顺序 依次捕获
+            self.capture_share_link(api)
+            # 流量超额申请：check-in
+            if self.hyper_params["check_in"] is True:
+                self.check_in(api)
+            # ======================================
+            # 超参数高级行为处理
+            # ======================================
+            self.handle_hyper_action(api)
+
+        except TimeoutException:
+            logger.error(
+                f">>> TimeoutException <{self.action_name}> -- {self.register_url}"
+            )
+        except WebDriverException as e:
+            logger.error(f">>> WebDriverException <{self.action_name}> -- {e}")
+        except (HTTPError, ConnectionRefusedError, ConnectionResetError):
+            pass
+        except Exception as e:
+            logger.warning(f">>> Exception <{self.action_name}> -- {e}")
+        finally:
+            api.quit()
+
+    def handle_hyper_action(self, api: Chrome):
+        # 协同注册任务
+        if self.need_collaborator:
+            self.hyper_call_collaborator(api)
+
+    def hyper_call_collaborator(self, api):
+
+        # 获取配置信息
+        co_invite = self.hyper_params["co-invite"]
+
+        if isinstance(co_invite, int):
+            gain = 1 if co_invite < 1 or co_invite > 30 else co_invite
+        else:
+            gain = 1
+
+        self.hyper_params["co-invite"] = False
+        context = {
+            "atomic": {
+                "name": self.action_name,
+                "register_url": self.register_url,
+                "life_cycle": self.life_cycle,
+                "anti_slider": self.anti_slider,
+                "hyper_params": self.hyper_params,
+                "email": "@gmail.com",
+            },
+            "_hook": self.subscribe,
+            "_type": self.type_,
+            "hostname": urlparse(self.register_url).hostname,
+            # "email": self.email,
+            # "password": self.password,
+            "cookie": self.get_session_cookies(api),
+            "gain": gain,
+        }
+
+        # 广播协同任务上下文信息
+        FlexibleDistributeV2().to_inviter(context)

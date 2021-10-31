@@ -4,95 +4,6 @@ from os.path import join, dirname, exists, abspath
 
 from loguru import logger
 
-from src.config import (
-    SINGLE_DEPLOYMENT,
-    ENABLE_DEPLOY,
-    ENABLE_KERNEL,
-    ENABLE_SERVER,
-    ENABLE_DEBUG,
-    ENABLE_REBOUND,
-    SINGLE_TASK_CAP,
-    LAUNCH_INTERVAL,
-    REDIS_MASTER,
-    REDIS_SLAVER_DDT,
-    API_PORT,
-    API_HOST,
-    API_DEBUG,
-    API_THREADED,
-    OPEN_HOST,
-    GARDENER_HOST,
-    ROUTE_API,
-    SEQ_TEST,
-    CRAWLER_SEQUENCE,
-    SMTP_ACCOUNT,
-    SERVERCHAN_SCKEY,
-    REDIS_SECRET_KEY,
-    PROJECT_NUM,
-    VERSION,
-    TIME_ZONE_CN,
-    TIME_ZONE_NY,
-    DEFAULT_POWER,
-    Fore,
-    terminal_echo,
-    PROXY_POOL,
-    ENABLE_PROXY,
-)
-
-__all__ = [
-    # =============================================
-    # config safe load from user_yaml
-    # =============================================
-    "SINGLE_DEPLOYMENT",
-    "ENABLE_DEPLOY",
-    "ENABLE_KERNEL",
-    "ENABLE_SERVER",
-    "ENABLE_DEBUG",
-    "ENABLE_REBOUND",
-    "SINGLE_TASK_CAP",
-    "LAUNCH_INTERVAL",
-    "REDIS_MASTER",
-    "REDIS_SLAVER_DDT",
-    "API_HOST",
-    "API_DEBUG",
-    "API_THREADED",
-    "API_PORT",
-    "OPEN_HOST",
-    "GARDENER_HOST",
-    "ROUTE_API",
-    "SEQ_TEST",
-    "CRAWLER_SEQUENCE",
-    "SMTP_ACCOUNT",
-    "SERVERCHAN_SCKEY",
-    "REDIS_SECRET_KEY",
-    "PROJECT_NUM",
-    "VERSION",
-    "TIME_ZONE_CN",
-    "TIME_ZONE_NY",
-    "DEFAULT_POWER",
-    "Fore",
-    "terminal_echo",
-    "PROXY_POOL",
-    "ENABLE_PROXY",
-    # =============================================
-    # system setting
-    # =============================================
-    "CHROMEDRIVER_PATH",
-    "SERVER_DIR_PROJECT",
-    "SERVER_PATH_YAML_CONFIG",
-    "SERVER_PATH_YAML_CONFIG_SAMPLE",
-    "SERVER_DIR_DATABASE",
-    "SQLITE3_CONFIG",
-    "SERVER_DIR_CLIENT_DEPORT",
-    "SERVER_PATH_DEPOT_VCS",
-    "SERVER_DIR_DATABASE_CACHE",
-    "SERVER_DIR_CACHE_BGPIC",
-    "SERVER_PATH_DATABASE_FETCH",
-    "SERVER_DIR_DATABASE_LOG",
-    "NGINX_SUBSCRIBE",
-    "SERVER_DIR_SSPANEL_MINING",
-    "PROTOCOL_FLAG",
-    "logger",
-]
 # ---------------------------------------------------
 # TODO Server doc tree base on linux
 # ROOT_PROJECT:/qinse/V2RaycSpider{version}
@@ -195,7 +106,14 @@ SERVER_PATH_DATABASE_FETCH = join(SERVER_DIR_DATABASE, "CrawlFetchHistory.txt")
 # TODO 服务器日志文件路径
 # ---------------------------------------------------
 SERVER_DIR_DATABASE_LOG = join(SERVER_DIR_DATABASE, "logs")
-
+event_logger_format = (
+    "<g>{time:YYYY-MM-DD HH:mm:ss}</g> | "
+    "<lvl>{level}</lvl> - "
+    # "<c><u>{name}</u></c> | "
+    "{message}"
+)
+logger.remove()
+logger.add(sink=sys.stdout, colorize=True, level="DEBUG", format=event_logger_format)
 logger.add(
     sink=join(SERVER_DIR_DATABASE_LOG, "error.log"),
     level="ERROR",
@@ -231,3 +149,61 @@ PROTOCOL_FLAG = {
     "trojan-go": "trojan-go://",
     "xray": "vless://",
 }
+from src.config import *
+
+__all__ = [
+    # =============================================
+    # config safe load from user_yaml
+    # =============================================
+    "SINGLE_DEPLOYMENT",
+    "ENABLE_DEPLOY",
+    "ENABLE_KERNEL",
+    "ENABLE_SERVER",
+    "ENABLE_DEBUG",
+    "ENABLE_REBOUND",
+    "SINGLE_TASK_CAP",
+    "LAUNCH_INTERVAL",
+    "REDIS_MASTER",
+    "REDIS_SLAVER_DDT",
+    "API_HOST",
+    "API_DEBUG",
+    "API_THREADED",
+    "API_PORT",
+    "OPEN_HOST",
+    "GARDENER_HOST",
+    "ROUTE_API",
+    "SEQ_TEST",
+    "CRAWLER_SEQUENCE",
+    "SMTP_ACCOUNT",
+    "SERVERCHAN_SCKEY",
+    "REDIS_SECRET_KEY",
+    "PROJECT_NUM",
+    "VERSION",
+    "TIME_ZONE_CN",
+    "TIME_ZONE_NY",
+    "DEFAULT_POWER",
+    "Fore",
+    "terminal_echo",
+    "PROXY_POOL",
+    "ENABLE_PROXY",
+    "PERMISSION_COLLABORATOR",
+    # =============================================
+    # system setting
+    # =============================================
+    "CHROMEDRIVER_PATH",
+    "SERVER_DIR_PROJECT",
+    "SERVER_PATH_YAML_CONFIG",
+    "SERVER_PATH_YAML_CONFIG_SAMPLE",
+    "SERVER_DIR_DATABASE",
+    "SQLITE3_CONFIG",
+    "SERVER_DIR_CLIENT_DEPORT",
+    "SERVER_PATH_DEPOT_VCS",
+    "SERVER_DIR_DATABASE_CACHE",
+    "SERVER_DIR_CACHE_BGPIC",
+    "SERVER_PATH_DATABASE_FETCH",
+    "SERVER_DIR_DATABASE_LOG",
+    "NGINX_SUBSCRIBE",
+    "SERVER_DIR_SSPANEL_MINING",
+    "PROTOCOL_FLAG",
+    "logger",
+]

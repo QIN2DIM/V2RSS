@@ -7,6 +7,7 @@ import time
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from tqdm import tqdm
 
@@ -42,7 +43,7 @@ class StaffCollector:
         """键入并跳转至相关页面"""
         while True:
             try:
-                input_tag = api.find_element_by_xpath("//input[@name='q']")
+                input_tag = api.find_element(By.XPATH, "//input[@name='q']")
                 input_tag.click()
                 input_tag.clear()
                 input_tag.send_keys(search_query)
@@ -61,7 +62,8 @@ class StaffCollector:
                 try:
                     ActionChains(api).send_keys(Keys.END).perform()
                     time.sleep(0.5)
-                    api.find_element_by_xpath("//a[@id='pnnext']").click()
+
+                    api.find_element(By.XPATH, "//a[@id='pnnext']").click()
                     break
                 except NoSuchElementException:
                     # 检测到到流量拦截 主动抛出异常并采取备用方案
@@ -76,7 +78,7 @@ class StaffCollector:
                 try:
                     ActionChains(api).send_keys(Keys.END).perform()
                     time.sleep(0.5)
-                    page_switchers = api.find_elements_by_xpath("//a[@id='pnnext']")
+                    page_switchers = api.find_elements(By.XPATH, "//a[@id='pnnext']")
                     next_page_bottom = page_switchers[-1]
                     next_page_bottom.click()
                     break
@@ -93,8 +95,9 @@ class StaffCollector:
     def _capture_host(self, api: Chrome):
         time.sleep(1)
         # hosts = api.find_elements_by_xpath("//span[@class='qXLe6d dXDvrc']//span[@class='fYyStc']")
-        hosts = api.find_elements_by_xpath(
-            "//div[contains(@class,'NJjxre')]//cite[@class='iUh30 Zu0yb qLRx3b tjvcx']"
+        hosts = api.find_elements(
+            By.XPATH,
+            "//div[contains(@class,'NJjxre')]//cite[@class='iUh30 Zu0yb qLRx3b tjvcx']",
         )
 
         with open(self.cache_path, "a", encoding="utf8") as f:
@@ -152,7 +155,7 @@ class StaffCollector:
     @staticmethod
     def get_page_num(api: Chrome):
         try:
-            result = api.find_element_by_xpath("//div[@id='result-stats']")
+            result = api.find_element(By.XPATH, "//div[@id='result-stats']")
             tag_num = result.text.strip().split(" ")[1]
             print(tag_num)
         except NoSuchElementException:

@@ -4,7 +4,15 @@
 #   if 该机场不具备该类型链接的采集权限，剔除。
 #   elif 该机场同时具备其他类型的采集权限，权限收缩（改写），实例入队。
 #   else 该机场仅具备该类型任务的采集权限，实例入队。
-__all__ = ["ActionShunt", "devil_king_armed", "reset_task"]
+__all__ = ["ActionShunt", "devil_king_armed", "reset_task", "DevilKingArmed"]
+
+from loguru import logger
+from requests import HTTPError
+from selenium.common.exceptions import (
+    TimeoutException,
+    WebDriverException,
+    StaleElementReferenceException,
+)
 
 from src.BusinessCentralLayer.setting import CRAWLER_SEQUENCE, CHROMEDRIVER_PATH
 from .master import ActionMasterGeneral
@@ -112,6 +120,35 @@ class DevilKingArmed(ActionMasterGeneral):
             debug=debug,
         )
 
+    def synergy(self, api=None):
+        api = (
+            self.set_spider_option(guise=self.hyper_params.get("proxy"))
+            if api is None
+            else api
+        )
+        if not api:
+            return
+        try:
+            logger.debug(self.runtime_flag({"session_id": api.session_id}, "SYNERGY"))
+            self.get_html_handle(api=api, url=self.register_url, wait_seconds=45)
+            self.sign_up(api)
+            # 进入站点并等待核心元素渲染完成
+            self.wait(api, 40, "//div[@class='card-body']")
+        except TimeoutException:
+            logger.error(
+                f">>> TimeoutException <{self.action_name}> -- {self.register_url}"
+            )
+        except StaleElementReferenceException as e:
+            logger.exception(e)
+        except WebDriverException as e:
+            logger.warning(e)
+        except (HTTPError, ConnectionRefusedError, ConnectionResetError):
+            pass
+        except Exception as e:
+            logger.warning(f">>> Exception <{self.action_name}> -- {e}")
+        finally:
+            api.quit()
+
 
 def devil_king_armed(atomic: dict, silence=True, beat_sync=True, assault=False):
     return DevilKingArmed(
@@ -134,18 +171,24 @@ def reset_task() -> list:
     from src.BusinessCentralLayer.setting import SINGLE_TASK_CAP, REDIS_SECRET_KEY
 
     rc = RedisClient()
+    # running_state={"v2ray":[], "ssr":[], "xray":[], ...}
     running_state = dict(
         zip(CRAWLER_SEQUENCE, [[] for _ in range(len(CRAWLER_SEQUENCE))])
     )
+    # 拷贝本地运行实例（源）
     action_list = __entropy__.copy()
     qsize = len(action_list)
     random.shuffle(action_list)
     try:
+        # --------------------------
         # 进行各个类型的实体任务的分类
+        # --------------------------
         for task_name in CRAWLER_SEQUENCE:
             # 获取池中对应类型的数据剩余
             storage_remain: int = rc.get_len(REDIS_SECRET_KEY.format(f"{task_name}"))
+            # --------------------------
             # 进行各个类型的实体任务的分类
+            # --------------------------
             for atomic in action_list:
                 permission = (
                     {}
@@ -154,7 +197,9 @@ def reset_task() -> list:
                 )
                 if permission.get(task_name) is True:
                     running_state[task_name].append(atomic)
+            # --------------------------
             # 在库数据溢出 返回空执行队列
+            # --------------------------
             if storage_remain >= SINGLE_TASK_CAP:
                 running_state[task_name] = []
             # 缓存+保存数据超过风险阈值
@@ -164,6 +209,7 @@ def reset_task() -> list:
                 running_state[task_name].pop()
                 qsize -= 1
 
+        # 将各种类型的运行实体混合到同一个列表中
         instances = [atomic for i in list(running_state.values()) if i for atomic in i]
         return instances
     # 网络异常，主动捕获RedisClient()的连接错误

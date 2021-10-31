@@ -31,8 +31,8 @@ class GeeTest2(SliderValidator):
         self.offset = 60
 
     def capture_full_img(self):
-        gt_full_img = self.api.find_element_by_xpath(
-            "//a[contains(@class,'gt_fullbg')]"
+        gt_full_img = self.api.find_element(
+            By.XPATH, "//a[contains(@class,'gt_fullbg')]"
         )
         gt_full_img.screenshot(filename=self.full_img_path)
 
@@ -50,7 +50,7 @@ class GeeTest2(SliderValidator):
     def is_success(self):
         for _ in range(2):
             try:
-                label = self.api.find_element_by_class_name("gt_info_type")
+                label = self.api.find_element(By.CLASS_NAME, "gt_info_type")
                 if self.debug:
                     print(f"--->result: {label.text.strip()}\n")
                 if "通过" in label.text.strip():

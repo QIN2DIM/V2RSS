@@ -305,10 +305,15 @@ class Scaffold:
 
         :return:
         """
-
         _ConfigQuarantine.check_config(call_driver=True)
         logger.info("<ScaffoldGuider> Spawn || MainCollector")
-        booster(docker=__entropy__, silence=True, power=DEFAULT_POWER, assault=True)
+        # 剔除运行在 co-invite 模式的实例
+        booster(
+            docker=[i for i in __entropy__ if not i["hyper_params"].get("co-invite")],
+            silence=True,
+            power=DEFAULT_POWER,
+            assault=True,
+        )
 
     @staticmethod
     def overdue():
@@ -418,5 +423,5 @@ class Scaffold:
 
         :return:
         """
+        _ConfigQuarantine().run()
         SystemInterface.run(deploy_=True, port=port, host=host, debug=debug)
-

@@ -23,7 +23,7 @@ from src.BusinessCentralLayer.setting import (
     SQLITE3_CONFIG,
     TIME_ZONE_CN,
 )
-from .redis_io import RedisClient
+from .redis_io import RedisClient, MessageQueue
 from ..middleware import work_io
 
 
@@ -112,25 +112,34 @@ class FlexibleDistributeV0:
 
 
 class FlexibleDistributeV2:
-    def __init__(self, stream: dict):
-        self.stream = stream
+    def __init__(self):
+        self.rdb = RedisClient()
+        self.mq = MessageQueue()
 
-    def distribute(self):
-        self.to_redis()
-
-    def to_redis(self):
-        rdb = RedisClient()
-
+    def publish(self, stream: dict):
         # 存储订阅
-        subscribe = self.stream.get("subscribe")
-        end_time = self.stream.get("end_time")
-        subscribe_class = self.stream.get("class")
-        rdb.add(subscribe_class=subscribe_class, subscribe=subscribe, end_time=end_time)
+        subscribe = stream.get("subscribe")
+        end_time = stream.get("end_time")
+        subscribe_class = stream.get("class")
+        self.rdb.add(
+            subscribe_class=subscribe_class, subscribe=subscribe, end_time=end_time
+        )
 
         # 存储别名
-        alias = self.stream.get("action")
-        netloc = self.stream.get("netloc")
-        rdb.set_alias(alias=alias, netloc=netloc)
+        alias = stream.get("action")
+        netloc = stream.get("netloc")
+        self.rdb.set_alias(alias=alias, netloc=netloc)
+
+    def to_inviter(self, context: dict or str):
+        context = str(context) if isinstance(context, dict) else context
+        self.mq.broadcast_pending_task({"pending": context})
+
+    def to_runner(self, context: dict or str):
+        context = str(context) if isinstance(context, dict) else context
+        self.mq.broadcast_pending_task({"overload": context})
+
+    def set_collaborative_task(self, stream: tuple):
+        self.rdb.get_driver().lpush("collaborative_task", *stream)
 
     def to_nginx(self):
         raise NotImplementedError()

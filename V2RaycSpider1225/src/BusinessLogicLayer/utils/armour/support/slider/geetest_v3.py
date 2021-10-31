@@ -77,7 +77,7 @@ class GeeTest3(SliderValidator):
         # 重试10次，每次失败冷却0.5s 最多耗时5s，否则主动抛出错误
         for _ in range(10):
             try:
-                self.slider = self.api.find_element_by_class_name(class_name)
+                self.slider = self.api.find_element(By.CLASS_NAME, class_name)
                 return self.slider
             except Exception as e:
                 print("{}:{}".format(self.__class__, e))
@@ -86,7 +86,7 @@ class GeeTest3(SliderValidator):
         raise NoSuchElementException
 
     def activate_validator(self):
-        self.api.find_element_by_class_name("geetest_radar_tip").click()
+        self.api.find_element(By.CLASS_NAME, "geetest_radar_tip").click()
         time.sleep(0.5)
 
     def is_success(self):
@@ -94,8 +94,8 @@ class GeeTest3(SliderValidator):
 
         :return:
         """
-        button_text2 = self.api.find_element_by_class_name(
-            "geetest_success_radar_tip_content"
+        button_text2 = self.api.find_element(
+            By.CLASS_NAME, "geetest_success_radar_tip_content"
         )
         text2 = button_text2.text
 

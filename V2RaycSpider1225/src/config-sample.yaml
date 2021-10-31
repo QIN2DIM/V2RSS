@@ -44,26 +44,32 @@ ENABLE_DEPLOY:
   # 建议在多服务器场景下将采集任务和ddt任务分离，
   tasks:
     # 采集订阅
-    collector: True
+    collector: true
     # 移除过期订阅
-    ddt_overdue: True
+    ddt_overdue: true
     # 解耦订阅
-    ddt_decouple: True
+    ddt_decouple: false
 
 # ENABLE_DEPLOY 服务器内核开关
 ENABLE_KERNEL:
   # 基准服务
-  basic: True
+  basic: true
   # 数据挖掘
-  async_dm: False
+  async_dm:
+    enable: false
   # 园丁系统
-  gardener: False
+  gardener:
+    enable: false
+  # 破冰船
+  ice-breaker:
+    enable: true
+    collaborator: true
 
 # ENABLE_SERVER 部署 flask for v2rss-service
-ENABLE_SERVER: True
+ENABLE_SERVER: false
 
 # ENABLE_PROXY_POOL 开启弹性代理访问
-ENABLE_PROXY: False
+ENABLE_PROXY: True
 
 # ENABLE_COROUTINE 协程加速
 ENABLE_COROUTINE: True
@@ -97,9 +103,9 @@ SINGLE_TASK_CAP: 25
 # 为保证系统高可用性，请不要让任务巡回频次低于以上预设值
 # ---------------------------------------------------
 LAUNCH_INTERVAL:
-  collector: 300
-  ddt_overdue: 3600
-  ddt_decouple: 60
+  collector: 120
+  ddt_overdue: 60
+  ddt_decouple: 120
 
 # ---------------------------------------------------
 # TODO [√] Redis Cluster Configuration(SSH-BASE)
@@ -170,5 +176,6 @@ SMTP_ACCOUNT:
 # ---------------------------------------------------
 # 2. 使用<SERVER酱>推送，请在SERVERCHAN_SCKEY填写自己的Key
 # http://sc.ftqq.com/3.version
+# ---------------------------------------------------
 SERVERCHAN_SCKEY: ''
 

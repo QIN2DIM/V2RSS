@@ -1,5 +1,6 @@
-__all__ = ["RedisClient", "RedisDataDisasterTolerance"]
+__all__ = ["RedisClient", "RedisDataDisasterTolerance", "MessageQueue"]
 
+import time
 from typing import List, Tuple
 
 import redis
@@ -9,6 +10,8 @@ from src.BusinessCentralLayer.setting import (
     REDIS_SECRET_KEY,
     TIME_ZONE_CN,
     CRAWLER_SEQUENCE,
+    LAUNCH_INTERVAL,
+    SINGLE_TASK_CAP,
     logger,
 )
 
@@ -40,8 +43,9 @@ class RedisClient:
             db=db,
             **kwargs,
         )
-        self.subscribe = ""
+        self.sub_link = ""
         self.crawler_seq = CRAWLER_SEQUENCE
+        self.studio = "collaborators"
 
     def add(self, subscribe_class=None, subscribe=None, end_time: str = None):
         """
@@ -68,7 +72,7 @@ class RedisClient:
                 target_raw: dict = self.db.hgetall(key_name)
                 try:
                     # 弹出并捕获 <离当前时间> <最远一次入库>的订阅连接 既订阅链接并未按end_life排序
-                    self.subscribe, end_life = list(target_raw.items()).pop(pop_)
+                    self.sub_link, end_life = list(target_raw.items()).pop(pop_)
 
                     # end_life: requests_time(采集时间点) + vip_crontab(机场会员时长(账号试用时长))
 
@@ -82,7 +86,7 @@ class RedisClient:
                     # 若链接过期 -> loop next -> finally :db-del stale subscribe
                     if self.is_stale(end_life, beyond=3):
                         continue
-                    return self.subscribe
+                    return self.sub_link
                 # 出现该错误视为redis队列被击穿 无任何可用的链接分发，中断循环
                 except IndexError:
                     logger.critical(
@@ -93,7 +97,7 @@ class RedisClient:
                 finally:
                     from src.BusinessCentralLayer.middleware.subscribe_io import detach
 
-                    detach(self.subscribe, beat_sync=True)
+                    detach(self.sub_link, beat_sync=True)
         finally:
             # 关闭连接
             self.kill()
@@ -287,3 +291,133 @@ class RedisDataDisasterTolerance(RedisClient):
             logger.warning(f"({class_}):缓存可能被击穿或缓存为空，请系统管理员及时维护链接池！")
         except redis.exceptions.ConnectionError:
             logger.error(f"redis-slave {self.redis_virtual} 或宕机")
+
+
+class MessageQueue(RedisClient):
+    def __init__(self, group_: str = None):
+        super(MessageQueue, self).__init__()
+        # 消息流：广播待处理消息的运行时上下文摘要信息
+        self.stream_ = "v2rss:tasks"
+        # # 信息流：广播已处理的消息ID（全局共享）
+        # self.stream_offload_name = "offload_queue"
+        # 统一消费组名称，分布式接入点使用统一的消费组 pending-ids 同步工作进度
+        self.group_ = "tasks_group" if group_ is None else group_
+        # 统一消费者头id，可考虑使用消费者回收机制，确保分布式并发安全
+        self.consumer_ = "hexo"
+        # 截断 6 小时理论吞吐量的冗余数据
+        self.max_queue_size = max(
+            int(6 * 3600 / LAUNCH_INTERVAL["collector"]), SINGLE_TASK_CAP
+        )
+        # 任务同步的批次大小
+        self.count = 1
+        # 任务同步的阻塞时间
+        self.block = 2 * 1000
+
+        # 自动初始化
+        self._automated()
+
+    def _is_exists_group(self, group_name: str) -> bool:
+        """
+
+        :param group_name:
+        :return:
+        """
+        try:
+            groups = self.db.xinfo_groups(self.stream_)
+            for group in groups:
+                if group.get("name", "") == group_name:
+                    return True
+            return False
+        except redis.exceptions.ResponseError:
+            return False
+
+    def _automated(self):
+        """
+        自动初始化 消费者组 以及 消息流。
+        使用 MKSTREAM 参数，当创建组时，组依赖的流不存在，则会自动创建流。此时流的长度为0。
+        :return:
+        """
+        if not self._is_exists_group(self.group_):
+            self.db.xgroup_create(self.stream_, self.group_, id="0", mkstream=True)
+
+    def __len__(self):
+        return self.db.xlen(self.stream_)
+
+    def remove_bad_code(self, type_: str, hook_: str):
+        self.db.hdel(REDIS_SECRET_KEY.format(type_), hook_)
+
+    def broadcast_pending_task(self, fields: dict):
+        """
+        广播消息上下文
+        :param fields: 消息键值对
+        :return:
+        """
+        self.db.xadd(self.stream_, fields, maxlen=self.max_queue_size, approximate=True)
+
+    def offload_task(self, message_id: str):
+        self.db.xack(self.stream_, self.group_, message_id)
+
+    def _focus_task(self, count: int = None, block: int = None):
+        """
+
+        :param count: 一次可同步的最大任务数。
+
+        当 未读任务数远大于 count 时，此参数生效。
+        当 未读任务数远小于 count 或为 0 时，count 数值上等于未读任务数。无可读任务时函数返回空列表。
+
+        换句话说，在 block 阻塞时间内, 一旦消息流出现变更，xreadgroup 一次性读取 count 个（ '>' 变更数据）消息并返回；
+        而不是在 block 阻塞时间内尝试等待收集到 count 数量的任务再返回。
+
+        意味着 当 block != 0 时，实际阻塞时间 <= block
+
+        :param block: 阻塞（毫秒），默认 2s。
+        :return:
+        """
+        return self.db.xreadgroup(
+            self.group_, self.consumer_, {self.stream_: ">"}, count=count, block=block
+        )
+
+    def handle_task(self, count: int = 1, block: int = 2 * 1000) -> list:
+        """
+
+        :param count:
+        :param block:
+        :return: [['tasks', [('1635474291784-0', {'pending': '待处理队列'}), ... ]]]
+        """
+        task_queue = self._focus_task(count, block)
+        if task_queue:
+            _, message = task_queue[0]
+            return message
+
+    def get_pending_tasks(self) -> dict:
+        """
+
+        :return: {
+            'pending': 5,
+            'min': '1635471488028-0',
+            'max': '1635471640628-0',
+            'consumers': [{'name': 'hexo', 'pending': 5}]
+        }
+        """
+        return self.db.xpending(self.stream_, self.group_)
+
+    def listen(self, count: int = None, block: int = None):
+        """
+
+        :return:
+        """
+        count = self.count if count is None else count
+        block = self.block if block is None else block
+
+        while True:
+            yield self.handle_task(count=count, block=block)
+
+
+if __name__ == "__main__":
+    from datetime import datetime
+
+    mq = MessageQueue()
+    while True:
+        print(f"[{datetime.now()}] --broadcast-- element")
+        mq.broadcast_pending_task({"pending": "待处理队列"})
+        time.sleep(1)

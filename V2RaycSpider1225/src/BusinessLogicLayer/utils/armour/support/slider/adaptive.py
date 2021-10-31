@@ -5,6 +5,7 @@
 # Description: 区分geetest_v2/geetest_v3
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver import Chrome
+from selenium.webdriver.common.by import By
 
 from .geetest_v2 import GeeTest2
 from .geetest_v3 import GeeTest3
@@ -30,7 +31,7 @@ class GeeTestAdapter:
     @staticmethod
     def checker(api: Chrome):
         try:
-            api.find_element_by_class_name("geetest_radar_tip_content")
+            api.find_element(By.CLASS_NAME, "geetest_radar_tip_content")
             return GeeTest3
         except NoSuchElementException:
             return GeeTest2

@@ -14,6 +14,7 @@ from selenium.common.exceptions import (
     TimeoutException,
     UnexpectedAlertPresentException,
 )
+from selenium.webdriver.common.by import By
 
 from src.BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE_CACHE
 from .master import ActionMasterGeneral
@@ -47,9 +48,7 @@ class Prism(ActionMasterGeneral):
         self.xpath_canvas_subs = "//div[@class='card-body']"
 
     def run(self, api=None):
-        logger.debug(
-            f">> RUN <{self.action_name}> --> beat_sync[{self.beat_sync}] feature[{self.atomic.get('feature')}]"
-        )
+        logger.debug(self.runtime_flag(self.hyper_params))
         api = self.set_spider_option() if api is None else api
         if not api:
             return
@@ -61,7 +60,7 @@ class Prism(ActionMasterGeneral):
             # 点击商城转换页面
             try:
                 self.wait(api, 10, self.xpath_page_shop)
-                api.find_element_by_xpath(self.xpath_page_shop).click()
+                api.find_element(By.XPATH, self.xpath_page_shop).click()
             except TimeoutException:
                 logger.error(
                     f">>> TimeoutException <{self.action_name}> -- {self.register_url} -- 商城转换页面超时"
@@ -69,16 +68,16 @@ class Prism(ActionMasterGeneral):
             # 弹窗遮盖
             except ElementClickInterceptedException:
                 time.sleep(0.5)
-                api.find_element_by_xpath("//button").click()
+                api.find_element(By.XPATH, "//button").click()
                 time.sleep(0.5)
 
                 # 点击商城转换页面至/shop界面，again
                 self.wait(api, 10, self.xpath_page_shop)
-                api.find_element_by_xpath(self.xpath_page_shop).click()
+                api.find_element(By.XPATH, self.xpath_page_shop).click()
             # 免费计划识别 购买免费计划
             try:
                 self.wait(api, 3, self.xpath_button_buy)
-                api.find_element_by_xpath(self.xpath_button_buy).click()
+                api.find_element(By.XPATH, self.xpath_button_buy).click()
 
                 # 回到主页
                 time.sleep(1)

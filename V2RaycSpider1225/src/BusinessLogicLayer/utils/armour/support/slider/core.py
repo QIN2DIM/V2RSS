@@ -385,10 +385,10 @@ class SliderValidator:
         """
 
         # v3
-        button_text = self.api.find_element_by_class_name("geetest_radar_tip_content")
+        button_text = self.api.find_element(By.CLASS_NAME, "geetest_radar_tip_content")
         text = button_text.text
         if text in ("尝试过多", "网络不给力", "请点击重试"):
-            button = self.api.find_element_by_class_name("geetest_reset_tip_content")
+            button = self.api.find_element(By.CLASS_NAME, "geetest_reset_tip_content")
             button.click()
 
     def is_success(self):

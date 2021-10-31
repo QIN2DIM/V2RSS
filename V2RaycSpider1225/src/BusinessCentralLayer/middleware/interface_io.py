@@ -17,10 +17,14 @@ from src.BusinessCentralLayer.setting import (
     OPEN_HOST,
     logger,
     LAUNCH_INTERVAL,
-    terminal_echo,
+    PERMISSION_COLLABORATOR,
 )
 from src.BusinessLogicLayer.cluster import sailor, slavers
-from src.BusinessLogicLayer.deploy import TasksScheduler, CollectorScheduler
+from src.BusinessLogicLayer.deploy import (
+    TasksScheduler,
+    CollectorScheduler,
+    CollaboratorScheduler,
+)
 from src.BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
 from src.BusinessViewLayer.myapp.app import app
 from .redis_io import RedisClient
@@ -30,7 +34,7 @@ from .redis_io import RedisClient
 # ----------------------------------------
 
 ACTIONS_IO = [
-    f'{[j[0] for j in i.get("hyper_params").items() if j[-1]]}{i.get("name")}'
+    f'{i.get("name")} {[j[0] for j in i.get("hyper_params").items() if j[-1]]}'
     for i in slavers.__entropy__
 ]
 
@@ -110,15 +114,19 @@ _cd = _ContainerDegradation()
 class _SystemEngine:
     def __init__(self) -> None:
         if ENABLE_DEPLOY["global"]:
-            terminal_echo(f"[SystemEngineIO] CONFIG_ENABLE_DEPLOY:{ENABLE_DEPLOY}", 1)
+            logger.info(f"<SystemEngineIO> CONFIG_ENABLE_DEPLOY:{ENABLE_DEPLOY}")
             if ENABLE_DEPLOY["tasks"]["collector"]:
-                terminal_echo(
-                    f"[SystemEngineIO] CONFIG_COLLECTOR_PERMISSION:{CRAWLER_SEQUENCE}",
-                    1,
+                logger.info(
+                    f"<SystemEngineIO> CONFIG_COLLECTOR_PERMISSION:{CRAWLER_SEQUENCE}"
                 )
-                for action_image in ACTIONS_IO:
-                    terminal_echo(f"[SystemEngineIO] CONFIG_ACTIONS:{action_image}", 1)
-
+            for action_image in ACTIONS_IO:
+                logger.info(f"<SystemEngineIO> ACTIONS:{action_image}")
+        status_msg = "ENABLE_DEPLOY={} COLLECTOR={} COLLABORATOR={}".format(
+            ENABLE_DEPLOY["global"],
+            ENABLE_DEPLOY["tasks"]["collector"],
+            PERMISSION_COLLABORATOR,
+        )
+        logger.info("<SystemEngineIO> Load operating parameters. {}".format(status_msg))
         logger.success("<SystemEngineIO> Startup coroutine engine.")
         logger.success("<SystemEngineIO> Service core loading completed.")
 
@@ -132,7 +140,7 @@ class _SystemEngine:
 
     @staticmethod
     @logger.catch()
-    def run_deploy() -> None:
+    def run_timed_task() -> None:
         # 载入定时任务权限配置
         tasks = ENABLE_DEPLOY["tasks"]
         task2function = {
@@ -181,6 +189,14 @@ class _SystemEngine:
             sys.exit()
         except NameError:
             logger.critical("eval()或exec()语法异常，检测变量名是否不一致。")
+
+    @staticmethod
+    def run_collaborative_task() -> None:
+        """
+
+        :return:
+        """
+        CollaboratorScheduler().hosting()
 
     @staticmethod
     def run(beat_sync=True, force_run=None) -> None:
@@ -239,7 +255,7 @@ class _SystemEngine:
             if ENABLE_DEPLOY["global"]:
                 process_list.append(
                     multiprocessing.Process(
-                        target=_SystemEngine.run_deploy, name="deploymentTimingTask"
+                        target=_SystemEngine.run_timed_task, name="deploymentTimingTask"
                     )
                 )
 
@@ -252,7 +268,14 @@ class _SystemEngine:
                         kwargs=kwargs,
                     )
                 )
-
+            # 协同订阅任务
+            if PERMISSION_COLLABORATOR:
+                process_list.append(
+                    multiprocessing.Process(
+                        target=_SystemEngine.run_collaborative_task,
+                        name="collaborator",
+                    )
+                )
             # 执行多进程任务
             for process_ in process_list:
                 logger.success(f"<SystemProcess> Startup -- {process_.name}")

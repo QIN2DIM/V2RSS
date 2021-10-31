@@ -9,13 +9,10 @@ import shlex
 import requests
 from bs4 import BeautifulSoup
 
-THIS_WALK = "."
-CHROMEDRIVER_UNZIP_PATH = "src/BusinessCentralLayer/chromedriver"
-
 
 def shell_echo(cmd: str, mode="default"):
     """
-    为了输出安全做的协调函数
+    为输出安全做的协调函数
     :param cmd:
     :param mode:
     :return:
@@ -24,6 +21,10 @@ def shell_echo(cmd: str, mode="default"):
         return os.system(cmd)
     if mode == "safe":
         return os.system(shlex.quote(cmd))
+
+
+THIS_WALK = "."
+CHROMEDRIVER_UNZIP_PATH = "src/BusinessCentralLayer/chromedriver"
 
 
 def set_google_chrome():
