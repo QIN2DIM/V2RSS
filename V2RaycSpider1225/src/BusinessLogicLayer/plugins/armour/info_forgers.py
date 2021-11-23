@@ -3,7 +3,7 @@ import urllib.request
 
 import requests
 
-from src.BusinessCentralLayer.setting import PROXY_POOL
+from BusinessCentralLayer.setting import PROXY_POOL
 
 
 def get_header(use_faker=False) -> str:

@@ -6,7 +6,7 @@ name: V2RSS Probe
 #   一般情况下不建议使用 GitHub Actions 部署 v2rss-server，仅在你缺少可用 VPS 时在此构建服务
 on:
   push:
-    branches: [ master ]
+    branches: [ unused ]
   # schedule:
   #   - cron: '25 * * * *'
 

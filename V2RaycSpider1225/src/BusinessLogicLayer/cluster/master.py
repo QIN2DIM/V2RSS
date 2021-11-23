@@ -1,6 +1,8 @@
 __all__ = ["ActionMasterGeneral"]
 
+import os
 import random
+import sys
 import time
 from datetime import datetime, timedelta
 from os.path import join
@@ -16,19 +18,20 @@ from selenium.common.exceptions import (
     SessionNotCreatedException,
     ElementNotInteractableException,
 )
-from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver import Chrome, ChromeOptions, Remote
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from urllib3.exceptions import HTTPError
 
-from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistributeV2
-from src.BusinessCentralLayer.setting import (
+from BusinessCentralLayer.middleware.subscribe_io import FlexibleDistributeV2
+from BusinessCentralLayer.setting import (
     CHROMEDRIVER_PATH,
     TIME_ZONE_CN,
     SERVER_DIR_CACHE_BGPIC,
     logger,
+    COMMAND_EXECUTOR,
 )
 from ..plugins.armour import GeeTestAdapter
 from ..plugins.armour import get_header, flow_probe
@@ -38,17 +41,17 @@ class BaseAction:
     """针对SSPanel-Uim机场的基准行为"""
 
     def __init__(
-        self,
-        silence=None,
-        assault=None,
-        beat_sync=True,
-        debug=None,
-        action_name=None,
-        email_class=None,
-        life_cycle=None,
-        anti_slider=None,
-        chromedriver_path=None,
-        endurance=None,
+            self,
+            silence=None,
+            assault=None,
+            beat_sync=True,
+            debug=None,
+            action_name=None,
+            email_class=None,
+            life_cycle=None,
+            anti_slider=None,
+            chromedriver_path=None,
+            endurance=None,
     ):
         """
         设定登陆选项，初始化登陆器
@@ -238,25 +241,47 @@ class BaseAction:
                 options.experimental_options["prefs"] = chrome_pref
                 d_c = DesiredCapabilities.CHROME
                 d_c["pageLoadStrategy"] = "none"
-                _api = Chrome(
-                    options=options,
-                    executable_path=self.chromedriver_path,
-                    desired_capabilities=d_c,
-                )
+                if COMMAND_EXECUTOR:
+                    _api = Remote(
+                        command_executor=COMMAND_EXECUTOR,
+                        desired_capabilities=d_c,
+                        options=options
+                    )
+                else:
+                    _api = Chrome(
+                        options=options,
+                        executable_path=self.chromedriver_path,
+                        desired_capabilities=d_c,
+                    )
             else:
+                if COMMAND_EXECUTOR:
+                    _api = Remote(
+                        command_executor=COMMAND_EXECUTOR,
+                        options=options
+                    )
                 _api = Chrome(options=options, executable_path=self.chromedriver_path)
             # 进一步消除操作指令头，增加隐蔽性
-            _api.execute_cdp_cmd(
-                "Page.addScriptToEvaluateOnNewDocument",
-                {
-                    "source": """
-                Object.defineProperty(navigator, 'webdriver', {
-                  get: () => undefined
-                })
-              """
-                },
-            )
+            try:
+                _api.execute_cdp_cmd(
+                    "Page.addScriptToEvaluateOnNewDocument",
+                    {
+                        "source": """
+                    Object.defineProperty(navigator, 'webdriver', {
+                      get: () => undefined
+                    })
+                  """
+                    },
+                )
+            except AttributeError:
+                pass
             return _api
+        except PermissionError:
+            if 'linux' in sys.platform:
+                logger.debug("Attempting to give executable permission to the `chromedriver`. | "
+                             f"path={CHROMEDRIVER_PATH}")
+                os.system(f"chmod +x {CHROMEDRIVER_PATH}")
+            else:
+                logger.warning("The `chromedriver` executable may have wrong permissions.")
         except SessionNotCreatedException as e:
             logger.error(
                 f"<{self.action_name}> 任務核心無法啓動：ChromeDriver 與 Chrome 版本不匹配。 "
@@ -323,12 +348,12 @@ class BaseAction:
                 time.sleep(0.5 + self.beat_dance)
                 continue
 
-            time.sleep(1)
             # ======================================
             # 依据实体抽象特征，选择相应的解决方案
             # ======================================
-            # 滑动验证 TODO 引入STAFF API 自适应识别参数
+            # 滑动验证
             if self.anti_slider:
+                time.sleep(1)
                 # 打开工具箱
                 response = self.utils_slider(api=api)
                 # 执行失败刷新页面并重试N次
@@ -341,22 +366,30 @@ class BaseAction:
             # 提交注册数据，完成注册任务
             # ======================================
             # 点击注册按键
-            api.find_element(By.ID, "register-confirm").click()
-            # 重试N轮 等待[注册成功]界面的加载
-            for x in range(3):
+            time.sleep(0.5)
+            for _ in range(3):
                 try:
-                    time.sleep(1.5)
-                    api.find_element(
-                        By.XPATH, "//button[contains(@class,'confirm')]"
-                    ).click()
+                    api.find_element(By.ID, "register-confirm").click()
+                except (ElementNotInteractableException, WebDriverException):
+                    print(f"正在同步集群节拍 | "
+                          f"action={self.action_name} "
+                          f"hold={1.5 + self.beat_dance}s "
+                          f"session_id={api.session_id} "
+                          f"event=`register-pending`")
+                    time.sleep(self.timeout_retry_time + self.beat_dance)
+                    continue
+
+            time.sleep(0.5)
+            for _ in range(3):
+                try:
+                    api.find_element(By.XPATH, "//button[contains(@class,'confirm')]").click()
                     return True
                 except NoSuchElementException:
-                    logger.debug(
-                        f"[{x + 1} / 3]{self.action_name}验证超时，{self.timeout_retry_time}s后重试 --> "
-                        f"session_id={api.session_id}"
-                    )
-                    time.sleep(self.timeout_retry_time)
+                    time.sleep(self.timeout_retry_time + self.beat_dance)
                     continue
+            else:
+                api.refresh()
+                self.sign_up(api)
 
     @staticmethod
     def wait(api: Chrome, timeout: float, tag_xpath_str):
@@ -414,14 +447,25 @@ class BaseAction:
         :param api:
         :return:
         """
+        for _ in range(6):
+            try:
+                time.sleep(0.5)
+                api.find_element(By.ID, "checkin-div").click()
+                break
+            # 加载失败
+            except NoSuchElementException:
+                pass
+            # 出现弹窗遮挡，需要进一步处理
+            except WebDriverException:
+                ActionMasterGeneral.check_modal(api)
+                continue
+
+    @staticmethod
+    def check_modal(api: Chrome):
         try:
-            time.sleep(3)
-            api.find_element(By.ID, "checkin-div").click()
-        # 加载失败
-        except NoSuchElementException:
-            pass
-        # 出现弹窗遮挡，需要进一步处理
-        except WebDriverException:
+            time.sleep(0.5)
+            api.find_element(By.XPATH, "//button[@data-dismiss]").click()
+        except (WebDriverException, NoSuchElementException):
             pass
 
     @staticmethod
@@ -444,7 +488,7 @@ class BaseAction:
         headers = {
             "Cookie": cookies,
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
-            " Chrome/95.0.4638.54 Safari/537.36 Edg/95.0.1020.30",
+                          " Chrome/95.0.4638.54 Safari/537.36 Edg/95.0.1020.30",
             "refer_path": refer_path,
             "sec-ch-ua": '"Microsoft Edge";v="95", "Chromium";v="95", ";Not A Brand";v="99"',
             "sec-ch-ua-platform": "Windows",
@@ -462,6 +506,22 @@ class BaseAction:
         ]
 
         return invite_link
+
+    def get_invite_link_v2(self, api: Chrome, timeout=45):
+        start_time = time.time()
+        url_invite = f"https://{urlparse(self.register_url).hostname}/user/invite"
+        api.get(url_invite)
+        while True:
+            try:
+                self.wait(api, 15, "all")
+                time.sleep(1 + self.beat_dance)
+                invite_code = api.find_element(By.XPATH, "//div[@class='hero-inner']//a").get_attribute(
+                    "data-clipboard-text")
+                return invite_code
+            except WebDriverException:
+                if time.time() - start_time > timeout:
+                    break
+                continue
 
     @staticmethod
     def set_collaborative_task(mirror_action: dict, gain: int = 1):
@@ -487,13 +547,13 @@ class BaseAction:
         return title
 
     def load_any_subscribe(
-        self,
-        api: Chrome,
-        element_xpath_str: str,
-        href_xpath_str: str,
-        class_: str,
-        retry=0,
-        timeout: int = 30,
+            self,
+            api: Chrome,
+            element_xpath_str: str,
+            href_xpath_str: str,
+            class_: str,
+            retry=0,
+            timeout: int = 30,
     ):
         """
         捕获订阅并送入持久化数据池
@@ -509,13 +569,13 @@ class BaseAction:
         self.type_ = class_
         # 订阅萃取
         self.subscribe = (
-            WebDriverWait(api, timeout)
-            .until(
+            WebDriverWait(api, timeout).until(
                 expected_conditions.presence_of_element_located(
-                    (By.XPATH, element_xpath_str)
+                    (
+                        By.XPATH, element_xpath_str
+                    )
                 )
-            )
-            .get_attribute(href_xpath_str)
+            ).get_attribute(href_xpath_str)
         )
 
         # 无持久化权限，链接不送入数据库
@@ -619,7 +679,7 @@ class AdaptiveCapture(BaseAction):
 
         headers = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            " (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67"
+                          " (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.67"
         }
         res = requests.get(url, headers=headers, timeout=5)
         if cache_source_page:
@@ -637,7 +697,7 @@ class AdaptiveCapture(BaseAction):
         if not soup.find_all("input"):
             report.update({"type": "refuse to register"})
         elif soup.find_all("button", id="emil_verify") or soup.find_all(
-            "button", id="send-code"
+                "button", id="send-code"
         ):
             report.update({"type": "email"})
         elif "已经有账号了" in response.text:
@@ -713,19 +773,19 @@ class AdaptiveCapture(BaseAction):
 
 class ActionMasterGeneral(BaseAction):
     def __init__(
-        self,
-        register_url: str = None,
-        silence: bool = True,
-        assault: bool = False,
-        beat_sync: bool = True,
-        email: str = None,
-        life_cycle: int = None,
-        anti_slider: bool = False,
-        hyper_params: dict = None,
-        action_name: str = None,
-        debug: bool = False,
-        chromedriver_path: str = CHROMEDRIVER_PATH,
-        endurance: bool = True,
+            self,
+            register_url: str = None,
+            silence: bool = True,
+            assault: bool = False,
+            beat_sync: bool = True,
+            email: str = None,
+            life_cycle: int = None,
+            anti_slider: bool = False,
+            hyper_params: dict = None,
+            action_name: str = None,
+            debug: bool = False,
+            chromedriver_path: str = CHROMEDRIVER_PATH,
+            endurance: bool = True,
     ):
         """
 
@@ -765,7 +825,7 @@ class ActionMasterGeneral(BaseAction):
             # usr_email | True 需要自己输入邮箱后缀(默认为qq) False: 邮箱后缀为选择形式只需填写主段
             "usr_email": False,
             # check_in | 机场签到（仅在注册时签到，不提供每日维护）
-            "check_in": True,
+            "check_in": False,
             # co-invite 协同增益模式（园丁系统子模块）
             "co-invite": False,
         }
@@ -822,12 +882,13 @@ class ActionMasterGeneral(BaseAction):
             self.wait(api, 40, "//div[@class='card-body']")
             # 根据原子类型订阅的优先顺序 依次捕获
             self.capture_share_link(api)
-            # 流量超额申请：check-in
-            if self.hyper_params["check_in"] is True:
-                self.check_in(api)
             # ======================================
             # 超参数高级行为处理
             # ======================================
+            # 流量超额申请：check-in
+            if self.hyper_params["check_in"] is True:
+                self.check_in(api)
+            # Cluster Actions
             self.handle_hyper_action(api)
 
         except TimeoutException:
@@ -853,21 +914,31 @@ class ActionMasterGeneral(BaseAction):
         # 获取配置信息
         co_invite = self.hyper_params["co-invite"]
 
+        # 拟合协同实例数量
         if isinstance(co_invite, int):
             gain = 1 if co_invite < 1 or co_invite > 30 else co_invite
         else:
             gain = 1
 
+        # 尝试直接获取 invite code
+        invite_link = self.get_invite_link_v2(api, timeout=45)
+
+        # 重置实例镜像状态
         self.hyper_params["co-invite"] = False
+
+        # 运行实例的原子任务协议头，根据 atomic 生产实例镜像
+        atomic = {
+            "name": self.action_name,
+            "register_url": self.register_url,
+            "life_cycle": self.life_cycle,
+            "anti_slider": self.anti_slider,
+            "hyper_params": self.hyper_params,
+            "email": "@gmail.com",
+        }
+
+        # 构建上下文协议头，加入了一些必要的，可选的边缘参数
         context = {
-            "atomic": {
-                "name": self.action_name,
-                "register_url": self.register_url,
-                "life_cycle": self.life_cycle,
-                "anti_slider": self.anti_slider,
-                "hyper_params": self.hyper_params,
-                "email": "@gmail.com",
-            },
+            "atomic": atomic,
             "_hook": self.subscribe,
             "_type": self.type_,
             "hostname": urlparse(self.register_url).hostname,
@@ -878,4 +949,13 @@ class ActionMasterGeneral(BaseAction):
         }
 
         # 广播协同任务上下文信息
-        FlexibleDistributeV2().to_inviter(context)
+        throw = FlexibleDistributeV2()
+        if invite_link:
+            # 替换必要键值对，满足传输协议需求
+            atomic["register_url"] = invite_link
+            atomic["synergy"] = True
+            # 批量广播运行实例
+            for _ in range(gain):
+                throw.to_runner(atomic)
+        else:
+            FlexibleDistributeV2().to_inviter(context)

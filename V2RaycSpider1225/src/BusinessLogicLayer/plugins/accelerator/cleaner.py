@@ -9,8 +9,8 @@ import warnings
 import requests
 from redis import exceptions as redis_error
 
-from src.BusinessCentralLayer.middleware.redis_io import RedisClient
-from src.BusinessCentralLayer.setting import (
+from BusinessCentralLayer.middleware.redis_io import RedisClient
+from BusinessCentralLayer.setting import (
     REDIS_SECRET_KEY,
     CRAWLER_SEQUENCE,
     logger,

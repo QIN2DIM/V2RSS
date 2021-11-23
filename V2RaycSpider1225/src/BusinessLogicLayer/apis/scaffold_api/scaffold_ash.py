@@ -3,12 +3,12 @@ import time
 import webbrowser
 from urllib.parse import urlparse
 
-from src.BusinessCentralLayer.middleware.redis_io import RedisClient
-from src.BusinessCentralLayer.middleware.subscribe_io import detach
-from src.BusinessCentralLayer.setting import REDIS_SECRET_KEY, CRAWLER_SEQUENCE, logger
-from src.BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
-from src.BusinessLogicLayer.plugins.breaker import clash_adapter
-from src.BusinessViewLayer.myapp.virtual_station import app
+from BusinessCentralLayer.middleware.redis_io import RedisClient
+from BusinessCentralLayer.middleware.subscribe_io import detach
+from BusinessCentralLayer.setting import REDIS_SECRET_KEY, CRAWLER_SEQUENCE, logger
+from BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
+from BusinessLogicLayer.plugins.breaker import clash_adapter
+from BusinessViewLayer.myapp.virtual_station import app
 
 
 class _ClashTaskAsh:

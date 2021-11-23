@@ -16,8 +16,8 @@ from selenium.common.exceptions import (
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 
-from src.BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE, TIME_ZONE_CN
-from src.BusinessLogicLayer.cluster.master import ActionMasterGeneral
+from BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE, TIME_ZONE_CN
+from BusinessLogicLayer.cluster.master import ActionMasterGeneral
 
 
 class SSPanelParser(ActionMasterGeneral):

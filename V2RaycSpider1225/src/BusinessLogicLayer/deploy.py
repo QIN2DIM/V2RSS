@@ -23,15 +23,15 @@ from apscheduler.triggers.interval import IntervalTrigger
 from gevent import monkey
 from gevent.queue import Queue
 
-from src.BusinessCentralLayer.middleware.redis_io import MessageQueue
-from src.BusinessCentralLayer.middleware.subscribe_io import FlexibleDistributeV2
-from src.BusinessCentralLayer.setting import logger
-from src.BusinessLogicLayer.cluster.cook import (
+from BusinessCentralLayer.middleware.redis_io import MessageQueue
+from BusinessCentralLayer.middleware.subscribe_io import FlexibleDistributeV2
+from BusinessCentralLayer.setting import logger
+from BusinessLogicLayer.cluster.cook import (
     devil_king_armed,
     reset_task,
     DevilKingArmed,
 )
-from src.BusinessLogicLayer.cluster.prism import Prism
+from BusinessLogicLayer.cluster.prism import Prism
 
 monkey.patch_all()
 
@@ -260,9 +260,9 @@ class CollectorScheduler(TasksScheduler):
             for id_, instance_ in runtime_state:
                 # 识别超时任务
                 is_timeout = (
-                    instance_["start-time"]
-                    + timedelta(seconds=instance_["running-limit"])
-                    < datetime.now()
+                        instance_["start-time"]
+                        + timedelta(seconds=instance_["running-limit"])
+                        < datetime.now()
                 )
                 if is_timeout:
                     try:
@@ -277,9 +277,9 @@ class CollectorScheduler(TasksScheduler):
                     except Exception as e:
                         logger.warning(f"ERROR <{instance_['name']}> --> {e}")
             if (
-                not self.is_running
-                and len(self.running_jobs) == 0
-                and self.workers.qsize() == 0
+                    not self.is_running
+                    and len(self.running_jobs) == 0
+                    and self.workers.qsize() == 0
             ):
                 self.scheduler.remove_job(job_id=self.echo_id)
                 self.echo()
@@ -335,9 +335,9 @@ class CollectorScheduler(TasksScheduler):
                 )
                 return False
         elif (
-            not self.is_running
-            and len(self.running_jobs) == 0
-            and self.workers.qsize() == 0
+                not self.is_running
+                and len(self.running_jobs) == 0
+                and self.workers.qsize() == 0
         ):
             # 迁移粘性任务，使用弹性协程生产实例
             if self.dt_extension() > 0:
@@ -431,9 +431,7 @@ class CollectorScheduler(TasksScheduler):
         is_synergy = bool(atomic.get("synergy"))
         # 假假地停一下
         if is_synergy:
-            atomic["hyper_params"]["beat_dance"] = (
-                self.running_jobs.__len__() + 1
-            ) * 1.7
+            atomic["hyper_params"]["beat_dance"] = (self.running_jobs.__len__() + 1) * 1.7
         # ================================================
         # [√] 生产运行实例 更新系统运行状态
         # ================================================
@@ -444,6 +442,10 @@ class CollectorScheduler(TasksScheduler):
             alice = devil_king_armed(atomic, assault=True, silence=True)
         # 初始化运行实例配置
         api = alice.set_spider_option()
+        # 内部异常捕获，延迟反射均摊运行风险
+        # 已知可反射的异常有：`chromedriver` PermissionException;
+        if not api:
+            self.overload.put_nowait(atomic)
         # 标记运行实例
         alice_id = api.session_id
         alice_name = alice.action_name
@@ -532,7 +534,7 @@ class CollaboratorScheduler(CollectorScheduler):
                     # 任务在忙
                     if self.workers.qsize() > self.power:
                         self.broadcast.to_inviter(context)
-                        logger.debug(
+                        logger.warning(
                             f"{self.collector_id} The local WorkerQueue is busy, "
                             f"and the pending tasks have been rejected."
                         )
@@ -540,24 +542,37 @@ class CollaboratorScheduler(CollectorScheduler):
                         continue
 
                     # 任务分流
-                    logger.debug(
+                    logger.success(
                         f"{self.collector_id} Load the remote message to be processed."
                     )
                     gevent.joinall([gevent.spawn(self._adaptor, context)])
                 # 获取过热任务
                 elif task.get("overload"):
                     context: dict = ast.literal_eval(task.get("overload"))
+                    if self.distributor.qsize() > self.power:
+                        self.broadcast.to_runner(context)
+                        logger.warning(
+                            f"{self.collector_id} The local WorkerQueue is busy, "
+                            f"and the pending tasks have been rejected."
+                        )
+                        time.sleep(60)
+                        continue
+
                     logger.debug(
                         f"{self.collector_id} [{self.distributor.qsize() + 1}/100]"
-                        f"Loading overheating task..."
+                        f"Loading overheating task."
+                        f" | action={context['name']}"
                     )
                     gevent.joinall([gevent.spawn(self._distribute, context)])
             # KeyboardInterrupt 回滚异常异常终端的消息
             except (KeyboardInterrupt,):
-                if context.get("atomic"):
-                    self.broadcast.to_inviter(context=context)
-                else:
-                    self.broadcast.to_runner(context=context)
+                try:
+                    if context.get("atomic"):
+                        self.broadcast.to_inviter(context=context)
+                    else:
+                        self.broadcast.to_runner(context=context)
+                except Exception as e:
+                    logger.error(f"{self.collector_id} Queue task rollback exception. {e}")
             except Exception as e:
                 logger.exception(e)
             # 任务结束后必须去除 PEL
@@ -575,7 +590,7 @@ class CollaboratorScheduler(CollectorScheduler):
         if not context.get(tracer):
             context[tracer] = self._runner["name"]
         if not self._runner["hook"].get(cookie):
-            self._runner["hook"].update({cookie: 0})
+            self._runner["hook"].update({cookie: 0, "hostname": hostname})
 
         # 重定向 register-url
         try:
@@ -589,16 +604,19 @@ class CollaboratorScheduler(CollectorScheduler):
                 self.broadcast.to_inviter(context=context)
                 logger.warning(
                     f"{self.collector_id} Reflex abnormal task."
-                    f" | {tracer}=[{context[tracer]}/{max_trace_num}] cookie=[{cookie}]"
+                    f" | hostname=`{hostname}`"
+                    f" | {tracer}={context[tracer]}[{self._runner['hook'][cookie]}/{max_trace_num}]"
                 )
             # 溯源消解
             else:
                 logger.error(
                     f"{self.collector_id} Remove anomalous tasks and coordination roots."
+                    f" | hostname=`{hostname}`"
                 )
-                self.mq.remove_bad_code(
-                    context.get("_type", ""), context.get("_hook", "")
-                )
+                # 将已加入 pool 的订阅移除
+                # self.mq.remove_bad_code(
+                #     context.get("_type", ""), context.get("_hook", "")
+                # )
             return False
 
         # 接续任务：重置任务id

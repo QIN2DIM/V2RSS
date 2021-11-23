@@ -77,9 +77,9 @@ except FileNotFoundError:
             fp.write(res_.content)
         terminal_echo("配置模板拉取成功,请重启项目", 1)
     except (
-        res_error.ConnectionError,
-        res_error.HTTPError,
-        res_error.RequestException,
+            res_error.ConnectionError,
+            res_error.HTTPError,
+            res_error.RequestException,
     ) as e_:
         terminal_echo("配置模板自动拉取失败，请检查本地网络", 0)
         print(f">>> error:{e_}")
@@ -155,9 +155,9 @@ ENABLE_REBOUND: bool = config_["ENABLE_REBOUND"]
 # 当某种链接的数量达到这个阈值则不会启动该类链接的采集任务
 # <Performance limit of 1xCPU 1GRAM VPS KVM>
 # Defaults type:int = 25
-# 个人使用 推荐SINGLE_TASK_CAP不超过3
+# 个人使用 推荐 SINGLE_TASK_CAP 不超过10
 # ---------------------------------------------------
-SINGLE_TASK_CAP: int = config_["SINGLE_TASK_CAP"]
+SINGLE_TASK_CAP: int = int(os.getenv("SINGLE_TASK_CAP", config_["SINGLE_TASK_CAP"]))
 
 # ---------------------------------------------------
 # TODO (√)DEPLOY_INTERVAL -- schedule任务间隔,单位秒（s）
@@ -345,6 +345,28 @@ if UAtheK1nG and len(UAtheK1nG.split("#")) == 4:
         REDIS_MASTER["db"] = 0 if not keys[-1] else int(keys[-1])
     except ValueError:
         REDIS_MASTER["db"] = 0
+
+# ---------------------------------------------------
+# 兼容 Docker Compose / k8s 覆盖 deploy 定时任务配置
+# ---------------------------------------------------
+INTERVAL_COLLECTOR: int = int(os.getenv("INTERVAL_COLLECTOR", 0))
+INTERVAL_OVERDUE: int = int(os.getenv("INTERVAL_OVERDUE", 0))
+INTERVAL_DECOUPLE: int = int(os.getenv("INTERVAL_DECOUPLE", 0))
+if INTERVAL_COLLECTOR:
+    ENABLE_DEPLOY["tasks"]["collector"] = True
+    LAUNCH_INTERVAL["collector"] = INTERVAL_COLLECTOR
+if INTERVAL_OVERDUE:
+    ENABLE_DEPLOY["tasks"]["ddt_overdue"] = True
+    LAUNCH_INTERVAL["ddt_overdue"] = INTERVAL_OVERDUE
+if INTERVAL_DECOUPLE:
+    ENABLE_DEPLOY["tasks"]["ddt_decouple"] = True
+    LAUNCH_INTERVAL["ddt_decouple"] = INTERVAL_DECOUPLE
+# ---------------------------------------------------
+# 兼容 Docker Compose Selenium-chrome 集线器端口
+# ---------------------------------------------------
+# COMMAND_EXECUTOR = f"http://127.0.0.1:{DOCKER_PORT}/wd/hub"
+# https://127.0.0.1:4444/wd/hub
+COMMAND_EXECUTOR = os.getenv("COMMAND_EXECUTOR")
 # ---------------------------------------------------
 
 # 主从反转

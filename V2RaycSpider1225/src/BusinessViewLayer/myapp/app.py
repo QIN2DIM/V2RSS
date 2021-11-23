@@ -2,8 +2,8 @@ __all__ = ["app"]
 
 from flask import request, Flask, jsonify, redirect
 
-from src.BusinessCentralLayer.setting import ROUTE_API
-from src.BusinessViewLayer.myapp.apis import (
+from BusinessCentralLayer.setting import ROUTE_API
+from BusinessViewLayer.myapp.apis import (
     apis_capture_subscribe,
     apis_version_manager,
     apis_get_subs_num,

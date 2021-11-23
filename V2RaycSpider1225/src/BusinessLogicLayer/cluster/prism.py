@@ -16,7 +16,7 @@ from selenium.common.exceptions import (
 )
 from selenium.webdriver.common.by import By
 
-from src.BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE_CACHE
+from BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE_CACHE
 from .master import ActionMasterGeneral
 
 

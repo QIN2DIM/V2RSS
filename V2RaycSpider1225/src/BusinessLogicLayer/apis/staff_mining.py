@@ -8,18 +8,18 @@ __all__ = ["staff_api"]
 
 import os
 
-from src.BusinessCentralLayer.setting import (
+from BusinessCentralLayer.setting import (
     logger,
     SERVER_DIR_DATABASE,
     CHROMEDRIVER_PATH,
 )
-from src.BusinessLogicLayer.utils.staff_mining import (
+from BusinessLogicLayer.utils.staff_mining import (
     StaffChecker,
     StaffCollector,
     IdentifyRecaptcha,
     StaffEntropyGenerator,
 )
-from src.BusinessLogicLayer.utils.staff_mining.common.exceptions import (
+from BusinessLogicLayer.utils.staff_mining.common.exceptions import (
     CollectorSwitchError,
     NoSuchWindowException,
 )

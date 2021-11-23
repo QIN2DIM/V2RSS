@@ -27,6 +27,10 @@ THIS_WALK = "."
 CHROMEDRIVER_UNZIP_PATH = "src/BusinessCentralLayer/chromedriver"
 
 
+def set_ubuntu_dev():
+    shell_echo("apt-get update && apt-get install -y gcc wget unzip")
+
+
 def set_google_chrome():
     # Google-chrome already exists in the current environment
     if shell_echo("google-chrome --version") == 0:
@@ -34,12 +38,12 @@ def set_google_chrome():
         # os.system("sudo rpm -e google-chrome-stable")
         return True
 
-    # installing Google Chrome on CentOS7
+    # installing Google Chrome on Ubuntu
     shell_echo(
-        "wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm >/dev/null"
+        "wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb >/dev/null"
     )
     shell_echo(
-        "sudo apt localinstall google-chrome-stable_current_x86_64.rpm >/dev/null"
+        "apt install ./google-chrome-stable_current_amd64.deb -y >/dev/null"
     )
 
 
@@ -98,10 +102,9 @@ def init_project():
 
 
 def run():
+    set_ubuntu_dev()
     set_google_chrome()
-
     set_chromedriver(CHROMEDRIVER_UNZIP_PATH)
-
     # 清理运行缓存
     init_project()
 

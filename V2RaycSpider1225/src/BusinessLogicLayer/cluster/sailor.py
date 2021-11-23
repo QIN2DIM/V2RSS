@@ -3,9 +3,9 @@ __all__ = ["manage_task"]
 
 import random
 
-from src.BusinessCentralLayer.middleware.redis_io import RedisClient
-from src.BusinessCentralLayer.middleware.work_io import Middleware
-from src.BusinessCentralLayer.setting import (
+from BusinessCentralLayer.middleware.redis_io import RedisClient
+from BusinessCentralLayer.middleware.work_io import Middleware
+from BusinessCentralLayer.setting import (
     CRAWLER_SEQUENCE,
     REDIS_SECRET_KEY,
     SINGLE_TASK_CAP,

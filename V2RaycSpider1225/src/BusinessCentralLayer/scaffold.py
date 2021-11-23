@@ -4,22 +4,24 @@ __all__ = ["Scaffold"]
 from gevent import monkey
 
 monkey.patch_all()
+import time
+import requests
 import csv
 import os
 import shutil
 import sys
 
-from src.BusinessCentralLayer.middleware.interface_io import SystemInterface
-from src.BusinessCentralLayer.middleware.subscribe_io import select_subs_to_admin
-from src.BusinessLogicLayer.apis.staff_mining import staff_api
-from src.BusinessLogicLayer.cluster.slavers import __entropy__
-from src.BusinessLogicLayer.plugins.accelerator import (
+from BusinessCentralLayer.middleware.interface_io import SystemInterface
+from BusinessCentralLayer.middleware.subscribe_io import select_subs_to_admin
+from BusinessLogicLayer.apis.staff_mining import staff_api
+from BusinessLogicLayer.cluster.slavers import __entropy__
+from BusinessLogicLayer.plugins.accelerator import (
     booster,
     SubscribesCleaner,
     SubscribeParser,
 )
-
-from src.BusinessCentralLayer.setting import (
+from BusinessLogicLayer.utils import build
+from BusinessCentralLayer.setting import (
     logger,
     DEFAULT_POWER,
     CHROMEDRIVER_PATH,
@@ -32,13 +34,14 @@ from src.BusinessCentralLayer.setting import (
     terminal_echo,
     SERVER_DIR_DATABASE_LOG,
     SERVER_DIR_SSPANEL_MINING,
+    COMMAND_EXECUTOR,
 )
 
 
 class _ConfigQuarantine:
     """系统环境诊断工具"""
 
-    def __init__(self):
+    def __init__(self, force: bool = False):
         self.root = [
             SERVER_DIR_CLIENT_DEPORT,
             SERVER_PATH_DEPOT_VCS,
@@ -46,6 +49,7 @@ class _ConfigQuarantine:
             SERVER_DIR_CACHE_BGPIC,
         ]
         self.flag = False
+        self.force = force
 
     def set_up_file_tree(self, root):
         """
@@ -67,7 +71,7 @@ class _ConfigQuarantine:
                         if child_ == SERVER_PATH_DEPOT_VCS:
                             try:
                                 with open(
-                                    child_, "w", encoding="utf-8", newline=""
+                                        child_, "w", encoding="utf-8", newline=""
                                 ) as fpx:
                                     csv.writer(fpx).writerow(["version", "title"])
                                 logger.success(f"系统文件链接成功->{child_}")
@@ -76,8 +80,31 @@ class _ConfigQuarantine:
                 except Exception as ep:
                     logger.exception(ep)
 
-    @staticmethod
-    def check_config(call_driver: bool = False):
+    def pending_selenium_hub(self, timeout: int = 120):
+        start_ = time.time()
+        while time.time() - start_ < timeout:
+            try:
+                session = requests.session()
+                response = session.get(COMMAND_EXECUTOR)
+                if response.status_code == 200:
+                    logger.success(f"<ConfigQuarantine> Status of Selenium Hub:OK"
+                                   f" | url={COMMAND_EXECUTOR}")
+                    return True
+                logger.warning(f"<ConfigQuarantine> Status of Selenium Hub:Pending"
+                               f" | status_code={response.status_code} url={COMMAND_EXECUTOR}")
+            except requests.exceptions.ConnectionError:
+                logger.debug(f"<ConfigQuarantine> Waiting for Selenium Hub deployment...")
+            except requests.exceptions.RequestException as e:
+                logger.error(f"<ConfigQuarantine> Attempt to reconnect Selenium Hub"
+                             f" | error={e}")
+            time.sleep(5)
+
+        logger.critical(f"<ConfigQuarantine> Invalid Selenium Hub operation object,"
+                        f"and the V2RSS process was refused to run."
+                        f" | url={COMMAND_EXECUTOR}")
+        self._exit()
+
+    def check_config(self, call_driver: bool = False):
         """
         检查用户配置是否残缺
         :param call_driver: 针对 ChromeDriver 配置情况的检查
@@ -97,12 +124,21 @@ class _ConfigQuarantine:
             logger.warning("您未正确配置<Redis-Slave> 本项目资源拷贝功能无法使用，但不影响系统正常运行。")
         if not all([REDIS_MASTER.get("host"), REDIS_MASTER.get("password")]):
             logger.error("您未正确配置<Redis-Master> 此配置为“云彩姬”的核心组件，请配置后重启项目！")
-            sys.exit()
+            self._exit()
 
         # 当需要调用的接口涉及到driver操作时抛出
-        if call_driver and not os.path.exists(CHROMEDRIVER_PATH):
+        if (
+                call_driver
+                and not os.path.exists(CHROMEDRIVER_PATH)
+                and not COMMAND_EXECUTOR
+        ):
             logger.error(chromedriver_not_found_error)
-            sys.exit()
+            self._exit()
+
+        # 检查 docker-compose/swarm 中关于 selenium-hub 的接口心跳
+        # 若 `status-code != 200`，则不允许程序运行
+        if COMMAND_EXECUTOR:
+            self.pending_selenium_hub()
 
     def run(self):
         """
@@ -120,7 +156,11 @@ class _ConfigQuarantine:
             if self.flag:
                 logger.success(">>> 运行环境链接完成，请重启项目")
                 logger.warning(">>> 提醒您正确配置Chrome及对应版本的ChromeDriver")
-                sys.exit()
+                self._exit()
+
+    def _exit(self):
+        if not self.force:
+            sys.exit()
 
 
 def within_error(flag_name: str, key_name: str, within_list: list):
@@ -164,6 +204,8 @@ class Scaffold:
 
         :return:
         """
+        # 配置工作环境
+        build.run()
         # 初始化工作目录
         self.cq.run()
 
@@ -172,7 +214,7 @@ class Scaffold:
     # ----------------------------------
 
     @staticmethod
-    def parse(subscribe: str, decode: bool = False):
+    def parse(subscribe: str, decode: bool = True):
         """
         解析订阅链接/节点分享链接。
 
@@ -292,25 +334,31 @@ class Scaffold:
 
         :return:
         """
-        from src.BusinessCentralLayer.middleware.redis_io import RedisClient
-
+        from BusinessCentralLayer.middleware.redis_io import RedisClient
         logger.info(f"<ScaffoldGuider> Ping || {RedisClient().test()}")
 
     @staticmethod
-    def spawn():
+    def spawn(join: bool = False):
         """
         并发执行本机所有采集器任务，每个采集器实体启动一次，并发数取决于本机硬件条件。
 
-        Usage: python main.py spawn
+        Usage: python main.py spawn 启动常规实例
+        or: python main.py spawn --join 启动 常规实例 + synergy 运行实例
 
+        :param join:
         :return:
         """
-        _ConfigQuarantine.check_config(call_driver=True)
+        _docker = (
+            __entropy__
+            if join
+            else [i for i in __entropy__ if not i["hyper_params"].get("co-invite")]
+        )
+        _ConfigQuarantine(force=bool(COMMAND_EXECUTOR)).check_config(call_driver=not bool(COMMAND_EXECUTOR))
         logger.info("<ScaffoldGuider> Spawn || MainCollector")
         # 剔除运行在 co-invite 模式的实例
         booster(
-            docker=[i for i in __entropy__ if not i["hyper_params"].get("co-invite")],
-            silence=True,
+            docker=_docker,
+            silence=False,
             power=DEFAULT_POWER,
             assault=True,
         )
@@ -364,7 +412,7 @@ class Scaffold:
 
         # 清除日志 ~/database/logs
         if os.path.exists(SERVER_DIR_DATABASE_LOG) and _permission["logs"].startswith(
-            "y"
+                "y"
         ):
             history_logs = os.listdir(SERVER_DIR_DATABASE_LOG)
             for _log_file in history_logs:
@@ -411,7 +459,7 @@ class Scaffold:
 
         Usage: python main.py server    以系统默认配置启动服务
         Usage: python main.py server --debug    以 debug 模式启动 flask
-        Usage: python main.py server --ip=6500 --port="localhost"   指定运行端口启动服务
+        Usage: python main.py server --host=6500 --port="localhost"   指定运行端口启动服务
 
         :param debug: 以 debug 模式启动 flask。注意，若配置文件中的 ENABLE_SERVER: False，此配置项无效。
         :param port: v2rss server 后端服务 (Flask) 的部署端口，默认 port=API_PORT(6500)
@@ -425,3 +473,51 @@ class Scaffold:
         """
         _ConfigQuarantine().run()
         SystemInterface.run(deploy_=True, port=port, host=host, debug=debug)
+
+    @staticmethod
+    def deploy(timer: bool = True, synergy: bool = True, collector: bool = False):
+        """
+        部署 V2RSS 后端服务。
+
+        本接口仅提供定时任务和协同任务的权限，若想部署对外接口服务，需要使用 scaffold.router()
+
+        Usage: python main.py deploy                部署服务，与 server 指令完全一致
+        or: python main.py deploy --synergy=False   禁用协同，不受理协同任务
+        or: python main.py deploy --timer=False     禁用定时任务
+
+        :param timer: 定时任务权限，默认开启。
+        :param collector: 采集器权限，默认关闭
+        :param synergy: 破冰船协同任务权限，默认开启
+        :return:
+        """
+        if collector is True:
+            timer = True
+        _ConfigQuarantine(force=True).run()
+        SystemInterface.run(
+            deploy_=True,
+            enable_flask=False,
+            enable_timed_task=timer,
+            enable_synergy=synergy
+        )
+
+    @staticmethod
+    def synergy():
+        _ConfigQuarantine(force=True).run()
+        SystemInterface.run(
+            deploy_=True,
+            enable_flask=False,
+            enable_timed_task=False,
+            enable_synergy=True
+        )
+
+    @staticmethod
+    def router(host="127.0.0.1", port=6500):
+        _ConfigQuarantine(force=True).run()
+        SystemInterface.run(
+            deploy_=True,
+            enable_flask=True,
+            enable_timed_task=False,
+            enable_synergy=False,
+            host=host,
+            port=port
+        )

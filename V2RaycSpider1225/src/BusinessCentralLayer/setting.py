@@ -38,12 +38,12 @@ from loguru import logger
 
 if "win" in sys.platform:
     CHROMEDRIVER_PATH = (
-        dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver.exe"
+            dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver.exe"
     )
     SERVER_DIR_PROJECT = dirname(dirname(__file__))
 else:
     CHROMEDRIVER_PATH = (
-        dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver"
+            dirname(dirname(__file__)) + "/BusinessCentralLayer/chromedriver"
     )
     SERVER_DIR_PROJECT = abspath(".")
 # 若不存在CHROMEDRIVER_PATH指定的路径则尝试从环境变量中查找chromedriver文件
@@ -149,7 +149,7 @@ PROTOCOL_FLAG = {
     "trojan-go": "trojan-go://",
     "xray": "vless://",
 }
-from src.config import *
+from config import *
 
 __all__ = [
     # =============================================
@@ -187,6 +187,7 @@ __all__ = [
     "PROXY_POOL",
     "ENABLE_PROXY",
     "PERMISSION_COLLABORATOR",
+    "COMMAND_EXECUTOR",
     # =============================================
     # system setting
     # =============================================

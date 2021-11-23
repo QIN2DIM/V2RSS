@@ -15,7 +15,7 @@ from uuid import uuid4
 
 from faker import Faker
 
-from src.BusinessCentralLayer.setting import (
+from BusinessCentralLayer.setting import (
     logger,
     REDIS_SECRET_KEY,
     CRAWLER_SEQUENCE,
@@ -156,7 +156,7 @@ def set_task2url_cache(task_name, register_url, subs):
     @param subs:
     @return:
     """
-    from src.BusinessCentralLayer.middleware.work_io import Middleware
+    from BusinessCentralLayer.middleware.work_io import Middleware
 
     docker = {
         urlparse(register_url).netloc: {
@@ -207,7 +207,7 @@ def pop_subs_to_admin(class_: str):
     @return:
     """
     logger.debug("<SuperAdmin> -- 获取订阅")
-    from src.BusinessLogicLayer.cluster.sailor import manage_task
+    from BusinessLogicLayer.cluster.sailor import manage_task
 
     try:
         # 获取该类型订阅剩余链接

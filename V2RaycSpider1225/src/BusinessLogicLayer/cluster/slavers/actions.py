@@ -143,19 +143,6 @@ ActionUUCloud = {
     "hyper_params": {"ssr": False, "v2ray": True},
     "email": "@gmail.com",
 }
-# =============================================
-# ActionSuFeiCloud
-# - change log:
-#   -2020-06-16 可用流量1024MB不满足标准
-# =============================================
-ActionSuFeiCloud = {
-    "name": "ActionSuFeiCloud",
-    "register_url": "https://www.dagewokuaitule.icu/auth/register",
-    "life_cycle": 2,
-    "anti_slider": True,
-    "hyper_params": {"ssr": True, "v2ray": True},
-    "email": "@gmail.com",
-}
 
 # =============================================
 # ActionMiTaoCloud
@@ -170,20 +157,7 @@ ActionMiTaoCloud = {
     "hyper_params": {"ssr": False, "v2ray": True},
     "email": "@gmail.com",
 }
-# =============================================
-# ActionReCloud
-# - intro: 1day 10G
-# - change log:
-#   -
-# =============================================
-ActionReCloud = {
-    "name": "ActionReCloud",
-    "register_url": "https://www.rerere.xyz/auth/register",
-    "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True},
-    "email": "@gmail.com",
-}
+
 # =============================================
 # ActionMxCloud
 # - change log:
@@ -296,27 +270,6 @@ Action7ccCloud = {
     "email": "@qq.com",
 }
 # =============================================
-# ActionPPCloud
-# - change log:
-#   -2021-07-18 [Create] 更新实例
-# =============================================
-ActionPPForV2rayCloud = {
-    "name": "ActionPPForV2rayCloud",
-    "register_url": "https://www.ppyun.fun/auth/register",
-    "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True},
-    "email": "@gmail.com",
-}
-ActionPPForSSRCloud = {
-    "name": "ActionPPForSSRCloud",
-    "register_url": "https://www.ppyun.fun/auth/register",
-    "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": True, "v2ray": False},
-    "email": "@gmail.com",
-}
-# =============================================
 # ActionAaxCloud
 # - change log:
 #   -2021-07-18 [Create] 更新实例
@@ -363,7 +316,7 @@ ActionMaoQCloud = {
 # =============================================
 ActionZZCloud = {
     "name": "ActionZZCloud",
-    "register_url": "https://zz12.xyz/auth/register",
+    "register_url": "http://zhuzhu12.xyz/auth/register",
     "life_cycle": 6,
     "anti_slider": False,
     "hyper_params": {"ssr": False, "v2ray": True},
@@ -380,7 +333,7 @@ ActionAzIcoCloud = {
     "register_url": "https://azi.azzico.cc/auth/register",
     "life_cycle": 1,
     "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
     "email": "@gmail.com",
 }
 # =============================================
@@ -396,18 +349,118 @@ ActionKuaiZaiCloud = {
     "hyper_params": {"ssr": True, "v2ray": False},
     "email": "@gmail.com",
 }
+# =============================================
+# ActionHuoXingCloud
+# - change log:
+#   -2021-11-18 [Create] 更新实例
+#   -2021-11-18 [1day 1G + 100 * 2G co-invite]
+# =============================================
+ActionHuoXingCloud = {
+    "name": "ActionHuoXingCloud",
+    "register_url": "https://wolaile.icu/auth/register",
+    "life_cycle": 1,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "email": "@gmail.com",
+}
+# =============================================
+# ActionJcBbCloud
+# - change log:
+#   -2021-11-18 [Create] 更新实例
+#   -2021-11-18 [1day 0G + 30 * 2 co-invite]
+# =============================================
+ActionJcBbCloud = {
+    "name": "ActionJcBbCloud",
+    "register_url": "https://www.jcbb.xyz/auth/register",
+    "life_cycle": 1,
+    "anti_slider": False,
+    "hyper_params": {"ssr": True, "v2ray": False, "co-invite": 10},
+    "email": "@qq.com",
+}
+# =============================================
+# ActionMfCloud
+# - change log:
+#   -2021-11-18 [Create] 更新实例
+#   -2021-11-18 [14day 60G + 10 * 2 co-invite]
+# =============================================
+ActionMfCloud = {
+    "name": "ActionMfCloud",
+    "register_url": "https://mfcloud.host/auth/register",
+    "life_cycle": 14,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
+}
+# =============================================
+# ActionPPCloud
+# - change log:
+#   - 2021-07-18 [Create] 更新实例
+#   - 2021-11-19 [1day 1G + 10 * 20G co-invite]
+# =============================================
+ActionPPCloud = {
+    "name": "ActionPPCloud",
+    "register_url": "https://www.ppyun.fun/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 3},
+    "email": "@gmail.com",
+}
+# =============================================
+# ActionSuFeiCloud
+# - change log:
+#   - 2020-06-16 可用流量1024MB不满足标准
+#   - 2021-11-19 [2day 1G + 10 * 2G = 20G]
+# =============================================
+ActionSuFeiCloud = {
+    "name": "ActionSuFeiCloud",
+    "register_url": "https://www.sufeiyun.icu/auth/register",
+    "life_cycle": 2,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "email": "@gmail.com",
+}
+# =============================================
+# ActionReCloud
+# - intro: 1day 10G
+# - change log:
+#   - 2021-11-19 [1day 0G + 10 * 5G co-invite]
+# =============================================
+ActionReCloud = {
+    "name": "ActionReCloud",
+    "register_url": "https://www.reoen.top/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 6},
+    "email": "@gmail.com",
+}
+# =============================================
+# ActionGiraffeCloud
+# - change log:
+#   - 2021-11-19 [2day 10G + 10 * 2G co-invite]
+# =============================================
+ActionGiraffeCloud = {
+    "name": "ActionGiraffeCloud",
+    "register_url": "https://www.gftech.cc/auth/register",
+    "life_cycle": 2,
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5, "usr_email": True},
+    "email": "@gmail.com",
+}
 __entropy__ = [
     # ---------------------
     # [启动] 无障碍
     # ---------------------
     # ActionAaxCloud,  # v2ray [1day 10G]
     ActionZZCloud,  # v2ray [6day 100G]
-    ActionAzIcoCloud,  # v2ray [1day 2G + 1000 * 2 co-invite]
+    ActionAzIcoCloud,  # v2ray [1day 2G + 1000 * 2G co-invite]
+    ActionHuoXingCloud,  # v2ray [1day 1G + 100 * 2G co-invite]
+    ActionGiraffeCloud,  # v2ray [2day 10G + 10 * 2G co-invite]
     # ---------------------
     # [启动] 需要滑动验证
     # ---------------------
-    ActionDuosCloud,  # v2ray [1day co-invite 3 * 10 = 30G]
-    ActionKakCloud,  # v2ray [1day co-invite 3 * 10 = 30G]
+    ActionReCloud,  # v2ray [1day 0G + 10 * 5G co-invite]
+    ActionSuFeiCloud,  # v2ray [2day 1G + 10 * 2G co-invite]
+    ActionPPCloud,  # v2ray [1day 2G + 10 * 20G co-invite]
     # ---------------------
     # [停用] 公益节点
     # ---------------------
@@ -418,6 +471,8 @@ __entropy__ = [
     # Action7ccCloud,
     # ActionHuoJianCloud,
     # ActionKuaiZaiCloud,  # ssr [30day 500G]
+    # ActionMfCloud,  # v2ray [14day 60G + 10 * 2 co-invite]
+    # ActionJcBbCloud,  # ssr [1day 0G + 30 * 2 co-invite]
 
     # -->GoogleCAPTHCA
     # ActionGsouCloud,
@@ -425,6 +480,7 @@ __entropy__ = [
     # [停用] 未达标
     # ---------------------
     # 流量不达标
+    # ActionDuosCloud,  # v2ray [1day co-invite 1 * 10 = 10G]
     # ActionWgCloud, # [v2ray] [1day 2G + non co-invite]
     # ActionJdSuCloud, # [v2ray] [1day 500M + 0.1G/co-invite]
     # ActionJssForV2rayCloud,  # [v2ray] [1day 2G + non co-invite]
@@ -441,15 +497,14 @@ __entropy__ = [
     # ---------------------
     # 域名过期
     # ActionN95Cloud,
-    # ActionSuFeiCloud,
     # ActionZuiSuCloud,
     # 拒绝注册
     # ActionOhrCloud,
     # 站点瘫痪
-    # ActionPPForV2rayCloud,  # v2ray 1day2G
     # ActionMaoQCloud,
+    # ActionKakCloud,  # v2ray [1day co-invite 3 * 10 = 30G]
+
     # 跑路
-    # ActionReCloud,  # v2ray 1day10G
     # ActionJfCloud,
     # ActionUUCloud,
     # ActionJs8cCloud,

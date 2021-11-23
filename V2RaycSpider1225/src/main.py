@@ -6,7 +6,7 @@
 
 import fire
 
-from src.BusinessCentralLayer.scaffold import Scaffold
+from BusinessCentralLayer.scaffold import Scaffold
 
 if __name__ == "__main__":
     fire.Fire(Scaffold)

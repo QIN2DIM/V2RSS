@@ -7,7 +7,7 @@ import os
 import requests
 import yaml
 
-from src.BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE_CACHE
+from BusinessCentralLayer.setting import logger, SERVER_DIR_DATABASE_CACHE
 
 
 class _ClashAdaptationInterface:

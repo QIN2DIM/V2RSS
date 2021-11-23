@@ -3,7 +3,7 @@
     - “解压”与实例化采集器管理模块
     - 加速器性能释放
 """
-from src.BusinessCentralLayer.setting import logger, DEFAULT_POWER
+from BusinessCentralLayer.setting import logger, DEFAULT_POWER
 from .core import CoroutineSpeedup
 
 

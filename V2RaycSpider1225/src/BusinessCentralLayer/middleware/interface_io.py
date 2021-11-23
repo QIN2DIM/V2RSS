@@ -5,7 +5,7 @@ import sys
 
 from redis.exceptions import ConnectionError
 
-from src.BusinessCentralLayer.setting import (
+from BusinessCentralLayer.setting import (
     REDIS_SECRET_KEY,
     CRAWLER_SEQUENCE,
     SINGLE_TASK_CAP,
@@ -19,14 +19,14 @@ from src.BusinessCentralLayer.setting import (
     LAUNCH_INTERVAL,
     PERMISSION_COLLABORATOR,
 )
-from src.BusinessLogicLayer.cluster import sailor, slavers
-from src.BusinessLogicLayer.deploy import (
+from BusinessLogicLayer.cluster import sailor, slavers
+from BusinessLogicLayer.deploy import (
     TasksScheduler,
     CollectorScheduler,
     CollaboratorScheduler,
 )
-from src.BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
-from src.BusinessViewLayer.myapp.app import app
+from BusinessLogicLayer.plugins.accelerator import SubscribesCleaner
+from BusinessViewLayer.myapp.app import app
 from .redis_io import RedisClient
 
 # ----------------------------------------
@@ -47,6 +47,7 @@ class _ContainerDegradation:
         """config配置参数一次性读取之后系统不再响应配置变动，修改参数需要手动重启项目"""
         # 热加载配置文件 载入越权锁
         self.deploy_cluster, self.cap = CRAWLER_SEQUENCE, SINGLE_TASK_CAP
+        self.rc = RedisClient()
 
     @staticmethod
     def sync_launch_interval() -> dict:
@@ -79,16 +80,18 @@ class _ContainerDegradation:
     def startup_ddt_decouple(debug: bool = False, power: int = 12):
         SubscribesCleaner(debug=debug).interface(power=power)
 
-    def startup_ddt_overdue(self, task_name: str = None):
-        if task_name is None:
-            for new_task in self.deploy_cluster:
-                RedisClient().refresh(
-                    key_name=REDIS_SECRET_KEY.format(new_task), cross_threshold=3
-                )
-        else:
-            RedisClient().refresh(
-                key_name=REDIS_SECRET_KEY.format(task_name), cross_threshold=3
+    def startup_ddt_overdue(self):
+        dashboard = {}
+        for new_task in self.deploy_cluster:
+            key_remain = self.rc.refresh(
+                key_name=REDIS_SECRET_KEY.format(new_task), cross_threshold=3
             )
+            dashboard[new_task] = key_remain
+        logger.debug(
+            "<RemotePool | SpawnRhythm> {}".format(
+                " ".join([f"{i[0]}[{i[-1]}]" for i in dashboard.items()])
+            )
+        )
 
     def startup_collector(self):
         """
@@ -234,7 +237,7 @@ class _SystemEngine:
 
         # FIXME 节拍同步
         if not beat_sync:
-            from src.BusinessCentralLayer.middleware.subscribe_io import (
+            from BusinessCentralLayer.middleware.subscribe_io import (
                 FlexibleDistributeV0,
             )
 
@@ -248,19 +251,26 @@ class _SystemEngine:
         logger.success("<Gevent>任务结束")
 
     @staticmethod
-    def startup(**kwargs) -> None:
+    def startup(
+            enable_timed_task: bool = None,
+            enable_flask: bool = None,
+            enable_synergy: bool = None,
+            **kwargs) -> None:
+
+        enable_flask = ENABLE_SERVER if enable_flask is None else enable_flask
+        enable_timed_task = ENABLE_DEPLOY["global"] if enable_timed_task is None else enable_timed_task
+        enable_synergy = PERMISSION_COLLABORATOR if enable_synergy is None else enable_synergy
         process_list = []
         try:
             # 部署定时任务
-            if ENABLE_DEPLOY["global"]:
+            if enable_timed_task:
                 process_list.append(
                     multiprocessing.Process(
                         target=_SystemEngine.run_timed_task, name="deploymentTimingTask"
                     )
                 )
-
             # 部署 flask
-            if ENABLE_SERVER:
+            if enable_flask:
                 process_list.append(
                     multiprocessing.Process(
                         target=_SystemEngine.run_server,
@@ -269,7 +279,7 @@ class _SystemEngine:
                     )
                 )
             # 协同订阅任务
-            if PERMISSION_COLLABORATOR:
+            if enable_synergy:
                 process_list.append(
                     multiprocessing.Process(
                         target=_SystemEngine.run_collaborative_task,
@@ -305,21 +315,14 @@ class SystemInterface:
         该接口用于开启panel桌面前端
         @return:
         """
-        from src.BusinessViewLayer.panel.panel import PaneInterfaceIO
+        from BusinessViewLayer.panel.panel import PaneInterfaceIO
 
         v2raycs = PaneInterfaceIO()
         v2raycs.home_menu()
 
     @staticmethod
-    def ddt(task_name: str = None):
-        if not task_name:
-            _cd.startup_ddt_overdue()
-        elif not (isinstance(task_name, str) and task_name in CRAWLER_SEQUENCE):
-            logger.warning(
-                "<Interface>传入的参数（task_name）不合法，任务类型必须被指定在CRAWLER_SEQUENCE之中"
-            )
-        else:
-            _cd.startup_ddt_overdue(task_name)
+    def ddt():
+        _cd.startup_ddt_overdue()
 
     @staticmethod
     def subs_ddt(debug: bool = True, power: int = 12):
@@ -327,14 +330,18 @@ class SystemInterface:
 
     @staticmethod
     def run(
-        deploy_: bool = None, beat_sync: bool = True, force_run: bool = None, **kwargs
+            deploy_: bool = None,
+            beat_sync: bool = True,
+            force_run: bool = None,
+            **kwargs
     ) -> None:
         """
-        主程序入口
-        @param force_run:以debug身份强制运行采集器
-        @param beat_sync:节拍同步
-        @param deploy_: 部署 定时任务+flask web API
-        @return:
+
+        :param deploy_:
+        :param beat_sync:
+        :param force_run:
+        :param kwargs:
+        :return:
         """
 
         # 部署定时任务

@@ -5,7 +5,7 @@ from typing import List, Tuple
 
 import redis
 
-from src.BusinessCentralLayer.setting import (
+from BusinessCentralLayer.setting import (
     REDIS_MASTER,
     REDIS_SECRET_KEY,
     TIME_ZONE_CN,
@@ -95,14 +95,14 @@ class RedisClient:
                     return False
                 # 关联解除
                 finally:
-                    from src.BusinessCentralLayer.middleware.subscribe_io import detach
+                    from BusinessCentralLayer.middleware.subscribe_io import detach
 
                     detach(self.sub_link, beat_sync=True)
         finally:
             # 关闭连接
             self.kill()
 
-    def refresh(self, key_name: str, cross_threshold: int = None) -> None:
+    def refresh(self, key_name: str, cross_threshold: int = None) -> int:
         """
         原子级链接池刷新，一次性删去所有过期的key_name subscribe
         @param cross_threshold: 越过阈值删除订阅
@@ -111,23 +111,12 @@ class RedisClient:
         """
 
         docker: dict = self.db.hgetall(key_name)
-        # 管理员指令获取的链接
-        if self.get_len(key_name) != 0:
+        if docker:
             for subscribe, end_life in docker.items():
                 if self.is_stale(end_life, cross_threshold):
                     logger.debug(f"del-({key_name})--{subscribe}")
                     self.db.hdel(key_name, subscribe)
-            logger.success(
-                "<{}> UPDATE - {}({})".format(
-                    self.__class__.__name__, key_name, self.get_len(key_name)
-                )
-            )
-        else:
-            logger.warning(
-                "<{}> EMPTY - {}({})".format(
-                    self.__class__.__name__, key_name, self.get_len(key_name)
-                )
-            )
+        return self.get_len(key_name)
 
     @staticmethod
     def is_stale(subs_expiration_time: str, beyond: int = None) -> bool:
@@ -176,7 +165,7 @@ class RedisClient:
 
     def test(self) -> str:
         if self.db.ping():
-            return "欢迎使用v2ray云彩姬"
+            return "欢迎使用V2RSS云彩姬"
 
     def get_driver(self) -> redis.StrictRedis:
         return self.db
@@ -240,7 +229,7 @@ class RedisDataDisasterTolerance(RedisClient):
     def __init__(self):
         super(RedisDataDisasterTolerance, self).__init__()
 
-        from src.BusinessCentralLayer.setting import REDIS_SLAVER_DDT
+        from BusinessCentralLayer.setting import REDIS_SLAVER_DDT
 
         if not REDIS_SLAVER_DDT.get("host"):
             logger.warning("未设置数据容灾服务器，该职能将由Master执行")
