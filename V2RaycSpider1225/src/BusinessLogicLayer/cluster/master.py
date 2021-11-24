@@ -914,9 +914,9 @@ class ActionMasterGeneral(BaseAction):
         # 获取配置信息
         co_invite = self.hyper_params["co-invite"]
 
-        # 拟合协同实例数量
+        # 计算协同实例数量
         if isinstance(co_invite, int):
-            gain = 1 if co_invite < 1 or co_invite > 30 else co_invite
+            gain = 1 if co_invite < 1 or co_invite > 10 else co_invite
         else:
             gain = 1
 

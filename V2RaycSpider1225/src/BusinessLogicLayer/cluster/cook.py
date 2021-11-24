@@ -7,7 +7,7 @@
 __all__ = ["ActionShunt", "devil_king_armed", "reset_task", "DevilKingArmed"]
 
 from loguru import logger
-from requests import HTTPError
+from requests import HTTPError, ConnectionError
 from selenium.common.exceptions import (
     TimeoutException,
     WebDriverException,
@@ -93,18 +93,18 @@ class ActionShunt:
 
 class DevilKingArmed(ActionMasterGeneral):
     def __init__(
-        self,
-        register_url,
-        chromedriver_path,
-        silence: bool = True,
-        assault: bool = False,
-        beat_sync: bool = True,
-        email: str = None,
-        life_cycle: int = None,
-        anti_slider: bool = False,
-        hyper_params: dict = None,
-        action_name: str = None,
-        debug: bool = False,
+            self,
+            register_url,
+            chromedriver_path,
+            silence: bool = True,
+            assault: bool = False,
+            beat_sync: bool = True,
+            email: str = None,
+            life_cycle: int = None,
+            anti_slider: bool = False,
+            hyper_params: dict = None,
+            action_name: str = None,
+            debug: bool = False,
     ):
         super(DevilKingArmed, self).__init__(
             register_url=register_url,
@@ -142,8 +142,8 @@ class DevilKingArmed(ActionMasterGeneral):
             logger.exception(e)
         except WebDriverException as e:
             logger.warning(e)
-        except (HTTPError, ConnectionRefusedError, ConnectionResetError):
-            pass
+        except (HTTPError, ConnectionError, ConnectionRefusedError, ConnectionResetError):
+            raise ConnectionError
         except Exception as e:
             logger.warning(f">>> Exception <{self.action_name}> -- {e}")
         finally:

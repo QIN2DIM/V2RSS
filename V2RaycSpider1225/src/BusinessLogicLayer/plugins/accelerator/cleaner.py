@@ -78,7 +78,10 @@ class SubscribesCleaner(CoroutineSpeedup):
                 terminal_echo(
                     f"valid -- {node_info['subs']} -- {len(node_info['nodes'])}", 1
                 )
-        except (UnicodeDecodeError, TypeError) as e:
+        except TypeError:
+            terminal_echo(f"denial -- {sub_info[0]} -- "
+                          f"You need to use a proxy to make a request to this link", 0)
+        except UnicodeDecodeError as e:
             # 对于已标记“解析错误”的订阅 更新其请求次数
             if self.temp_cache.get(sub_info[0]):
                 self.temp_cache[sub_info[0]] += 1
@@ -126,7 +129,7 @@ class SubscribeParser:
         # 订阅类型
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.53",
+                          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36 Edg/88.0.705.53",
         }
         # 流量不通过系统代理
         proxies = {"http": None, "https": None}

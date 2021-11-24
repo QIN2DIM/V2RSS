@@ -59,26 +59,31 @@ def action(register_url: str = None, share_type="v2ray", output_path_csv=None):
         pass
 
 
-def middleware():
+def launcher():
     while not runtime_queue.empty():
         url = runtime_queue.get_nowait()
         action(url, SERVICE_TYPE, DEFAULT_HEAP)
 
 
-def demo_with_gevent(auto_start=True):
+def demo_with_gevent(auto_start=True, get_sample=True):
+
     # Get demo sites.
-    data_set = preload(get_sample=False)
+    data_set = preload(get_sample)
 
-    # Tasks Offload.
-    for url in data_set:
-        runtime_queue.put_nowait(url)
+    if get_sample:
+        action(data_set, SERVICE_TYPE, DEFAULT_HEAP)
+    else:
+        # Tasks Offload.
+        for url in data_set:
+            runtime_queue.put_nowait(url)
 
-    # Tasks Overload.
-    task_container = []
-    for _ in range(RUNTIME_POWER):
-        task = gevent.spawn(middleware)
-        task_container.append(task)
-    gevent.joinall(task_container)
+        # Tasks Overload.
+        task_container = []
+        power_ = data_set.__len__() if RUNTIME_POWER > data_set.__len__() else RUNTIME_POWER
+        for _ in range(power_):
+            task = gevent.spawn(launcher)
+            task_container.append(task)
+        gevent.joinall(task_container)
 
     # Open report file.
     if auto_start:

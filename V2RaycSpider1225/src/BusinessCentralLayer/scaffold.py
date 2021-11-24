@@ -221,9 +221,10 @@ class Scaffold:
         返回订阅链接所映射的可用节点数及详细订阅信息。
 
         Usage: python main.py parse --url=[<URL>]
-        Usage: python main.py parse [<URL>]
-        Usage: python main.py parse '[<URL>]'       当链接存在 & 符号时用引号将链接框起来
-        Usage: python main.py parse [<URL>] --decode        启动 BASE64 自动解码程序，返回节点明文数据
+        or: python main.py parse [<URL>]
+        or: python main.py parse "[<URL>]"       当链接存在 & 符号时用引号将链接框起来
+        or: python main.py parse [<URL>] --decode        启动 BASE64 自动解码程序，返回节点明文数据，默认开启。
+
         :param decode: 解析订阅时进行自动 BASE64 解码
         :param subscribe: 需要解析的订阅链接
         :return:
@@ -319,10 +320,10 @@ class Scaffold:
         """
         for i, host_ in enumerate(__entropy__):
             print(f">>> [{i + 1}/{__entropy__.__len__()}]{host_['name']}")
-            print(f"注册链接: {host_['register_url']}")
+            print(f"注入地址: {host_['register_url']}")
             print(f"存活周期: {host_['life_cycle']}天")
             print(
-                f"采集类型: {'&'.join([f'{j[0].lower()}' for j in host_['hyper_params'].items() if j[-1]])}\n"
+                f"运行参数: {', '.join([f'{j[0].lower()}={j[-1]}' for j in host_['hyper_params'].items() if j[-1]])}\n"
             )
 
     @staticmethod
@@ -338,27 +339,36 @@ class Scaffold:
         logger.info(f"<ScaffoldGuider> Ping || {RedisClient().test()}")
 
     @staticmethod
-    def spawn(join: bool = False):
+    def spawn(join: bool = False, explicit=False):
         """
         并发执行本机所有采集器任务，每个采集器实体启动一次，并发数取决于本机硬件条件。
 
         Usage: python main.py spawn 启动常规实例
-        or: python main.py spawn --join 启动 常规实例 + synergy 运行实例
+        or: python main.py spawn --join 启动 synergy 运行实例（也即启动所有运行实例）
+        or: python main.py spawn --explicit 显式启动。这在 linux 系统被中禁止使用
 
+        :param explicit: 显式启动 默认为 False
         :param join:
         :return:
         """
+        # 静默/显示启动参数调整
+        silence = True if "linux" in sys.platform else not bool(explicit)
+
+        # 根据 join 参数调整相应的运行实例队列
         _docker = (
             __entropy__
             if join
             else [i for i in __entropy__ if not i["hyper_params"].get("co-invite")]
         )
+
+        # 检查运行配置
         _ConfigQuarantine(force=bool(COMMAND_EXECUTOR)).check_config(call_driver=not bool(COMMAND_EXECUTOR))
+
+        # 生产运行实例
         logger.info("<ScaffoldGuider> Spawn || MainCollector")
-        # 剔除运行在 co-invite 模式的实例
         booster(
             docker=_docker,
-            silence=False,
+            silence=silence,
             power=DEFAULT_POWER,
             assault=True,
         )
@@ -444,6 +454,17 @@ class Scaffold:
                         terminal_echo(f"清除运行缓存-->{_file}", 3)
             terminal_echo("系统缓存文件清理完毕", 1)
 
+    @staticmethod
+    def clean():
+        """
+        清理系统运行缓存，同 clear
+
+        Usage: python main.py clean
+
+        :return:
+        """
+        return Scaffold.clear()
+
     # ----------------------------------
     # Backend service interface
     # ----------------------------------
@@ -458,8 +479,8 @@ class Scaffold:
             - ENABLE_DEPLOY     各种定时任务的开关
 
         Usage: python main.py server    以系统默认配置启动服务
-        Usage: python main.py server --debug    以 debug 模式启动 flask
-        Usage: python main.py server --host=6500 --port="localhost"   指定运行端口启动服务
+        or: python main.py server --debug    以 debug 模式启动 flask
+        or: python main.py server --host=6500 --port="localhost"   指定运行端口启动服务
 
         :param debug: 以 debug 模式启动 flask。注意，若配置文件中的 ENABLE_SERVER: False，此配置项无效。
         :param port: v2rss server 后端服务 (Flask) 的部署端口，默认 port=API_PORT(6500)
@@ -479,9 +500,11 @@ class Scaffold:
         """
         部署 V2RSS 后端服务。
 
-        本接口仅提供定时任务和协同任务的权限，若想部署对外接口服务，需要使用 scaffold.router()
+        - 本接口仅提供定时任务和协同任务的权限，若想部署对外接口服务，需要使用 scaffold.router()
+        - 部署多机后端服务推荐使用 python main.py deploy --synergy=False 解耦服务，也既使用该指令部署采集器，
+        使用其他物理机部署 synergy 协同任务，除非服务器性能卓越，否则不推荐将 synergy 和 collector 放在同一个物理机上运行
 
-        Usage: python main.py deploy                部署服务，与 server 指令完全一致
+        Usage: python main.py deploy                部署服务，默认开启 运行协同 和 定时采集
         or: python main.py deploy --synergy=False   禁用协同，不受理协同任务
         or: python main.py deploy --timer=False     禁用定时任务
 
@@ -502,6 +525,14 @@ class Scaffold:
 
     @staticmethod
     def synergy():
+        """
+        部署 V2RSS 协同任务
+
+        - 本接口运行的服务仅执行 synergy 任务
+        - 也即运行此任务的物理机无需更新 action.py 配置队列，任务上下文信息由上游 deploy-collector 对象动态分发
+
+        :return:
+        """
         _ConfigQuarantine(force=True).run()
         SystemInterface.run(
             deploy_=True,
@@ -512,6 +543,15 @@ class Scaffold:
 
     @staticmethod
     def router(host="127.0.0.1", port=6500):
+        """
+        部署 V2RSS 接口服务
+
+        - 运行 V2RSS 对外接口服务，使用 http 通信。推荐使用其他外部服务（如 nginx，bot）从 `127.0.0.1` 转发信息流。
+
+        :param host:
+        :param port:
+        :return:
+        """
         _ConfigQuarantine(force=True).run()
         SystemInterface.run(
             deploy_=True,

@@ -188,9 +188,10 @@ ActionGsouCloud = {
 # ActionDuosCloud
 # - intro: 1day 10G
 # - change log:
-#   -2021.07.14 [停用]流量不达标
-#   -2021.08.04 [启用]
-#   -2021.10.29 # 1day co-invite 3 * 10 = 30G
+#   - 2021.07.14 [停用]流量不达标
+#   - 2021.08.04 [启用]
+#   - 2021.10.29 [1day co-invite 3 * 10 = 30G]
+#   - 2021-11-24 [1day co-invite 1 * 10 = 10G]
 # =============================================
 ActionDuosCloud = {
     "name": "ActionDuosCloud",
@@ -446,68 +447,135 @@ ActionGiraffeCloud = {
     "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5, "usr_email": True},
     "email": "@gmail.com",
 }
+# =============================================
+# ActionXiaoCloud
+# - change log:
+#   -2021-11-24 [Create] 更新实例
+#   -2021-11-24 [1day 1G + 10 * 0.01G co-invite]
+# =============================================
+ActionXiaoCloud = {
+    "name": "ActionXiaoCloud",
+    "register_url": "https://www.xiaoxiaoyun.xyz/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True},
+    "email": "@gmail.com",
+}
+# =============================================
+# ActionGoGoCloud
+# - change log:
+#   - 2021-11-24 [Create]
+#   - 2021-11-24 [1day 10G + 10 * 2G co-invite]
+# =============================================
+ActionGoGoCloud = {
+    "name": "ActionGoGoCloud",
+    "register_url": "https://gogo.bid/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "email": "@gmail.com",
+}
+# =============================================
+# ActionViCloud
+# - change log:
+#   - 2021-11-24 [Create]
+#   - 2021-11-24 [2day 1G + 10 * 2G co-invite]
+# =============================================
+ActionViCloud = {
+    "name": "ActionViCloud",
+    "register_url": "https://www.viyun.pw/auth/register",
+    "life_cycle": 2,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
+    "email": "@gmail.com",
+}
+# =============================================
+# ActionLittleCloud
+# - change log:
+#   - 2021-11-24 [Create]
+#   - 2021-11-24 [1day 10G + 10 * 5G co-invite]
+# =============================================
+ActionLittleCloud = {
+    "name": "ActionLittleCloud",
+    "register_url": "https://littleq.me/auth/register",
+    "life_cycle": 1,
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 6},
+    "email": "@gmail.com",
+}
 __entropy__ = [
-    # ---------------------
+    # ------------------------------------------
     # [启动] 无障碍
-    # ---------------------
-    # ActionAaxCloud,  # v2ray [1day 10G]
-    ActionZZCloud,  # v2ray [6day 100G]
-    ActionAzIcoCloud,  # v2ray [1day 2G + 1000 * 2G co-invite]
-    ActionHuoXingCloud,  # v2ray [1day 1G + 100 * 2G co-invite]
-    ActionGiraffeCloud,  # v2ray [2day 10G + 10 * 2G co-invite]
-    # ---------------------
+    # ------------------------------------------
+    ActionZZCloud,  # v2ray 6day 100G
+    ActionGiraffeCloud,  # v2ray 2day 20G=(10'+5*2')G
+
+    # ActionAzIcoCloud,  # v2ray 1day 12G=(2'+5*2')G
+    # ActionHuoXingCloud,  # v2ray 1day 11G=(1'+5*2')G
+    # ActionAaxCloud,  # v2ray 1day 10G
+
+    # ------------------------------------------
     # [启动] 需要滑动验证
-    # ---------------------
-    ActionReCloud,  # v2ray [1day 0G + 10 * 5G co-invite]
-    ActionSuFeiCloud,  # v2ray [2day 1G + 10 * 2G co-invite]
-    ActionPPCloud,  # v2ray [1day 2G + 10 * 20G co-invite]
-    # ---------------------
+    # ------------------------------------------
+    ActionViCloud,  # v2ray 2day 30G=(10'+10*2')G
+    ActionPPCloud,  # v2ray 1day 62G=(2'+3*20')G
+    ActionLittleCloud,  # v2ray 1day 40G=(10'+6*5')G
+
+    # ActionSuFeiCloud,  # v2ray 2day 11G=(1'+5*2')G
+    # ActionReCloud,  # v2ray 1day 30G=(0'+6*5')G
+    # ActionGoGoCloud,  # v2ray 1day 20G=(10'+5*2')G
+]
+
+_unused_actions = [
+    # ------------------------------------------
     # [停用] 公益节点
-    # ---------------------
-    # ---------------------
-    # [停用] 需要其他类型验证
-    # ---------------------
-    # -->邮箱
-    # Action7ccCloud,
-    # ActionHuoJianCloud,
-    # ActionKuaiZaiCloud,  # ssr [30day 500G]
-    # ActionMfCloud,  # v2ray [14day 60G + 10 * 2 co-invite]
-    # ActionJcBbCloud,  # ssr [1day 0G + 30 * 2 co-invite]
+    # ------------------------------------------
+    # ------------------------------------------
+    # [停用] 邮箱注册
+    # ------------------------------------------
+    Action7ccCloud,
+    ActionKuaiZaiCloud,  # ssr [30day 500G]
+    ActionMfCloud,  # v2ray [14day 60G + 10 * 2 co-invite]
+    ActionJcBbCloud,  # ssr [1day 0G + 30 * 2 co-invite]
+    # ------------------------------------------
+    # [停用] GoogleCAPTHCA
+    # ------------------------------------------
+    ActionGsouCloud,
+    ActionBitEbCloud,
+    # ------------------------------------------
+    # [停用] 流量不达标
+    # ------------------------------------------
+    ActionDuosCloud,  # v2ray [1day co-invite 1 * 10 = 10G]
+    ActionWgCloud,  # [v2ray] [1day 2G + non co-invite]
+    ActionJdSuCloud,  # [v2ray] [1day 500M + 0.1G/co-invite]
+    ActionJssForV2rayCloud,  # [v2ray] [1day 2G + non co-invite]
+    ActionMxCloud,  # [v2ray] [1day 2G + non co-invite]
+    ActionMaoQCloud,  # [v2ray] [3day 1G + 10 * 1 G = 10G]
+    ActionJfCloud,  # [v2ray][1day 1G + non co-invite]
+    ActionXiaoCloud,
 
-    # -->GoogleCAPTHCA
-    # ActionGsouCloud,
-    # ---------------------
-    # [停用] 未达标
-    # ---------------------
-    # 流量不达标
-    # ActionDuosCloud,  # v2ray [1day co-invite 1 * 10 = 10G]
-    # ActionWgCloud, # [v2ray] [1day 2G + non co-invite]
-    # ActionJdSuCloud, # [v2ray] [1day 500M + 0.1G/co-invite]
-    # ActionJssForV2rayCloud,  # [v2ray] [1day 2G + non co-invite]
-    # ActionMxCloud,  # [v2ray] [1day 2G + non co-invite]
     # 无免费节点
-    # ActionMiTaoCloud,
-    # ---------------------
+    ActionMiTaoCloud,
+    # ------------------------------------------
     # [剔除] 框架更换
-    # ---------------------
-    # ActionBitEbCloud,
-    # ActionThunderCloud,
-    # ---------------------
-    # [剔除] 其他
-    # ---------------------
-    # 域名过期
-    # ActionN95Cloud,
-    # ActionZuiSuCloud,
-    # 拒绝注册
-    # ActionOhrCloud,
-    # 站点瘫痪
-    # ActionMaoQCloud,
-    # ActionKakCloud,  # v2ray [1day co-invite 3 * 10 = 30G]
-
-    # 跑路
-    # ActionJfCloud,
-    # ActionUUCloud,
-    # ActionJs8cCloud,
-    # ActionTheSSR,
-    # ActionUfoCloud,
+    # ------------------------------------------
+    ActionThunderCloud,
+    ActionHuoJianCloud,
+    # ------------------------------------------
+    # [剔除] 拒绝注册
+    # ------------------------------------------
+    # ------------------------------------------
+    # [剔除] 站点瘫痪
+    # ------------------------------------------
+    ActionKakCloud,  # v2ray [1day co-invite 3 * 10 = 30G]
+    # ------------------------------------------
+    # [剔除] 跑路
+    # ------------------------------------------
+    ActionUUCloud,
+    ActionJs8cCloud,
+    ActionTheSSR,
+    ActionUfoCloud,
+    ActionN95Cloud,
+    ActionZuiSuCloud,
+    ActionOhrCloud,
 ]

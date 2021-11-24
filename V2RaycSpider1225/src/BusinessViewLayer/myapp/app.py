@@ -92,9 +92,7 @@ def admin_get_subs_v2_debug(_entropy_name):
     )
 
 
-@app.route(
-    f"/super_admin/{uuid4()}/<_entropy_name>", methods=['GET']
-)
+@app.route(f"/super_admin/{uuid4()}/<_entropy_name>", methods=['GET'])
 def admin_get_subs_v2(_entropy_name):
     """获取/general"""
     return jsonify(apis_admin_get_subs_v2(entropy_name=_entropy_name))
