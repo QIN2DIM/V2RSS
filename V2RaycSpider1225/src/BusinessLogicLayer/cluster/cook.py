@@ -6,8 +6,11 @@
 #   else 该机场仅具备该类型任务的采集权限，实例入队。
 __all__ = ["ActionShunt", "devil_king_armed", "reset_task", "DevilKingArmed"]
 
+import os
+
 from loguru import logger
 from requests import HTTPError, ConnectionError
+
 from selenium.common.exceptions import (
     TimeoutException,
     WebDriverException,
@@ -135,9 +138,7 @@ class DevilKingArmed(ActionMasterGeneral):
             # 进入站点并等待核心元素渲染完成
             self.wait(api, 40, "//div[@class='card-body']")
         except TimeoutException:
-            logger.warning(
-                f">>> TimeoutException <{self.action_name}> -- {self.register_url}"
-            )
+            raise TimeoutError
         except StaleElementReferenceException as e:
             logger.exception(e)
         except WebDriverException as e:
@@ -166,19 +167,42 @@ def devil_king_armed(atomic: dict, silence=True, beat_sync=True, assault=False):
 
 
 def reset_task() -> list:
+    """
+    为 deploy.collector 提供任务内容
+
+    :return:
+    """
     import random
-    from BusinessCentralLayer.middleware.redis_io import RedisClient
+    from BusinessCentralLayer.middleware.redis_io import RedisClient, EntropyHeap
     from BusinessCentralLayer.setting import SINGLE_TASK_CAP, REDIS_SECRET_KEY
 
     rc = RedisClient()
+    eh = EntropyHeap()
+
+    # 根据 scaffold.deploy 接口参数 beat_sync ，决定使用「本地任务队列（源）」还是使用「共享任务队列」
+    beat_attitude = os.getenv("beat_dance", "")
+    if beat_attitude == "remote":
+        pending_entropy = eh.sync()
+        action_list = pending_entropy if pending_entropy else __entropy__
+    else:
+        action_list = __entropy__.copy()
+
+    # TODO 加入日志溯源功能替换random方案
+    # 具体思路为：reset_task() 被调用时：
+    # 1. 获取当前系统时间（Asia/Shanghai）
+    # 2. 获取昨日对应时间段（±1h）的链接需求量
+    # 3. 将记录信息转化为 {需求量:相对占用率} 映射
+    # 4. 将相对占用率转化为任务优选概率（当需要剔除实例时生效）
+    # 5. 根据优选概率执行（当前时间段）高需求量实例，静默/剔除（当前时间段）低需求量实例
+    # 6. 仅在不符合方案启动条件时使用 random
+    random.shuffle(action_list)
+    qsize = len(action_list)
+
     # running_state={"v2ray":[], "ssr":[], "xray":[], ...}
     running_state = dict(
         zip(CRAWLER_SEQUENCE, [[] for _ in range(len(CRAWLER_SEQUENCE))])
     )
-    # 拷贝本地运行实例（源）
-    action_list = __entropy__.copy()
-    qsize = len(action_list)
-    random.shuffle(action_list)
+
     try:
         # --------------------------
         # 进行各个类型的实体任务的分类

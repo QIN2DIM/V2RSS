@@ -66,7 +66,6 @@ def launcher():
 
 
 def demo_with_gevent(auto_start=True, get_sample=True):
-
     # Get demo sites.
     data_set = preload(get_sample)
 

@@ -122,8 +122,8 @@ class _SystemEngine:
                 logger.info(
                     f"<SystemEngineIO> CONFIG_COLLECTOR_PERMISSION:{CRAWLER_SEQUENCE}"
                 )
-            for action_image in ACTIONS_IO:
-                logger.info(f"<SystemEngineIO> ACTIONS:{action_image}")
+            # for action_image in ACTIONS_IO:
+            #     logger.info(f"<SystemEngineIO> ACTIONS:{action_image}")
         status_msg = "ENABLE_DEPLOY={} COLLECTOR={} COLLABORATOR={}".format(
             ENABLE_DEPLOY["global"],
             ENABLE_DEPLOY["tasks"]["collector"],
@@ -194,12 +194,13 @@ class _SystemEngine:
             logger.critical("eval()或exec()语法异常，检测变量名是否不一致。")
 
     @staticmethod
-    def run_collaborative_task() -> None:
+    def run_collaborative_task(**kwargs) -> None:
         """
 
         :return:
         """
-        CollaboratorScheduler().hosting()
+        synergy_workers = kwargs.get("workers", None)
+        CollaboratorScheduler(synergy_workers=synergy_workers).hosting()
 
     @staticmethod
     def run(beat_sync=True, force_run=None) -> None:
@@ -266,7 +267,8 @@ class _SystemEngine:
             if enable_timed_task:
                 process_list.append(
                     multiprocessing.Process(
-                        target=_SystemEngine.run_timed_task, name="deploymentTimingTask"
+                        target=_SystemEngine.run_timed_task,
+                        name="deploymentTimingTask"
                     )
                 )
             # 部署 flask
@@ -284,6 +286,7 @@ class _SystemEngine:
                     multiprocessing.Process(
                         target=_SystemEngine.run_collaborative_task,
                         name="collaborator",
+                        kwargs=kwargs
                     )
                 )
             # 执行多进程任务

@@ -278,11 +278,11 @@ Action7ccCloud = {
 ActionAaxCloud = {
     "name": "ActionAaxCloud",
     "register_url": "https://aaxc.club/auth/register",
-    "life_cycle": 1,
     "anti_slider": False,
     "hyper_params": {"ssr": False, "v2ray": True},
     "email": "@gmail.com",
     "feature": "prism",
+    "life_cycle": 1,
 }
 # =============================================
 # ActionJs8cCloud
@@ -318,7 +318,7 @@ ActionMaoQCloud = {
 ActionZZCloud = {
     "name": "ActionZZCloud",
     "register_url": "http://zhuzhu12.xyz/auth/register",
-    "life_cycle": 6,
+    "life_cycle": 15,
     "anti_slider": False,
     "hyper_params": {"ssr": False, "v2ray": True},
     "email": "@gmail.com",
@@ -327,15 +327,15 @@ ActionZZCloud = {
 # ActionAzIcoCloud
 # - change log:
 #   - 2021-10-29 [Create] 更新实例
-#   - 2021-10-29 [1day 2G + 1000 * 2 co-invite]
+#   - 2021-10-29 [1day 2G + 1000 * 2G co-invite]
 # =============================================
 ActionAzIcoCloud = {
     "name": "ActionAzIcoCloud",
     "register_url": "https://azi.azzico.cc/auth/register",
-    "life_cycle": 1,
     "anti_slider": False,
     "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
     "email": "@gmail.com",
+    "life_cycle": 1,
 }
 # =============================================
 # ActionKuaiZaiCloud
@@ -359,10 +359,10 @@ ActionKuaiZaiCloud = {
 ActionHuoXingCloud = {
     "name": "ActionHuoXingCloud",
     "register_url": "https://wolaile.icu/auth/register",
-    "life_cycle": 1,
     "anti_slider": False,
     "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
     "email": "@gmail.com",
+    "life_cycle": 1,
 }
 # =============================================
 # ActionJcBbCloud
@@ -401,10 +401,10 @@ ActionMfCloud = {
 ActionPPCloud = {
     "name": "ActionPPCloud",
     "register_url": "https://www.ppyun.fun/auth/register",
-    "life_cycle": 1,
     "anti_slider": True,
     "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 3},
     "email": "@gmail.com",
+    "life_cycle": 1,
 }
 # =============================================
 # ActionSuFeiCloud
@@ -415,10 +415,10 @@ ActionPPCloud = {
 ActionSuFeiCloud = {
     "name": "ActionSuFeiCloud",
     "register_url": "https://www.sufeiyun.icu/auth/register",
-    "life_cycle": 2,
     "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
     "email": "@gmail.com",
+    "life_cycle": 1,
 }
 # =============================================
 # ActionReCloud
@@ -429,23 +429,23 @@ ActionSuFeiCloud = {
 ActionReCloud = {
     "name": "ActionReCloud",
     "register_url": "https://www.reoen.top/auth/register",
-    "life_cycle": 1,
     "anti_slider": True,
     "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 6},
     "email": "@gmail.com",
+    "life_cycle": 1,
 }
 # =============================================
 # ActionGiraffeCloud
 # - change log:
-#   - 2021-11-19 [2day 10G + 10 * 2G co-invite]
+#   - 2021-11-19 [2day 3G + 10 * 2G co-invite]
 # =============================================
 ActionGiraffeCloud = {
     "name": "ActionGiraffeCloud",
     "register_url": "https://www.gftech.cc/auth/register",
-    "life_cycle": 2,
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5, "usr_email": True},
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10, "usr_email": True},
     "email": "@gmail.com",
+    "life_cycle": 2,
 }
 # =============================================
 # ActionXiaoCloud
@@ -470,24 +470,24 @@ ActionXiaoCloud = {
 ActionGoGoCloud = {
     "name": "ActionGoGoCloud",
     "register_url": "https://gogo.bid/auth/register",
-    "life_cycle": 1,
     "anti_slider": True,
     "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
     "email": "@gmail.com",
+    "life_cycle": 1,
 }
 # =============================================
 # ActionViCloud
 # - change log:
 #   - 2021-11-24 [Create]
-#   - 2021-11-24 [2day 1G + 10 * 2G co-invite]
+#   - 2021-11-24 [2day 1G + 5 * 2G co-invite]
 # =============================================
 ActionViCloud = {
     "name": "ActionViCloud",
     "register_url": "https://www.viyun.pw/auth/register",
-    "life_cycle": 2,
     "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
     "email": "@gmail.com",
+    "life_cycle": 1,
 }
 # =============================================
 # ActionLittleCloud
@@ -498,35 +498,75 @@ ActionViCloud = {
 ActionLittleCloud = {
     "name": "ActionLittleCloud",
     "register_url": "https://littleq.me/auth/register",
-    "life_cycle": 1,
     "anti_slider": True,
     "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 6},
     "email": "@gmail.com",
+    "life_cycle": 1,
 }
-__entropy__ = [
+# =============================================
+# ActionFETVCloud
+# - change log:
+#   - 2021-11-30 [Create]
+#   - 2021-11-30 [2day 1G + 10 * 2G co-invite]
+# =============================================
+ActionFETVCloud = {
+    "name": "ActionFETVCloud",
+    "register_url": "https://de1.foreign-expat-tv.win/auth/register",
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "email": "@fetv.com",
+    "life_cycle": 2,
+}
+# =============================================
+# ActionYesDaddyCloud
+# - change log:
+#   - 2021-11-30 [Create]
+#   - 2021-11-30 [1day 1G + 10 * 2G co-invite]
+# =============================================
+ActionYesDaddyCloud = {
+    "name": "ActionYesDaddyCloud",
+    "register_url": "https://www.yesdaddy.win/auth/register",
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 5},
+    "email": "@gmail.com",
+    "life_cycle": 1,
+}
+# =============================================
+# ActionTaoHaiCloud
+# - change log:
+#   - 2021-11-30 [Create]
+#   - 2021-11-30 [1day 10G + 10 * 2G co-invite]
+# =============================================
+ActionTaoHaiCloud = {
+    "name": "ActionTaoHaiCloud",
+    "register_url": "https://hntaohai.xyz/auth/register",
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
+    "email": "@gmail.com",
+    "life_cycle": 1,
+}
+
+# 备选可执行队列
+__pending__ = [
     # ------------------------------------------
     # [启动] 无障碍
     # ------------------------------------------
-    ActionZZCloud,  # v2ray 6day 100G
-    ActionGiraffeCloud,  # v2ray 2day 20G=(10'+5*2')G
-
-    # ActionAzIcoCloud,  # v2ray 1day 12G=(2'+5*2')G
-    # ActionHuoXingCloud,  # v2ray 1day 11G=(1'+5*2')G
-    # ActionAaxCloud,  # v2ray 1day 10G
-
+    ActionAzIcoCloud,  # v2ray 1day 12G=(2'+5*2')G
+    ActionHuoXingCloud,  # v2ray 1day 11G=(1'+5*2')G
+    ActionAaxCloud,  # v2ray 1day 10G
+    ActionFETVCloud,  # v2ray 2day 11G=(1'+5*2')G
+    ActionYesDaddyCloud,  # v2ray 1day 11G=(1'+5*2')G
     # ------------------------------------------
     # [启动] 需要滑动验证
     # ------------------------------------------
-    ActionViCloud,  # v2ray 2day 30G=(10'+10*2')G
+    ActionViCloud,  # v2ray 2day 11G=(1'+5*2')G
+    ActionGoGoCloud,  # v2ray 1day 20G=(10'+5*2')G
     ActionPPCloud,  # v2ray 1day 62G=(2'+3*20')G
     ActionLittleCloud,  # v2ray 1day 40G=(10'+6*5')G
-
-    # ActionSuFeiCloud,  # v2ray 2day 11G=(1'+5*2')G
-    # ActionReCloud,  # v2ray 1day 30G=(0'+6*5')G
-    # ActionGoGoCloud,  # v2ray 1day 20G=(10'+5*2')G
 ]
 
-_unused_actions = [
+# 弃用
+deprecated_actions = [
     # ------------------------------------------
     # [停用] 公益节点
     # ------------------------------------------
@@ -578,4 +618,23 @@ _unused_actions = [
     ActionN95Cloud,
     ActionZuiSuCloud,
     ActionOhrCloud,
+]
+
+# 执行队列
+__entropy__ = [
+    # cd .. && git pull origin master && cd src && python3 main.py synergy
+    # cd .. && git pull origin master && cd src && python3 main.py deploy --synergy=False
+    # ------------------------------------------
+    # [启动] 无障碍
+    # ------------------------------------------
+    ActionZZCloud,  # v2ray 6day 100G
+    ActionTaoHaiCloud,  # v2ray 1day 30G=(10'+10*2')G
+
+    # ------------------------------------------
+    # [启动] 需要滑动验证
+    # ------------------------------------------
+    ActionReCloud,  # v2ray 1day 30G=(0'+6*5')G
+    ActionGiraffeCloud,  # v2ray 2day 23G=(3'+10*2')G
+    ActionSuFeiCloud,  # v2ray 1day 21G=(1'+10*2')G
+
 ]

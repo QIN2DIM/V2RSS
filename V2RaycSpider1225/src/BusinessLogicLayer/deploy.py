@@ -53,7 +53,7 @@ class TasksScheduler:
         # ----------------------
         # 实例化调度器
         self.scheduler = BlockingScheduler()
-        # 定時抖動
+        # 定時抖動，让定时任务“非准点”执行，上下浮动 jitter 秒
         self.jitter = 5
         # 定任务设置最大实例并行数
         self.max_instances = 4
@@ -307,7 +307,7 @@ class CollectorScheduler(TasksScheduler):
         if log_ and transfer_num != 0:
             logger.success(
                 f"{self.collector_id} Disaster Tolerance Extension | "
-                f"Distributor[{self.distributor.qsize()}] --{transfer_num}--> Workers[{self.workers.qsize()}]"
+                f"Distributor[{self.distributor.qsize()}] --({transfer_num})--> Workers[{self.workers.qsize()}]"
             )
         return transfer_num
 
@@ -418,6 +418,10 @@ class CollectorScheduler(TasksScheduler):
             atomic = self.workers.get_nowait()
             self.devil_king_armed(atomic)
 
+            # 运行时容载延拓 实现动态队列
+            if self.synergy:
+                self.dt_extension(cursor=1)
+
     def devil_king_armed(self, atomic: dict):
         """
         一个映射了__entropy__站点源特征词典的SpawnEntity-Selenium运行实体
@@ -429,6 +433,7 @@ class CollectorScheduler(TasksScheduler):
         # ================================================
         # 任务模式切换 synergy | run
         is_synergy = bool(atomic.get("synergy"))
+        _report_name = "Synergy" if is_synergy else "Instance"
         # 假假地停一下
         if is_synergy:
             atomic["hyper_params"]["beat_dance"] = (self.running_jobs.__len__() + 1) * 1.7
@@ -468,28 +473,37 @@ class CollectorScheduler(TasksScheduler):
         # (o゜▽゜)o☆
         try:
             if is_synergy:
+                # HTTP状态码异常
+                if not alice.check_heartbeat():
+                    raise RuntimeError
                 alice.synergy(api)
             else:
                 alice.run(api)
-        except ConnectionError:
+        except RuntimeError:
+            self.broadcast.to_runner(atomic)
+            logger.warning(f">> {_report_name}ResetException <{alice_name}> "
+                           f"protocol=overload session_id={alice_id} error=StatusException")
+        except (ConnectionError, TimeoutError) as e:
             self.broadcast.to_runner(atomic)
             logger.warning(
-                f">> Reflect <{alice_name}> ConnectionError --> [session_id] {alice_id}"
+                f">> {_report_name}ResetException <{alice_name}> "
+                f"protocol=overload session_id={alice_id} error={e}"
             )
         # (￣ε(#￣) CTRL+C / strong anti-spider engine / is being DDOS
         except Exception as e:
-            logger.error(f">> ERROR <{alice_name}> --> {e}")
+            logger.error(f">> {_report_name}UnknownException <{alice_name}> "
+                         f"error={e}")
         finally:
             # (/≧▽≦)/
             try:
                 self.running_jobs.pop(alice_id)
-                logger.debug(f">> Detach <{alice_name}> --> [session_id] {alice_id}")
+                logger.debug(f">> Detach <{alice_name}> session_id={alice_id}")
             except (KeyError,):
                 pass
 
 
 class CollaboratorScheduler(CollectorScheduler):
-    def __init__(self):
+    def __init__(self, synergy_workers: int = None):
         """
         采集器工作模式 影响到任务的读取以及执行规则。
             - run 载入本地任务队列，根据任务容载极限进行任务剪枝，最后执行正常的采集流程。
@@ -497,6 +511,8 @@ class CollaboratorScheduler(CollectorScheduler):
             也即根据具体的 atomic 运行上下文决定运行模式。
         """
         super(CollaboratorScheduler, self).__init__()
+
+        self.power = min(synergy_workers, os.cpu_count()) if isinstance(synergy_workers, int) else os.cpu_count()
 
         # 采集器配置
         self.echo_limit: int = 300
@@ -555,7 +571,7 @@ class CollaboratorScheduler(CollectorScheduler):
                             f"{self.collector_id} The local WorkerQueue is busy, "
                             f"and the pending tasks have been rejected."
                         )
-                        time.sleep(60)
+                        time.sleep(10)
                         continue
 
                     logger.debug(

@@ -31,10 +31,10 @@ def preload(get_sample: bool = True):
 
 
 def demo(
-    register_url: str = preload(),
-    silence=True,
-    share_type="v2ray",
-    start_cache: bool = False,
+        register_url: str = preload(),
+        silence=True,
+        share_type="v2ray",
+        start_cache: bool = False,
 ):
     """
 

@@ -13,6 +13,7 @@ import sys
 
 from BusinessCentralLayer.middleware.interface_io import SystemInterface
 from BusinessCentralLayer.middleware.subscribe_io import select_subs_to_admin
+from BusinessCentralLayer.middleware.redis_io import EntropyHeap
 from BusinessLogicLayer.apis.staff_mining import staff_api
 from BusinessLogicLayer.cluster.slavers import __entropy__
 from BusinessLogicLayer.plugins.accelerator import (
@@ -35,6 +36,7 @@ from BusinessCentralLayer.setting import (
     SERVER_DIR_DATABASE_LOG,
     SERVER_DIR_SSPANEL_MINING,
     COMMAND_EXECUTOR,
+    DynamicEnvironment,
 )
 
 
@@ -310,21 +312,39 @@ class Scaffold:
         print(f">>> 文件导出目录: {classify_dir}")
 
     @staticmethod
-    def entropy():
+    def entropy(update: bool = False, remote: bool = False):
         """
-        在控制台输出本机采集队列信息。
+        采集队列的命令行管理工具。
 
-        Usage: python main.py entropy
+        Usage: python main.py entropy   输出本机采集队列信息
+        or: python main.py entropy --remote 输出``远程队列``的摘要信息
+        or: python main.py entropy --upload 将``本机采集队列``辐射至远端，替换最新共享队列数据
 
+        :param remote: 输出``远程队列``的摘要信息
+        :param update: 将本地 action.py entropy 同步至共享任务队列
         :return:
         """
-        for i, host_ in enumerate(__entropy__):
-            print(f">>> [{i + 1}/{__entropy__.__len__()}]{host_['name']}")
-            print(f"注入地址: {host_['register_url']}")
-            print(f"存活周期: {host_['life_cycle']}天")
-            print(
-                f"运行参数: {', '.join([f'{j[0].lower()}={j[-1]}' for j in host_['hyper_params'].items() if j[-1]])}\n"
-            )
+        eh = EntropyHeap()
+
+        # 将要输出的摘要数据 <localQueue> or <remoteQueue>
+        check_entropy = __entropy__ if not remote else eh.sync()
+
+        # 当摘要数据非空时输出至控制台
+        if check_entropy:
+            for i, host_ in enumerate(check_entropy):
+                print(f">>> [{i + 1}/{check_entropy.__len__()}]{host_['name']}")
+                print(f"注入地址: {host_['register_url']}")
+                print(f"存活周期: {host_['life_cycle']}天")
+                print(
+                    f"运行参数: {', '.join([f'{j[0].lower()}={j[-1]}' for j in host_['hyper_params'].items() if j[-1]])}\n"
+                )
+        else:
+            logger.warning("<ScaffoldGuider> empty entropy.")
+
+        # 更新远程队列
+        if update:
+            eh.update(new_entropy=__entropy__)
+            logger.success("<ScaffoldGuider> update remote tasks queue.")
 
     @staticmethod
     def ping():
@@ -496,7 +516,7 @@ class Scaffold:
         SystemInterface.run(deploy_=True, port=port, host=host, debug=debug)
 
     @staticmethod
-    def deploy(timer: bool = True, synergy: bool = True, collector: bool = False):
+    def deploy(timer: bool = True, synergy: bool = True, dance: bool = True, collector: bool = False):
         """
         部署 V2RSS 后端服务。
 
@@ -508,14 +528,32 @@ class Scaffold:
         or: python main.py deploy --synergy=False   禁用协同，不受理协同任务
         or: python main.py deploy --timer=False     禁用定时任务
 
+        :param dance: 节拍同步。影响 collector 的 reset_task 逻辑。IF True 使用共享队列，ELSE 使用本地队列。
         :param timer: 定时任务权限，默认开启。
         :param collector: 采集器权限，默认关闭
         :param synergy: 破冰船协同任务权限，默认开启
         :return:
         """
+
+        # The collector runs as a timing task,so `collector` is True, `timer` must be True.
         if collector is True:
             timer = True
+
+        # Use `DynamicEnvironment` to radiate `beat_sync` startup parameters.
+        if dance:
+            os.environ["beat_dance"] = "remote"
+            eh = EntropyHeap()
+            # When you start `beat_sync` deploy for the first time (the remote queue is empty),
+            # the local queue is used as the initial value of the remote queue.
+            if eh.is_empty():
+                logger.warning("<ScaffoldGuider> The remote tasks queue is empty. - "
+                               f"name={eh.entropy_name}")
+                Scaffold.entropy(update=True)
+
+        # Check runtime settings.
         _ConfigQuarantine(force=True).run()
+
+        # Startup process.
         SystemInterface.run(
             deploy_=True,
             enable_flask=False,
@@ -524,21 +562,37 @@ class Scaffold:
         )
 
     @staticmethod
-    def synergy():
+    def synergy(remote: str = None, workers: int = None):
         """
         部署 V2RSS 协同任务
 
         - 本接口运行的服务仅执行 synergy 任务
         - 也即运行此任务的物理机无需更新 action.py 配置队列，任务上下文信息由上游 deploy-collector 对象动态分发
 
+        Usage: python main.py synergy 启动协同任务
+        or: python main.py synergy --remote=https://selenium-hub:4444 使用 RemoteDriver 启动协同任务
+        or: python main.py synergy --workers=2 设置并行任务数为 2
+
+        :param workers: 并行任务数，正整数。默认为None，功率全开，手动指定时，workers 受限于弹性携程功率 power。
+        :param remote: such as http://selenium-hub:4444
         :return:
         """
+        # > docker-compose selenium_hub 访问地址
+        #   - 如 http://selenium-hub:4444 传参优先级更高
+        #   - IF docker-compose.yaml 中写明了环境变量此处无需声明。
+        # > 若不指定 RemoteDriver 则使用 src/BusinessCentralLayer/chromedriver
+        if remote:
+            DynamicEnvironment.selenium_hub_executor = remote
+        if isinstance(workers, int):
+            workers = 1 if workers < 1 else workers
+
         _ConfigQuarantine(force=True).run()
         SystemInterface.run(
             deploy_=True,
             enable_flask=False,
             enable_timed_task=False,
-            enable_synergy=True
+            enable_synergy=True,
+            workers=workers
         )
 
     @staticmethod

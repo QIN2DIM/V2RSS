@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 
 import requests
 from bs4 import BeautifulSoup
+from requests.exceptions import SSLError, RequestException, Timeout, ConnectionError
 from selenium.common.exceptions import (
     WebDriverException,
     NoSuchElementException,
@@ -840,6 +841,34 @@ class ActionMasterGeneral(BaseAction):
         # 集群节拍
         self.beat_dance = self.hyper_params.get("beat_dance", 0)
 
+    def check_heartbeat(self, debug=False):
+        url = self.register_url
+        session = requests.session()
+        try:
+            response = session.get(url, timeout=5)
+            if response.status_code > 400:
+                logger.error(f">> Block <{self.action_name}> InstanceStatusException "
+                             f"status_code={response.status_code} url={url}")
+                return False
+            return True
+        except (SSLError, HTTPError):
+            if debug:
+                logger.warning(f">> Block <{self.action_name}> Need to use a proxy to access the site "
+                               f"url={url}")
+            return True
+        except ConnectionError as e:
+            logger.error(f">> Block <{self.action_name}> ConnectionError "
+                         f"url={url} error={e}")
+            return False
+        except Timeout as e:
+            logger.error(f">> Block <{self.action_name}> ResponseTimeout "
+                         f"url={url} error={e}")
+            return False
+        except RequestException as e:
+            logger.error(f">> Block <{self.action_name}> RequestException "
+                         f"url={url} error={e}")
+            return False
+
     def capture_share_link(self, api, timeout=30):
         if self.hyper_params["v2ray"]:
             self.load_any_subscribe(
@@ -862,7 +891,11 @@ class ActionMasterGeneral(BaseAction):
         # elif self.hyper_params['qtl']: ...
 
     def run(self, api=None):
-        logger.debug(self.runtime_flag(self.hyper_params))
+
+        # 检测实例状态
+        if not self.check_heartbeat():
+            return
+
         # 获取任务设置
         api = (
             self.set_spider_option(guise=self.hyper_params.get("proxy"))
@@ -871,7 +904,9 @@ class ActionMasterGeneral(BaseAction):
         )
         if not api:
             return
+
         # 执行核心业务逻辑
+        logger.debug(self.runtime_flag(self.hyper_params))
         try:
             # 设置弹性计时器，当目标站点未能在规定时间内渲染到预期范围时自主销毁实体
             # 防止云彩姬误陷“战局”被站长过肩摔
@@ -880,23 +915,24 @@ class ActionMasterGeneral(BaseAction):
             self.sign_up(api)
             # 进入站点并等待核心元素渲染完成
             self.wait(api, 40, "//div[@class='card-body']")
+            # 验证 endurance 权限
+            if not self.hyper_params.get("endurance", True):
+                return
             # 根据原子类型订阅的优先顺序 依次捕获
             self.capture_share_link(api)
             # ======================================
-            # 超参数高级行为处理
+            # 超参数高级行为处理/Cluster Actions
             # ======================================
-            # 流量超额申请：check-in
-            if self.hyper_params["check_in"] is True:
-                self.check_in(api)
-            # Cluster Actions
             self.handle_hyper_action(api)
 
         except TimeoutException:
             logger.error(
-                f">>> TimeoutException <{self.action_name}> -- {self.register_url}"
+                f">> Block <{self.action_name}> TimeoutException "
+                f"url={self.register_url}"
             )
         except WebDriverException as e:
-            logger.error(f">>> WebDriverException <{self.action_name}> -- {e}")
+            logger.error(f">> Block <{self.action_name}> WebDriverException "
+                         f"url={self.register_url} error={e}")
         except (HTTPError, ConnectionRefusedError, ConnectionResetError):
             pass
         except Exception as e:
@@ -905,6 +941,9 @@ class ActionMasterGeneral(BaseAction):
             api.quit()
 
     def handle_hyper_action(self, api: Chrome):
+        # 流量超额申请：check-in
+        if self.hyper_params["check_in"] is True:
+            self.check_in(api)
         # 协同注册任务
         if self.need_collaborator:
             self.hyper_call_collaborator(api)

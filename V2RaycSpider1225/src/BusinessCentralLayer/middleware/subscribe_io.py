@@ -8,6 +8,7 @@ __all__ = [
 ]
 
 import threading
+import time
 from collections import Counter
 from datetime import datetime
 from urllib.parse import urlparse
@@ -23,7 +24,7 @@ from BusinessCentralLayer.setting import (
     SQLITE3_CONFIG,
     TIME_ZONE_CN,
 )
-from .redis_io import RedisClient, MessageQueue
+from .redis_io import RedisClient, MessageQueue, EntropyHeap
 from ..middleware import work_io
 
 
@@ -31,7 +32,7 @@ class FlexibleDistributeV0:
     """数据交换 弹性分发"""
 
     def __init__(
-        self, docker: list = None, access_mapping: dict = None, beat_sync=False
+            self, docker: list = None, access_mapping: dict = None, beat_sync=False
     ):
         """
 
@@ -115,6 +116,7 @@ class FlexibleDistributeV2:
     def __init__(self):
         self.rdb = RedisClient()
         self.mq = MessageQueue()
+        self.eh = EntropyHeap()
 
     def publish(self, stream: dict):
         # 存储订阅
@@ -132,11 +134,19 @@ class FlexibleDistributeV2:
 
     def to_inviter(self, context: dict or str):
         context = str(context) if isinstance(context, dict) else context
-        self.mq.broadcast_pending_task({"pending": context})
+        return self._health_check(protocol="pending", context=context)
 
     def to_runner(self, context: dict or str):
         context = str(context) if isinstance(context, dict) else context
-        self.mq.broadcast_pending_task({"overload": context})
+        return self._health_check(protocol="overload", context=context)
+
+    def _health_check(self, protocol: str, context: dict or str):
+        for _ in range(5):
+            response = self.mq.broadcast_pending_task({protocol: context})
+            if response:
+                return True
+            time.sleep(0.1)
+        return False
 
     def set_collaborative_task(self, stream: tuple):
         self.rdb.get_driver().lpush("collaborative_task", *stream)
@@ -292,7 +302,7 @@ def select_subs_to_admin(select_netloc: str = None, _debug=False) -> dict:
         subscribe, end_life = tag[0], tag[-1]
         # 存在对应netloc的链接并可存活至少beyond小时
         if select_netloc in urlparse(subscribe).netloc and not RedisClient().is_stale(
-            end_life, beyond=6
+                end_life, beyond=6
         ):
             logger.debug("<SubscribeIO> -- GET SUBSCRIPTION")
             rc.update_api_status(

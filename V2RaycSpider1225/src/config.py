@@ -372,3 +372,8 @@ COMMAND_EXECUTOR = os.getenv("COMMAND_EXECUTOR")
 # 主从反转
 if ENABLE_REBOUND:
     REDIS_MASTER, REDIS_SLAVER_DDT = REDIS_SLAVER_DDT, REDIS_MASTER
+
+
+class DynamicEnvironment:
+    selenium_hub_executor = COMMAND_EXECUTOR
+    beat_sync = False

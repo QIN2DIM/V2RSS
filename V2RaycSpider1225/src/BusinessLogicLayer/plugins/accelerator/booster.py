@@ -99,19 +99,20 @@ def booster(docker: dict or list, silence: bool, power: int = 1, assault=False):
                 silence=silence,
                 assault=assault,
             ).run(power)
-
+        return True
     # 该方法针对scaffold_spawn 实现相关接口，经典用法为灌入__entropy__
     # 此时认为docker_list.__len__()>=2，否则将会被识别为单个实体分流至其他业务模块
     elif isinstance(docker, list):
+        # 建立多核工作栈，使用弹性分发控件对服务器进行边缘压力测试
+        if power == -1:
+            return
         # 每个实体的行为测试被依次发起
         if power == 1:
             for mirror_image in docker:
                 ActionShunt.generate_entity(
                     atomic=mirror_image, silence=silence, assault=assault
                 )()
-        # 建立多核工作栈，使用弹性分发控件对服务器进行边缘压力测试
-        elif power == -1:
-            return True
         # 建立协程空间，分发实体行为测试任务[use gevent]
         else:
             SpawnBooster(docker=docker, silence=silence, assault=assault).run(power)
+        return True

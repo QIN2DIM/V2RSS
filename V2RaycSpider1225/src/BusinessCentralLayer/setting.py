@@ -188,6 +188,7 @@ __all__ = [
     "ENABLE_PROXY",
     "PERMISSION_COLLABORATOR",
     "COMMAND_EXECUTOR",
+    "DynamicEnvironment",
     # =============================================
     # system setting
     # =============================================

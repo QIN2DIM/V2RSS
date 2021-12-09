@@ -1,6 +1,6 @@
-__all__ = ["RedisClient", "RedisDataDisasterTolerance", "MessageQueue"]
+__all__ = ["RedisClient", "RedisDataDisasterTolerance", "MessageQueue", "EntropyHeap"]
 
-import time
+import ast
 from typing import List, Tuple
 
 import redis
@@ -15,18 +15,15 @@ from BusinessCentralLayer.setting import (
     logger,
 )
 
-REDIS_CLIENT_VERSION = redis.__version__
-IS_REDIS_VERSION_2 = REDIS_CLIENT_VERSION.startswith("2.")
-
 
 class RedisClient:
     def __init__(
-        self,
-        host=REDIS_MASTER["host"],
-        port=REDIS_MASTER["port"],
-        password=REDIS_MASTER["password"],
-        db=REDIS_MASTER["db"],
-        **kwargs,
+            self,
+            host=REDIS_MASTER["host"],
+            port=REDIS_MASTER["port"],
+            password=REDIS_MASTER["password"],
+            db=REDIS_MASTER["db"],
+            **kwargs,
     ) -> None:
         """
         init redis client
@@ -41,6 +38,7 @@ class RedisClient:
             password=password,
             decode_responses=True,
             db=db,
+            health_check_interval=30,
             **kwargs,
         )
         self.sub_link = ""
@@ -295,11 +293,11 @@ class MessageQueue(RedisClient):
         self.consumer_ = "hexo"
         # 截断 6 小时理论吞吐量的冗余数据
         self.max_queue_size = max(
-            int(6 * 3600 / LAUNCH_INTERVAL["collector"]), SINGLE_TASK_CAP
+            int((6 * 3600 / LAUNCH_INTERVAL["collector"]) * 100), SINGLE_TASK_CAP
         )
         # 任务同步的批次大小
         self.count = 1
-        # 任务同步的阻塞时间
+        # 任务同步的阻塞时间，默认 2s
         self.block = 2 * 1000
 
         # 自动初始化
@@ -341,7 +339,11 @@ class MessageQueue(RedisClient):
         :param fields: 消息键值对
         :return:
         """
-        self.db.xadd(self.stream_, fields, maxlen=self.max_queue_size, approximate=True)
+        try:
+            self.db.xadd(self.stream_, fields, maxlen=self.max_queue_size, approximate=True)
+            return True
+        except redis.exceptions.ConnectionError:
+            return False
 
     def offload_task(self, message_id: str):
         self.db.xack(self.stream_, self.group_, message_id)
@@ -402,11 +404,18 @@ class MessageQueue(RedisClient):
             yield self.handle_task(count=count, block=block)
 
 
-if __name__ == "__main__":
-    from datetime import datetime
+class EntropyHeap(RedisClient):
+    def __init__(self):
+        super(EntropyHeap, self).__init__(db=0)
+        self.entropy_name = "v2rss:entropy"
 
-    mq = MessageQueue()
-    while True:
-        print(f"[{datetime.now()}] --broadcast-- element")
-        mq.broadcast_pending_task({"pending": "待处理队列"})
-        time.sleep(1)
+    def update(self, new_entropy: List[dict]):
+        self.db.lpush(self.entropy_name, str(new_entropy))
+
+    def sync(self) -> List[dict]:
+        response = self.db.lrange(self.entropy_name, 0, 1)
+        if response:
+            return ast.literal_eval(self.db.lrange(self.entropy_name, 0, 1)[0])
+
+    def is_empty(self):
+        return not bool(self.db.llen(self.entropy_name))
