@@ -543,7 +543,7 @@ ActionTaoHaiCloud = {
     "anti_slider": False,
     "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
     "email": "@gmail.com",
-    "life_cycle": 1,
+    "life_cycle": 2,
 }
 
 # 备选可执行队列
@@ -633,7 +633,7 @@ __entropy__ = [
     # ------------------------------------------
     # [启动] 需要滑动验证
     # ------------------------------------------
-    ActionReCloud,  # v2ray 1day 30G=(0'+6*5')G
+    # ActionReCloud,  # v2ray 1day 30G=(0'+6*5')G
     ActionGiraffeCloud,  # v2ray 2day 23G=(3'+10*2')G
     ActionSuFeiCloud,  # v2ray 1day 21G=(1'+10*2')G
 

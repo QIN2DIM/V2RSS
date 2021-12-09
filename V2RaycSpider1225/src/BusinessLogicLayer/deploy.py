@@ -418,10 +418,6 @@ class CollectorScheduler(TasksScheduler):
             atomic = self.workers.get_nowait()
             self.devil_king_armed(atomic)
 
-            # 运行时容载延拓 实现动态队列
-            if self.synergy:
-                self.dt_extension(cursor=1)
-
     def devil_king_armed(self, atomic: dict):
         """
         一个映射了__entropy__站点源特征词典的SpawnEntity-Selenium运行实体
@@ -571,7 +567,7 @@ class CollaboratorScheduler(CollectorScheduler):
                             f"{self.collector_id} The local WorkerQueue is busy, "
                             f"and the pending tasks have been rejected."
                         )
-                        time.sleep(10)
+                        time.sleep(60)
                         continue
 
                     logger.debug(
