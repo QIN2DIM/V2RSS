@@ -112,7 +112,10 @@ class TasksScheduler:
             # 添加任务
             self.scheduler.add_job(
                 func=docker_api,
-                trigger=IntervalTrigger(seconds=docker_interval),
+                trigger=IntervalTrigger(
+                    seconds=docker_interval,
+                    timezone="Asia/Shanghai"
+                ),
                 id=docker_name,
                 # 定時抖動
                 jitter=self.jitter,
@@ -203,7 +206,10 @@ class CollectorScheduler(TasksScheduler):
             # interface of vulcan-collector
             func=self.go,
             id=self.echo_id,
-            trigger=IntervalTrigger(seconds=self.sync_step),
+            trigger=IntervalTrigger(
+                seconds=self.sync_step,
+                timezone="Asia/Shanghai"
+            ),
             max_instances=self.max_instances,
         )
 
@@ -558,24 +564,27 @@ class CollaboratorScheduler(CollectorScheduler):
                         f"{self.collector_id} Load the remote message to be processed."
                     )
                     gevent.joinall([gevent.spawn(self._adaptor, context)])
+
                 # 获取过热任务
                 elif task.get("overload"):
                     context: dict = ast.literal_eval(task.get("overload"))
                     if self.distributor.qsize() > self.power:
-                        self.broadcast.to_runner(context)
+                        try:
+                            self.broadcast.to_runner(context)
+                        except ConnectionResetError:
+                            pass
                         logger.warning(
                             f"{self.collector_id} The local WorkerQueue is busy, "
                             f"and the pending tasks have been rejected."
                         )
                         time.sleep(60)
-                        continue
-
-                    logger.debug(
-                        f"{self.collector_id} [{self.distributor.qsize() + 1}/100]"
-                        f"Loading overheating task."
-                        f" | action={context['name']}"
-                    )
-                    gevent.joinall([gevent.spawn(self._distribute, context)])
+                    else:
+                        logger.debug(
+                            f"{self.collector_id} [{self.distributor.qsize() + 1}/100]"
+                            f"Loading overheating task."
+                            f" | action={context['name']}"
+                        )
+                        gevent.joinall([gevent.spawn(self._distribute, context)])
             # KeyboardInterrupt 回滚异常异常终端的消息
             except (KeyboardInterrupt,):
                 try:

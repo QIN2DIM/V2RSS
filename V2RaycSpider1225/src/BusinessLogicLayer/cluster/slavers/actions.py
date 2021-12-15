@@ -333,7 +333,7 @@ ActionAzIcoCloud = {
     "name": "ActionAzIcoCloud",
     "register_url": "https://azi.azzico.cc/auth/register",
     "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -438,12 +438,13 @@ ActionReCloud = {
 # ActionGiraffeCloud
 # - change log:
 #   - 2021-11-19 [2day 3G + 10 * 2G co-invite]
+#   - 2021-12-14 自选邮箱
 # =============================================
 ActionGiraffeCloud = {
     "name": "ActionGiraffeCloud",
     "register_url": "https://www.gftech.cc/auth/register",
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10, "usr_email": True},
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10, "anti_email": True},
     "email": "@gmail.com",
     "life_cycle": 2,
 }
@@ -472,7 +473,7 @@ ActionGoGoCloud = {
     "register_url": "https://gogo.bid/auth/register",
     "anti_slider": True,
     "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
-    "email": "@gmail.com",
+    "email": "@qq.com",
     "life_cycle": 1,
 }
 # =============================================
@@ -513,7 +514,7 @@ ActionFETVCloud = {
     "name": "ActionFETVCloud",
     "register_url": "https://de1.foreign-expat-tv.win/auth/register",
     "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
     "email": "@fetv.com",
     "life_cycle": 2,
 }
@@ -527,7 +528,7 @@ ActionYesDaddyCloud = {
     "name": "ActionYesDaddyCloud",
     "register_url": "https://www.yesdaddy.win/auth/register",
     "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 5},
+    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 10},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -546,21 +547,37 @@ ActionTaoHaiCloud = {
     "life_cycle": 2,
 }
 
+# 执行队列
+__entropy__ = [
+    # cd .. && git pull origin master && cd src && python3 main.py synergy
+    # cd .. && git pull origin master && cd src && python3 main.py deploy --synergy=False
+    # ------------------------------------------
+    # [启动] 无障碍
+    # ------------------------------------------
+    # ActionZZCloud,  # v2ray 6day 100G
+    ActionFETVCloud,  # v2ray 2day
+    ActionYesDaddyCloud,  # v2ray 1day
+    ActionAzIcoCloud,  # v2ray 1day
+
+    # ------------------------------------------
+    # [启动] 需要滑动验证
+    # ------------------------------------------
+    # ActionReCloud,  # v2ray 1day
+    # ActionSuFeiCloud,  # v2ray 1day
+    ActionGoGoCloud,  # v2ray 1day
+
+]
+
 # 备选可执行队列
 __pending__ = [
     # ------------------------------------------
     # [启动] 无障碍
     # ------------------------------------------
-    ActionAzIcoCloud,  # v2ray 1day 12G=(2'+5*2')G
     ActionHuoXingCloud,  # v2ray 1day 11G=(1'+5*2')G
-    ActionAaxCloud,  # v2ray 1day 10G
-    ActionFETVCloud,  # v2ray 2day 11G=(1'+5*2')G
-    ActionYesDaddyCloud,  # v2ray 1day 11G=(1'+5*2')G
     # ------------------------------------------
     # [启动] 需要滑动验证
     # ------------------------------------------
     ActionViCloud,  # v2ray 2day 11G=(1'+5*2')G
-    ActionGoGoCloud,  # v2ray 1day 20G=(10'+5*2')G
     ActionPPCloud,  # v2ray 1day 62G=(2'+3*20')G
     ActionLittleCloud,  # v2ray 1day 40G=(10'+6*5')G
 ]
@@ -573,10 +590,15 @@ deprecated_actions = [
     # ------------------------------------------
     # [停用] 邮箱注册
     # ------------------------------------------
+    # <限定>
     Action7ccCloud,
     ActionKuaiZaiCloud,  # ssr [30day 500G]
+    ActionTaoHaiCloud,  # v2ray 1day 30G=(10'+10*2')G
     ActionMfCloud,  # v2ray [14day 60G + 10 * 2 co-invite]
     ActionJcBbCloud,  # ssr [1day 0G + 30 * 2 co-invite]
+
+    # <自选>
+    ActionGiraffeCloud,  # v2ray 2day 23G=(3'+10*2')G
     # ------------------------------------------
     # [停用] GoogleCAPTHCA
     # ------------------------------------------
@@ -608,6 +630,8 @@ deprecated_actions = [
     # [剔除] 站点瘫痪
     # ------------------------------------------
     ActionKakCloud,  # v2ray [1day co-invite 3 * 10 = 30G]
+    ActionAaxCloud,  # v2ray 1day 10G
+
     # ------------------------------------------
     # [剔除] 跑路
     # ------------------------------------------
@@ -618,23 +642,4 @@ deprecated_actions = [
     ActionN95Cloud,
     ActionZuiSuCloud,
     ActionOhrCloud,
-]
-
-# 执行队列
-__entropy__ = [
-    # cd .. && git pull origin master && cd src && python3 main.py synergy
-    # cd .. && git pull origin master && cd src && python3 main.py deploy --synergy=False
-    # ------------------------------------------
-    # [启动] 无障碍
-    # ------------------------------------------
-    ActionZZCloud,  # v2ray 6day 100G
-    ActionTaoHaiCloud,  # v2ray 1day 30G=(10'+10*2')G
-
-    # ------------------------------------------
-    # [启动] 需要滑动验证
-    # ------------------------------------------
-    # ActionReCloud,  # v2ray 1day 30G=(0'+6*5')G
-    ActionGiraffeCloud,  # v2ray 2day 23G=(3'+10*2')G
-    ActionSuFeiCloud,  # v2ray 1day 21G=(1'+10*2')G
-
 ]

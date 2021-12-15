@@ -4,10 +4,16 @@
 # Github     : https://github.com/QIN2DIM
 # Description:
 
+from .support.ft_mail.ft_mail import (
+    EmailRelay,
+    apis_get_email_context,
+    apis_get_verification_code
+)
 from .support.slider.adaptive import GeeTestAdapter
 from .support.slider.geetest_v2 import GeeTest2
 from .support.slider.geetest_v3 import GeeTest3
 
 __version__ = "0.1.1"
 
-__all__ = ["GeeTest2", "GeeTest3", "GeeTestAdapter"]
+__all__ = ["GeeTest2", "GeeTest3", "GeeTestAdapter", "EmailRelay",
+           "apis_get_email_context", "apis_get_verification_code"]

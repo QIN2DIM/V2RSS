@@ -92,15 +92,15 @@ class BaseAction:
         # =====================================
         # signs_information
         # =====================================
-        self.username, self.password, self.email = self.generate_account(
-            email_class=email_class
-        )
         self.subscribe = ""
         self.type_ = ""
         self.register_url = ""
+        self.username, self.password, self.email = "", "", ""
+        self.usr_email = None
         self.life_cycle = life_cycle
         self.beat_sync = beat_sync
         self.action_name = action_name
+        self.email_class = email_class
         self.anti_slider = anti_slider
         # =====================================
         # v-5.4.r 添加功能：I/O任务超时设置
@@ -118,6 +118,11 @@ class BaseAction:
         # v-5.5.r 添加功能：数据持久化 bool
         # =====================================
         self.endurance = endurance
+        # =====================================
+        # v-5.5.d 添加功能：邮箱验证 str
+        # =====================================
+        self.anti_email = False
+        self.email_object_context = {}
 
     def utils_slider(self, api):
         """
@@ -156,6 +161,21 @@ class BaseAction:
             # 更新作业时间
             self.work_clock_utils = time.time()
 
+    def utils_email(self, method="email"):
+        """
+
+        :param method:
+        :return:
+        """
+        if method == "email":
+            response = requests.get("http://127.0.0.1:8847/get_email")
+            res_json = response.json()
+            self.email_object_context = res_json.get("context")
+        elif method == "code":
+            response = requests.post("http://127.0.0.1:8847/get_email_code", data=self.email_object_context)
+            res_json: dict = response.json()
+            self.email_object_context["code"] = res_json.get("email_code")
+
     def _is_timeout(self):
         """任务超时简易判断"""
         # True：当前任务超时 False：当前任务未超时
@@ -163,8 +183,7 @@ class BaseAction:
             return True
         return False
 
-    @staticmethod
-    def generate_account(email_class: str = "@qq.com") -> tuple:
+    def generate_account(self, email_class: str = "@qq.com") -> tuple:
         """
         账号生成器
         :param email_class: @qq.com @gmail.com ...
@@ -177,8 +196,17 @@ class BaseAction:
         password = "".join(
             [random.choice(printable[: printable.index(" ")]) for _ in range(15)]
         )
-        email = username + email_class
 
+        # 根据实例特性生成 faker email object
+        # 若不要求验证邮箱，使用随机字节码，否则使用备用方案生成可接受验证码的邮箱对象
+        if not self.anti_email:
+            if not self.usr_email:
+                email = username
+            else:
+                email = username + email_class
+        else:
+            self.utils_email(method="email")
+            email = self.email_object_context.get("email")
         return username, password, email
 
     @staticmethod
@@ -317,6 +345,9 @@ class BaseAction:
         @param api:
         @return:
         """
+        self.username, self.password, self.email = self.generate_account(
+            email_class=self.email_class
+        )
         # 任务超时则弹出协程句柄 终止任务进行
         while True:
             # ======================================
@@ -344,7 +375,6 @@ class BaseAction:
                 passwd_.send_keys(self.password)
                 repasswd_.clear()
                 repasswd_.send_keys(self.password)
-
             except (ElementNotInteractableException, WebDriverException):
                 time.sleep(0.5 + self.beat_dance)
                 continue
@@ -362,7 +392,22 @@ class BaseAction:
                     self.work_clock_utils = time.time()
                     api.refresh()
                     continue
-
+            # 邮箱验证
+            if self.anti_email:
+                # 发送邮箱验证码
+                api.find_element(By.ID, "email_verify").click()
+                # 确认发送邮箱验证码
+                time.sleep(0.5 + self.beat_dance)
+                WebDriverWait(api, 10).until(expected_conditions.element_to_be_clickable((
+                    By.XPATH, "//button[@class='swal2-confirm swal2-styled']"
+                ))).click()
+                # 监听并接受邮箱验证码
+                self.utils_email(method="code")
+                verification_code = self.email_object_context.get("code")
+                # 填写邮箱验证码
+                email_code = api.find_element(By.ID, "email_code")
+                email_code.clear()
+                email_code.send_keys(verification_code)
             # ======================================
             # 提交注册数据，完成注册任务
             # ======================================
@@ -829,15 +874,19 @@ class ActionMasterGeneral(BaseAction):
             "check_in": False,
             # co-invite 协同增益模式（园丁系统子模块）
             "co-invite": False,
+            # anti_email 邮箱验证模式
+            "anti_email": False,
         }
         # 更新模型超参数
         if hyper_params:
             self.hyper_params.update(hyper_params)
         # 只需填写主段则邮箱名=用户名
-        if not self.hyper_params["usr_email"]:
-            self.email = self.username
+        # if not self.hyper_params["usr_email"]:
+        #     self.email = self.username
+        self.usr_email = bool(self.hyper_params["usr_email"])
         # 切换工作模式
         self.need_collaborator = bool(self.hyper_params["co-invite"])
+        self.anti_email = bool(self.hyper_params["anti_email"])
         # 集群节拍
         self.beat_dance = self.hyper_params.get("beat_dance", 0)
 
@@ -891,7 +940,6 @@ class ActionMasterGeneral(BaseAction):
         # elif self.hyper_params['qtl']: ...
 
     def run(self, api=None):
-
         # 检测实例状态
         if not self.check_heartbeat():
             return
@@ -924,7 +972,6 @@ class ActionMasterGeneral(BaseAction):
             # 超参数高级行为处理/Cluster Actions
             # ======================================
             self.handle_hyper_action(api)
-
         except TimeoutException:
             logger.error(
                 f">> Block <{self.action_name}> TimeoutException "

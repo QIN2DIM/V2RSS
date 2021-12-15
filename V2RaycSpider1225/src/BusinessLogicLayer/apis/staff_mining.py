@@ -63,7 +63,7 @@ class _Interface:
                 for cache_file in os.listdir(node):
                     # Keep the data that is more expensive to collect.
                     if ("staff_host.txt" in cache_file) or (
-                        "staff_arch_recaptcha.txt" in cache_file
+                            "staff_arch_recaptcha.txt" in cache_file
                     ):
                         continue
                     if cache_file.endswith(".txt"):
@@ -88,11 +88,11 @@ class _Interface:
 
     @logger.catch()
     def collector(
-        self,
-        silence: bool = True,
-        debug: bool = False,
-        page_num: int = 26,
-        sleep_node: int = 5,
+            self,
+            silence: bool = True,
+            debug: bool = False,
+            page_num: int = 26,
+            sleep_node: int = 5,
     ):
         """
         STAFF site collector
@@ -136,7 +136,7 @@ class _Interface:
             logger.exception(f"<StaffCollector> {e}")
 
     def checker(
-        self, business_name: str, debug: bool = True, power: int = os.cpu_count()
+            self, business_name: str, debug: bool = True, power: int = os.cpu_count()
     ):
         """
         STAFF checker executes related function modules according to different business names
@@ -221,7 +221,7 @@ class _Interface:
         """
         # FileNotFoundError
         if (not os.path.exists(input_path)) or (
-            not os.path.exists(os.path.dirname(output_path))
+                not os.path.exists(os.path.dirname(output_path))
         ):
             return False
 
@@ -276,19 +276,21 @@ class _Interface:
                 - False: at least one cycle has been successfully completed
         """
         if not os.path.exists(self._cache_path_staff_hosts):
+            with open(self._cache_path_staff_hosts, "w", encoding="utf8"):
+                pass
             return True
         with open(self._cache_path_staff_hosts, "r", encoding="utf8") as f:
             return not f.read()
 
     def go(
-        self,
-        debug: bool = False,
-        silence: bool = True,
-        power: int = os.cpu_count(),
-        use_collector: bool = True,
-        use_checker: bool = True,
-        identity_recaptcha: bool = False,
-        use_generator: bool = False,
+            self,
+            debug: bool = False,
+            silence: bool = True,
+            power: int = os.cpu_count(),
+            use_collector: bool = True,
+            use_checker: bool = True,
+            identity_recaptcha: bool = False,
+            use_generator: bool = False,
     ) -> tuple:
         """
         Execute business flow in series.

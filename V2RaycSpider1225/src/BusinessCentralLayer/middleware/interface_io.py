@@ -47,7 +47,6 @@ class _ContainerDegradation:
         """config配置参数一次性读取之后系统不再响应配置变动，修改参数需要手动重启项目"""
         # 热加载配置文件 载入越权锁
         self.deploy_cluster, self.cap = CRAWLER_SEQUENCE, SINGLE_TASK_CAP
-        self.rc = RedisClient()
 
     @staticmethod
     def sync_launch_interval() -> dict:
@@ -83,7 +82,7 @@ class _ContainerDegradation:
     def startup_ddt_overdue(self):
         dashboard = {}
         for new_task in self.deploy_cluster:
-            key_remain = self.rc.refresh(
+            key_remain = RedisClient().refresh(
                 key_name=REDIS_SECRET_KEY.format(new_task), cross_threshold=3
             )
             dashboard[new_task] = key_remain
