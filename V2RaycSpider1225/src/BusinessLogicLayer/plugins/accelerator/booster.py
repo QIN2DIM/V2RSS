@@ -4,7 +4,6 @@
 import warnings
 
 from BusinessLogicLayer.cluster.cook import ActionShunt
-from BusinessLogicLayer.cluster.prism import Prism
 from .core import CoroutineSpeedup
 
 
@@ -42,18 +41,13 @@ class SpawnBooster(CoroutineSpeedup):
         self.assault = assault
 
     def offload_task(self):
-        # 根据步态特征获取实例化任务
-        for mirror_image in self.docker:
-            # entity: ActionMaster 的行为抽象，此处为原子化操作，实体数仅为1
-            if mirror_image.get("feature") == "prism":
-                entity_ = Prism(
-                    atomic=mirror_image, silence=self.silence, assault=self.assault
-                ).run
-            else:
-                entity_ = ActionShunt.generate_entity(
-                    atomic=mirror_image, silence=self.silence, assault=self.assault
-                )
-            # 将运行实体加入任务队列
+        # 将运行实体加入任务队列
+        for atomic in self.docker:
+            entity_ = ActionShunt.generate_entity(
+                atomic=atomic,
+                silence=self.silence,
+                assault=self.assault
+            )
             self.work_q.put_nowait(entity_)
             self.jobs.append(entity_)
 
@@ -92,27 +86,16 @@ def booster(docker: dict or list, silence: bool, power: int = 1, assault=False):
                     "Please make it less than 16."
                 )
             SpawnBooster(
-                docker=[
-                    docker,
-                ]
-                * power,
+                docker=[docker, ] * power,
                 silence=silence,
                 assault=assault,
             ).run(power)
-        return True
-    # 该方法针对scaffold_spawn 实现相关接口，经典用法为灌入__entropy__
-    # 此时认为docker_list.__len__()>=2，否则将会被识别为单个实体分流至其他业务模块
+
+    # 将送测实体灌入协程引擎，每个标注实体执行一次
     elif isinstance(docker, list):
-        # 建立多核工作栈，使用弹性分发控件对服务器进行边缘压力测试
-        if power == -1:
-            return
-        # 每个实体的行为测试被依次发起
-        if power == 1:
-            for mirror_image in docker:
-                ActionShunt.generate_entity(
-                    atomic=mirror_image, silence=silence, assault=assault
-                )()
-        # 建立协程空间，分发实体行为测试任务[use gevent]
-        else:
-            SpawnBooster(docker=docker, silence=silence, assault=assault).run(power)
-        return True
+        SpawnBooster(
+            docker=docker,
+            silence=silence,
+            assault=assault
+        ).run(power)
+    return True

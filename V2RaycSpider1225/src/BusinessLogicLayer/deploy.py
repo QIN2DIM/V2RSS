@@ -8,6 +8,7 @@ import math
 import os
 import threading
 import time
+import warnings
 from datetime import datetime, timedelta
 from uuid import uuid4
 
@@ -31,9 +32,9 @@ from BusinessLogicLayer.cluster.cook import (
     reset_task,
     DevilKingArmed,
 )
-from BusinessLogicLayer.cluster.prism import Prism
 
 monkey.patch_all()
+warnings.simplefilter("ignore", category=UserWarning)
 
 
 class TasksScheduler:
@@ -436,19 +437,19 @@ class CollectorScheduler(TasksScheduler):
         # 任务模式切换 synergy | run
         is_synergy = bool(atomic.get("synergy"))
         _report_name = "Synergy" if is_synergy else "Instance"
+        _hyper_params = atomic["hyper_params"]
         # 假假地停一下
         if is_synergy:
-            atomic["hyper_params"]["beat_dance"] = (self.running_jobs.__len__() + 1) * 1.7
+            _hyper_params["beat_dance"] = (self.running_jobs.__len__() + 1) * 1.7
         # ================================================
         # [√] 生产运行实例 更新系统运行状态
         # ================================================
-        # 根据不同的运行实例摘要信息实现不同的解决方案
-        if atomic.get("feature") == "prism":
-            alice = Prism(atomic, assault=True, silence=True)
-        else:
-            alice = devil_king_armed(atomic, assault=True, silence=True)
+        # 魔王武装
+        alice = devil_king_armed(atomic, assault=True, silence=True)
+
         # 初始化运行实例配置
         api = alice.set_spider_option()
+
         # 内部异常捕获，延迟反射均摊运行风险
         # 已知可反射的异常有：`chromedriver` PermissionException;
         if not api:

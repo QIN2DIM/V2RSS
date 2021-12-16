@@ -8,12 +8,12 @@ class CoroutineSpeedup:
     """轻量化的协程控件"""
 
     def __init__(
-        self,
-        work_q: Queue = None,
-        task_docker=None,
-        power: int = None,
-        debug: bool = True,
-        timeout: float = 60,
+            self,
+            work_q: Queue = None,
+            task_docker=None,
+            power: int = None,
+            debug: bool = True,
+            timeout: float = 60,
     ):
         # 任务容器：queue
         self.work_q = work_q if work_q else Queue()

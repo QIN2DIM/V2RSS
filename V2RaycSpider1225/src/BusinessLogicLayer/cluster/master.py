@@ -168,13 +168,34 @@ class BaseAction:
         :return:
         """
         if method == "email":
-            response = requests.get("http://127.0.0.1:8847/get_email")
-            res_json = response.json()
-            self.email_object_context = res_json.get("context")
+            try:
+                response = requests.get("http://127.0.0.1:8847/get_email", timeout=1)
+                res_json = response.json()
+                self.email_object_context = res_json.get("context")
+            except requests.exceptions.ConnectionError:
+                from ..utils.armour import apis_get_email_context
+                self.email_object_context = apis_get_email_context(self.chromedriver_path, silence=True)
         elif method == "code":
-            response = requests.post("http://127.0.0.1:8847/get_email_code", data=self.email_object_context)
-            res_json: dict = response.json()
-            self.email_object_context["code"] = res_json.get("email_code")
+            try:
+                response = requests.post(
+                    "http://127.0.0.1:8847/get_email_code",
+                    data=self.email_object_context,
+                    timeout=1
+                )
+                res_json: dict = response.json()
+                self.email_object_context["code"] = res_json.get("email_code")
+            except requests.exceptions.ConnectionError:
+                from ..utils.armour import apis_get_verification_code
+                link = self.email_object_context.get("link", "")
+                if link.startswith("https://"):
+                    driver = self.email_object_context.get("driver")
+                    email_code = apis_get_verification_code(
+                        link=link,
+                        chromedriver_path=self.chromedriver_path,
+                        driver=driver,
+                        silence=True
+                    )
+                    self.email_object_context["code"] = email_code
 
     def _is_timeout(self):
         """任务超时简易判断"""
@@ -939,6 +960,52 @@ class ActionMasterGeneral(BaseAction):
         # elif self.hyper_params['kit']: ...
         # elif self.hyper_params['qtl']: ...
 
+    def prism_action(self, api: Chrome, force_draw: int = 5):
+        """
+
+        :param force_draw: 测试功能，尝试延拓订阅时长
+        :param api:
+        :return:
+        """
+        xpath_page_shop = "//div[contains(@onclick,'shop')]"
+        xpath_button_buy = "//a[contains(@onclick,'buyConfirm')]"
+
+        if not isinstance(force_draw, int):
+            force_draw = 5
+        force_draw = 1 if force_draw < 1 else force_draw
+
+        try:
+            # 点击商城转换页面
+            time.sleep(1 + self.beat_dance)
+            WebDriverWait(api, 10).until(expected_conditions.presence_of_element_located((
+                By.XPATH, xpath_page_shop
+            ))).click()
+        except ElementNotInteractableException:
+            # 解决弹窗遮挡
+            time.sleep(0.5 + self.beat_dance)
+            api.find_element(By.XPATH, "//button").click()
+
+            # 再次尝试跳转
+            time.sleep(0.5 + self.beat_dance)
+            WebDriverWait(api, 10).until(expected_conditions.element_to_be_clickable((
+                By.XPATH, xpath_page_shop
+            ))).click()
+
+        # 识别免费计划并购买
+        time.sleep(1 + self.beat_dance)
+        buy_free_plan = WebDriverWait(api, 10).until(expected_conditions.presence_of_element_located((
+            By.XPATH, xpath_button_buy
+        )))
+        for i in range(force_draw):
+            try:
+                buy_free_plan.click()
+            except WebDriverException:
+                pass
+
+        # 回到主页
+        time.sleep(0.1 + self.beat_dance)
+        api.get(self.register_url)
+
     def run(self, api=None):
         # 检测实例状态
         if not self.check_heartbeat():
@@ -966,6 +1033,9 @@ class ActionMasterGeneral(BaseAction):
             # 验证 endurance 权限
             if not self.hyper_params.get("endurance", True):
                 return
+            # 识别特种 Prism 实例，执行预购模式
+            if self.hyper_params.get("prism"):
+                self.prism_action(api, force_draw=self.life_cycle)
             # 根据原子类型订阅的优先顺序 依次捕获
             self.capture_share_link(api)
             # ======================================

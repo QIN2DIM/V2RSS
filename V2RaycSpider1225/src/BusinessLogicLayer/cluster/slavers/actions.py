@@ -279,9 +279,8 @@ ActionAaxCloud = {
     "name": "ActionAaxCloud",
     "register_url": "https://aaxc.club/auth/register",
     "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "hyper_params": {"ssr": False, "v2ray": True, "prism": True},
     "email": "@gmail.com",
-    "feature": "prism",
     "life_cycle": 1,
 }
 # =============================================
@@ -333,7 +332,7 @@ ActionAzIcoCloud = {
     "name": "ActionAzIcoCloud",
     "register_url": "https://azi.azzico.cc/auth/register",
     "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -514,7 +513,7 @@ ActionFETVCloud = {
     "name": "ActionFETVCloud",
     "register_url": "https://de1.foreign-expat-tv.win/auth/register",
     "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
     "email": "@fetv.com",
     "life_cycle": 2,
 }
@@ -528,7 +527,7 @@ ActionYesDaddyCloud = {
     "name": "ActionYesDaddyCloud",
     "register_url": "https://www.yesdaddy.win/auth/register",
     "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 10},
+    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 5},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -546,26 +545,113 @@ ActionTaoHaiCloud = {
     "email": "@gmail.com",
     "life_cycle": 2,
 }
-
+# =============================================
+# ActionLilyCloud
+# - change log:
+#   - 2021-12-15 [1day 5G + 10 * 2G co-invite]
+# =============================================
+ActionLilyCloud = {
+    "name": "ActionLilyCloud",
+    "register_url": "https://lilyco.cc/auth/register",
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5, "usr_email": True},
+    "email": "@gmail.com",
+    "life_cycle": 1,
+}
+# =============================================
+# ActionDogeCloud
+# - change log:
+#   - 2021-12-15 [2day 256MB + 1010 * 2G co-invite]
+#   - 特种实例，订阅时长延拓
+# =============================================
+ActionDogeCloud = {
+    "name": "ActionDogeCloud",
+    "register_url": "https://doggetech.com/auth/register",
+    "anti_slider": True,
+    "hyper_params": {"ssr": False, "v2ray": True, "prism": True, "co-invite": 7},
+    "email": "@gmail.com",
+    "life_cycle": 4,
+}
+# =============================================
+# ActionLieBaoCloud
+# - change log:
+#   - 2021-12-15 [3day 10G + 10 * 2G co-invite]
+# =============================================
+ActionLieBaoCloud = {
+    "name": "ActionLieBaoCloud",
+    "register_url": "https://www.xiaoliebao.xyz/auth/register",
+    "anti_slider": False,
+    "hyper_params": {"ssr": True, "v2ray": False, "co-invite": 3, "anti_email": True},
+    "email": "@gmail.com",
+    "life_cycle": 3,
+}
+# =============================================
+# ActionPorkCloud
+# - change log:
+#   - 2021-12-15 [3day 3G + 100 * 30G co-invite]
+#   - prism 特种实例
+# =============================================
+ActionPorkCloud = {
+    "name": "ActionPorkCloud",
+    "register_url": "https://prime.ypork.com/auth/register",
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "anti_email": True, "prism": True, "co-invite": 3},
+    "email": "@gmail.com",
+    "life_cycle": 4,
+}
+# =============================================
+# ActionMaTrixCloud
+# - change log:
+#   - 2021-12-15 [4h 10G + 1000 * 2G co-invite]
+# =============================================
+ActionMaTrixCloud = {
+    "name": "ActionMaTrixCloud",
+    "register_url": "https://matrixap.com/auth/register",
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "anti_email": True, "co-invite": 3},
+    "email": "@gmail.com",
+    "life_cycle": 1,
+}
+# =============================================
+# ActionGoWorldCloud
+# - change log:
+#   - 2021-12-15 [35day 0.5G + 10 * 2G co-invite]
+# =============================================
+ActionGoWorldCloud = {
+    "name": "ActionGoWorldCloud",
+    "register_url": "https://v.goworld.xyz/auth/register",
+    "anti_slider": False,
+    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 10},
+    "email": "@gmail.com",
+    "life_cycle": 7,
+}
 # 执行队列
 __entropy__ = [
+    # tmux attach -t v2rss
     # cd .. && git pull origin master && cd src && python3 main.py synergy
     # cd .. && git pull origin master && cd src && python3 main.py deploy --synergy=False
     # ------------------------------------------
     # [启动] 无障碍
     # ------------------------------------------
-    # ActionZZCloud,  # v2ray 6day 100G
     ActionFETVCloud,  # v2ray 2day
     ActionYesDaddyCloud,  # v2ray 1day
     ActionAzIcoCloud,  # v2ray 1day
-
+    ActionLilyCloud,  # v2ray 1day
+    ActionGoWorldCloud,  # v2ray 35day
     # ------------------------------------------
     # [启动] 需要滑动验证
     # ------------------------------------------
-    # ActionReCloud,  # v2ray 1day
-    # ActionSuFeiCloud,  # v2ray 1day
     ActionGoGoCloud,  # v2ray 1day
-
+    ActionDogeCloud,  # v2ray N-day prism
+    # ------------------------------------------
+    # [启动] 需要邮箱验证
+    # ------------------------------------------
+    # ActionGiraffeCloud,  # v2ray 2day 23G=(3'+10*2')G
+    # ActionMaTrixCloud,  # v2ray 4h
+    ActionPorkCloud,  # v2ray N-day prism
+    # ------------------------------------------
+    # [启动] 需要声纹验证
+    # ------------------------------------------
 ]
 
 # 备选可执行队列
@@ -573,13 +659,23 @@ __pending__ = [
     # ------------------------------------------
     # [启动] 无障碍
     # ------------------------------------------
+    ActionZZCloud,  # v2ray 6day 100G
     ActionHuoXingCloud,  # v2ray 1day 11G=(1'+5*2')G
     # ------------------------------------------
     # [启动] 需要滑动验证
     # ------------------------------------------
+    # ActionReCloud,  # v2ray 1day
+    # ActionSuFeiCloud,  # v2ray 1day
     ActionViCloud,  # v2ray 2day 11G=(1'+5*2')G
     ActionPPCloud,  # v2ray 1day 62G=(2'+3*20')G
     ActionLittleCloud,  # v2ray 1day 40G=(10'+6*5')G
+    # ------------------------------------------
+    # [启动] 需要邮箱验证
+    # ------------------------------------------
+    ActionLieBaoCloud,
+    # ------------------------------------------
+    # [启动] 需要声纹验证
+    # ------------------------------------------
 ]
 
 # 弃用
@@ -598,7 +694,7 @@ deprecated_actions = [
     ActionJcBbCloud,  # ssr [1day 0G + 30 * 2 co-invite]
 
     # <自选>
-    ActionGiraffeCloud,  # v2ray 2day 23G=(3'+10*2')G
+
     # ------------------------------------------
     # [停用] GoogleCAPTHCA
     # ------------------------------------------

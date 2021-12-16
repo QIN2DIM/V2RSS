@@ -8,12 +8,10 @@ from src.BusinessLogicLayer.plugins.accelerator import booster
 from loguru import logger
 
 
+@logger.catch()
 def demo():
-    from src.BusinessLogicLayer.cluster.slavers.actions import ActionFETVCloud
-    try:
-        booster(docker=ActionFETVCloud, silence=True, power=1, assault=True)
-    except Exception as e:
-        logger.exception(e)
+    from src.BusinessLogicLayer.cluster.slavers.actions import ActionGoWorldCloud
+    booster(docker=ActionGoWorldCloud, silence=True, power=1, assault=True)
 
 
 if __name__ == '__main__':

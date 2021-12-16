@@ -47,7 +47,7 @@ class EmailRelay:
     def get_temp_email(self, api: Chrome, timeout: int = 10):
         time.sleep(1)
         if self.silence:
-            api.save_screenshot("haha.png")
+            api.save_screenshot("QIN2DIM-V2RSS.png")
 
         activate_email: str = WebDriverWait(api, timeout).until(presence_of_element_located((
             By.TAG_NAME, "input"

@@ -10,7 +10,6 @@ import os
 
 from loguru import logger
 from requests import HTTPError, ConnectionError
-
 from selenium.common.exceptions import (
     TimeoutException,
     WebDriverException,
