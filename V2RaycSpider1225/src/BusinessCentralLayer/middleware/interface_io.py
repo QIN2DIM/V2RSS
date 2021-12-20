@@ -3,6 +3,7 @@ __all__ = ["SystemInterface"]
 import multiprocessing
 import sys
 
+import redis.exceptions
 from redis.exceptions import ConnectionError
 
 from BusinessCentralLayer.setting import (
@@ -199,7 +200,14 @@ class _SystemEngine:
         :return:
         """
         synergy_workers = kwargs.get("workers", None)
-        CollaboratorScheduler(synergy_workers=synergy_workers).hosting()
+        cbs = CollaboratorScheduler(synergy_workers=synergy_workers)
+        for i in range(99):
+            if i != 0:
+                logger.debug("<SystemProcess> 尝试重构服务... - service=Synergy")
+            try:
+                cbs.hosting()
+            except redis.exceptions.ConnectionError:
+                logger.critical("<SystemProcess> 服务宕机 - service=Synergy")
 
     @staticmethod
     def run(beat_sync=True, force_run=None) -> None:

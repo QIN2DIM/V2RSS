@@ -8,20 +8,22 @@ import time
 import requests
 import csv
 import os
-import shutil
 import sys
-
 from BusinessCentralLayer.middleware.interface_io import SystemInterface
 from BusinessCentralLayer.middleware.subscribe_io import select_subs_to_admin
 from BusinessCentralLayer.middleware.redis_io import EntropyHeap
-from BusinessLogicLayer.apis.staff_mining import staff_api
-from BusinessLogicLayer.cluster.slavers import __entropy__
 from BusinessLogicLayer.plugins.accelerator import (
-    booster,
     SubscribesCleaner,
     SubscribeParser,
 )
 from BusinessLogicLayer.utils import build
+from BusinessLogicLayer.apis import (
+    mining,
+    entropy,
+    runner,
+    clear,
+    ash,
+)
 from BusinessCentralLayer.setting import (
     logger,
     DEFAULT_POWER,
@@ -33,8 +35,6 @@ from BusinessCentralLayer.setting import (
     SERVER_DIR_CACHE_BGPIC,
     REDIS_SLAVER_DDT,
     terminal_echo,
-    SERVER_DIR_DATABASE_LOG,
-    SERVER_DIR_SSPANEL_MINING,
     COMMAND_EXECUTOR,
     DynamicEnvironment,
 )
@@ -284,35 +284,46 @@ class Scaffold:
             print(f">>> [{i + 1}/{tracer.__len__()}]{tag}")
 
     @staticmethod
-    def mining():
+    def mining(
+            env: str = "development",
+            silence: bool = True,
+            power: int = 16,
+            collector: bool = False,
+            classifier: bool = False,
+            source: str = "local",
+            batch: int = 1,
+    ):
         """
-        启动一次对 SSPanel-Uim 站点的检索与分类。
+        运行 Collector 以及 Classifier 采集并过滤基层数据
 
-        该项任务需要为国内IP开启系统代理。
+        Usage: python main.py mining --env=production                       |在 GitHub Actions 中构建生产环境
+        or: python main.py mining --silence=False                           |显式启动，在 linux 中运行时无效
+        or: python main.py mining --power=4                                 |指定分类器运行功率
+        or: python main.py mining --classifier --source=local               |启动分类器，指定数据源为本地缓存
+        or: python main.py mining --classifier --source=remote --batch=1    |启动分类器，指定远程数据源
+        or: python main.py mining --collector                               |启动采集器
 
-        Usage: python main.py mining
-
+        :param source: within [local remote] 指定数据源，仅对分类器生效
+            - local：使用本地 Collector 采集的数据进行分类
+            - remote：使用 SSPanel-Mining 母仓库数据进行分类（需要下载数据集）
+        :param batch: batch 应是自然数，仅在 source==remote 时生效，用于指定拉取的数据范围。
+            - batch=1 表示拉取昨天的数据（默认），batch=2 表示拉取昨天+前天的数据，以此类推往前堆叠
+            - 显然，当设置的 batch 大于母仓库存储量时会自动调整运行了逻辑，防止溢出。
+        :param env: within [development production]
+        :param silence: 采集器是否静默启动，默认静默。
+        :param power: 分类器运行功率。
+        :param collector: 采集器开启权限，默认关闭。
+        :param classifier: 分类器控制权限，默认关闭。
         :return:
         """
-        use_collector = staff_api.is_first_run()
-        classify_dir, staff_info = staff_api.go(
-            debug=False,
-            silence=True,
-            power=os.cpu_count() * 2,
-            identity_recaptcha=False,
-            use_collector=use_collector,
-            use_checker=True,
-            use_generator=False,
-        )
-        staff_api.refresh_cache(mode="de-dup")
-        print(f"\n\nSTAFF INFO\n{'_' * 32}")
-        for element in staff_info.items():
-            for i, tag in enumerate(element[-1]):
-                print(f">>> [{i + 1}/{len(element[-1])}]{element[0]}: {tag}")
-        print(f">>> 文件导出目录: {classify_dir}")
+        if collector:
+            mining.run_collector(env=env, silence=silence)
+
+        if classifier:
+            mining.run_classifier(power=power, source=source, batch=batch)
 
     @staticmethod
-    def entropy(update: bool = False, remote: bool = False):
+    def entropy(update: bool = False, remote: bool = False, check: bool = False):
         """
         采集队列的命令行管理工具。
 
@@ -320,31 +331,17 @@ class Scaffold:
         or: python main.py entropy --remote 输出``远程队列``的摘要信息
         or: python main.py entropy --upload 将``本机采集队列``辐射至远端，替换最新共享队列数据
 
+        :param check: 检查本地执行队列的健康状态
         :param remote: 输出``远程队列``的摘要信息
         :param update: 将本地 action.py entropy 同步至共享任务队列
         :return:
         """
-        eh = EntropyHeap()
-
-        # 将要输出的摘要数据 <localQueue> or <remoteQueue>
-        check_entropy = __entropy__ if not remote else eh.sync()
-
-        # 当摘要数据非空时输出至控制台
-        if check_entropy:
-            for i, host_ in enumerate(check_entropy):
-                print(f">>> [{i + 1}/{check_entropy.__len__()}]{host_['name']}")
-                print(f"注入地址: {host_['register_url']}")
-                print(f"存活周期: {host_['life_cycle']}天")
-                print(
-                    f"运行参数: {', '.join([f'{j[0].lower()}={j[-1]}' for j in host_['hyper_params'].items() if j[-1]])}\n"
-                )
-        else:
-            logger.warning("<ScaffoldGuider> empty entropy.")
-
-        # 更新远程队列
+        if not check:
+            entropy.preview(remote=remote)
         if update:
-            eh.update(new_entropy=__entropy__)
-            logger.success("<ScaffoldGuider> update remote tasks queue.")
+            entropy.update()
+        if check:
+            entropy.check(power=16)
 
     @staticmethod
     def ping():
@@ -359,38 +356,36 @@ class Scaffold:
         logger.info(f"<ScaffoldGuider> Ping || {RedisClient().test()}")
 
     @staticmethod
-    def spawn(join: bool = False, explicit=False):
+    def spawn(
+            silence: bool = True,
+            power: int = None,
+            join: bool = False,
+            remote: bool = False,
+    ):
         """
         并发执行本机所有采集器任务，每个采集器实体启动一次，并发数取决于本机硬件条件。
 
-        Usage: python main.py spawn 启动常规实例
-        or: python main.py spawn --join 启动 synergy 运行实例（也即启动所有运行实例）
-        or: python main.py spawn --explicit 显式启动。这在 linux 系统被中禁止使用
-
-        :param explicit: 显式启动 默认为 False
+        Usage: python main.py spawn                 |启动本地 non-synergy 实例
+        or: python main.py spawn --join             |启动本地所有可执行实例
+        or: python main.py spawn --silence=False    |显式启动。这在 linux 系统被中禁止使用
+        or: python main.py spawn --power=4          |指定并发数
+        or: python main.py spawn --remote           |读取远程队列的运行实例
+        :param silence:
+        :param power:
         :param join:
+        :param remote:
         :return:
         """
-        # 静默/显示启动参数调整
-        silence = True if "linux" in sys.platform else not bool(explicit)
-
-        # 根据 join 参数调整相应的运行实例队列
-        _docker = (
-            __entropy__
-            if join
-            else [i for i in __entropy__ if not i["hyper_params"].get("co-invite")]
-        )
-
         # 检查运行配置
         _ConfigQuarantine(force=bool(COMMAND_EXECUTOR)).check_config(call_driver=not bool(COMMAND_EXECUTOR))
 
-        # 生产运行实例
         logger.info("<ScaffoldGuider> Spawn || MainCollector")
-        booster(
-            docker=_docker,
+
+        runner.spawn(
             silence=silence,
-            power=DEFAULT_POWER,
-            assault=True,
+            power=power,
+            join=join,
+            remote=remote,
         )
 
     @staticmethod
@@ -405,7 +400,8 @@ class Scaffold:
         logger.info("<ScaffoldGuider> Overdue || Redis DDT")
         SystemInterface.ddt()
 
-    def decouple(self):
+    @staticmethod
+    def decouple(env: str = "development"):
         """
         扫描所指订阅池，清除无效订阅。
 
@@ -418,7 +414,7 @@ class Scaffold:
         :return:
         """
         logger.info("<ScaffoldGuider> Decouple || General startup")
-        if self.env == "development":
+        if env == "development":
             SubscribesCleaner(debug=True).interface(power=DEFAULT_POWER)
         else:
             SubscribesCleaner(debug=False).interface(power=DEFAULT_POWER)
@@ -435,54 +431,10 @@ class Scaffold:
 
         :return:
         """
-        _permission = {
-            "logs": input(terminal_echo("是否清除所有运行日志[y]?", 2)),
-            "cache": input(terminal_echo("是否清除所有运行缓存[y]?", 2)),
-        }
-
-        # 清除日志 ~/database/logs
-        if os.path.exists(SERVER_DIR_DATABASE_LOG) and _permission["logs"].startswith(
-                "y"
-        ):
-            history_logs = os.listdir(SERVER_DIR_DATABASE_LOG)
-            for _log_file in history_logs:
-                if len(_log_file.split(".")) > 2:
-                    _log_path = os.path.join(SERVER_DIR_DATABASE_LOG, _log_file)
-                    os.remove(_log_path)
-                    terminal_echo(f"清除运行日志-->{_log_path}", 3)
-
-        # 清除运行缓存 ~/database/
-        if _permission["cache"].startswith("y"):
-            cache_blocks = {
-                # ~/database/temp_cache/
-                SERVER_DIR_DATABASE_CACHE,
-                # ~/database/staff_hosts/
-                SERVER_DIR_SSPANEL_MINING,
-            }
-
-            for block in cache_blocks:
-                # 扫描文件
-                if os.path.exists(block):
-                    _files = [os.path.join(block, i) for i in os.listdir(block)]
-                    # 清除文件
-                    for _file in _files:
-                        if os.path.isfile(_file):
-                            os.remove(_file)
-                        else:
-                            shutil.rmtree(_file)
-                            os.mkdir(_file)
-                        terminal_echo(f"清除运行缓存-->{_file}", 3)
-            terminal_echo("系统缓存文件清理完毕", 1)
+        return clear.clear()
 
     @staticmethod
     def clean():
-        """
-        清理系统运行缓存，同 clear
-
-        Usage: python main.py clean
-
-        :return:
-        """
         return Scaffold.clear()
 
     # ----------------------------------
@@ -615,3 +567,46 @@ class Scaffold:
             host=host,
             port=port
         )
+
+    # TODO 以下配置在开源项目中隐去，请勿同步
+    # ----------------------------------
+    # Front-end debugging interface
+    # ----------------------------------
+    @staticmethod
+    def panel():
+        """
+        打开 panel 调试面板。
+
+        Usage: python main.py panel
+
+        :return:
+        """
+        from BusinessViewLayer.panel.panel import startup_from_platform
+
+        startup_from_platform()
+
+    @staticmethod
+    def ash():
+        """
+        一键拉取、合并、自动更新 Clash for Windows 订阅文件。
+
+        1. 仅可在 Windows 操作系统上运行。
+        2. 清洗订阅池，并将所有类型的节点分享链接合并转写为 Clash.yaml配置文件，
+        借由 URL Scheme 自动打开 Clash 并下载更新配置文件。
+
+        Usage: python main.py ash
+
+        :return:
+        """
+        logger.info("<ScaffoldGuider> ash | Clash订阅堆一键生成脚本")
+
+        # --------------------------------------------------
+        # 参数清洗
+        # --------------------------------------------------
+        # if 'win' not in sys.platform:
+        #     return
+
+        # --------------------------------------------------
+        # 运行脚本
+        # --------------------------------------------------
+        return ash(debug=True, decouple=True)

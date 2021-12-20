@@ -405,7 +405,7 @@ class SliderValidator:
         """
         # Change the execution order appropriately according to the specific situation.
         # 1. EC.Presence_of_all_elements_located.
-        # 2. Get the slider object.
+        # 2. Get the anti_slider object.
         # 3. Get a complete screenshot.
         # 4. Activate GeeTest.
         # 5. Get a screenshot of the gap.
@@ -414,5 +414,5 @@ class SliderValidator:
         # 6. Identify the coordinates of the left boundary of the gap.
         # ~(Visual recognition results in debug mode.)
         # 7. Generate the trajectory of the physical operator.
-        # 8. Drag the slider.
+        # 8. Drag the anti_slider.
         # 9. Determine whether the execution is successful and return the relevant bool signal.

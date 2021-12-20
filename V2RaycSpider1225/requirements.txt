@@ -19,3 +19,6 @@ urllib3>=1.25.11
 apscheduler>=3.8.0
 faker>=8.11.0
 fire>=0.4.0
+cloudscraper>=1.2.58
+pydub>=0.25.1
+SpeechRecognition

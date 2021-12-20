@@ -31,6 +31,7 @@ from BusinessCentralLayer.setting import (
     CHROMEDRIVER_PATH,
     TIME_ZONE_CN,
     SERVER_DIR_CACHE_BGPIC,
+    SERVER_DIR_CACHE_AUDIO,
     logger,
     COMMAND_EXECUTOR,
 )
@@ -50,7 +51,6 @@ class BaseAction:
             action_name=None,
             email_class=None,
             life_cycle=None,
-            anti_slider=None,
             chromedriver_path=None,
             endurance=None,
     ):
@@ -63,7 +63,6 @@ class BaseAction:
         :param action_name: 任务标签
         :param email_class: register页面显示的默认邮箱；常见为 @qq.com or @gmail.com
         :param life_cycle: 会员试用时长 trail time；
-        :param anti_slider: 目标站点是否具备极验（GeeTest）滑动验证
         """
 
         # =====================================
@@ -76,7 +75,6 @@ class BaseAction:
         action_name = "BaseAction" if action_name is None else action_name
         email_class = "@qq.com" if email_class is None else email_class
         life_cycle = 1 if life_cycle is None else life_cycle
-        anti_slider = True if anti_slider is None else anti_slider
         chromedriver_path = (
             "chromedriver" if chromedriver_path is None else chromedriver_path
         )
@@ -101,7 +99,6 @@ class BaseAction:
         self.beat_sync = beat_sync
         self.action_name = action_name
         self.email_class = email_class
-        self.anti_slider = anti_slider
         # =====================================
         # v-5.4.r 添加功能：I/O任务超时设置
         # =====================================
@@ -119,10 +116,19 @@ class BaseAction:
         # =====================================
         self.endurance = endurance
         # =====================================
-        # v-5.5.d 添加功能：邮箱验证 str
+        # v-5.5.d 添加功能：邮箱验证
         # =====================================
-        self.anti_email = False
         self.email_object_context = {}
+        # =====================================
+        # v-5.5.d 添加功能：声纹验证
+        # =====================================
+        self.dir_audio_cache = SERVER_DIR_CACHE_AUDIO
+        """
+        TODO [√]系统超参数
+        """
+        self.anti_email = False
+        self.anti_slider = False
+        self.anti_recaptcha = False
 
     def utils_slider(self, api):
         """
@@ -196,6 +202,74 @@ class BaseAction:
                         silence=True
                     )
                     self.email_object_context["code"] = email_code
+
+    def utils_recaptcha(self, api: Chrome):
+        """
+        处理 SSPanel 中的 Google reCAPTCHA v2 Checkbox 人机验证。
+
+        使用音频声纹识别验证而非直面图像识别。
+
+        > 无论站点本身可否直连访问，本模块的执行过程的流量必须过墙，否则音频文件的下载及转码必然报错。
+        > 可能的异常有:
+         - speech_recognition.RequestError
+         - http.client.IncompleteRead
+
+        :param api:
+        :return:
+        """
+        from ..utils.armour import (
+            activate_recaptcha,
+            handle_audio,
+            parse_audio,
+            submit_recaptcha
+        )
+
+        """
+        TODO [√]激活 reCAPTCHA 并获取音频文件下载链接
+        ------------------------------------------------------
+        """
+        audio_url: str = activate_recaptcha(api)
+
+        # Google reCAPTCHA 风控
+        if not audio_url:
+            logger.error("运行实例已被风控。\n"
+                         "可能原因及相关建议如下：\n"
+                         "1.目标站点可能正在遭受流量攻击，请更换测试用例；\n"
+                         "2.代理IP可能已被风控，建议关闭代理运行或更换代理节点；\n"
+                         "3.本机设备所在网络正在传输恶意流量，建议切换网络如切换WLAN。\n"
+                         ">>> https://developers.google.com/recaptcha/docs/faq#"
+                         "my-computer-or-network-may-be-sending-automated-queries")
+            raise WebDriverException
+
+        """
+        TODO [√]音频转码 （MP3 --> WAV） 增加识别精度
+        ------------------------------------------------------
+        """
+        path_audio_wav: str = handle_audio(
+            audio_url=audio_url,
+            dir_audio_cache=self.dir_audio_cache
+        )
+        # logger.success("Handle Audio - path_audio_wav=`{}`".format(path_audio_wav))
+
+        """
+        TODO [√]声纹识别 --(output)--> 文本数据
+        ------------------------------------------------------
+        # speech_recognition.RequestError 需要挂起代理
+        # http.client.IncompleteRead 网速不佳，音频文件未下载完整就开始解析
+        """
+        answer: str = parse_audio(path_audio_wav)
+        # logger.success("Parse Audio - answer=`{}`".format(answer))
+
+        """
+        TODO [√] 定位输入框并填写文本数据
+        ------------------------------------------------------
+        # speech_recognition.RequestError 需要挂起代理
+        # http.client.IncompleteRead 网速不佳，音频文件未下载完整就开始解析
+        """
+        response = submit_recaptcha(api, answer=answer)
+        if not response:
+            logger.error("Submit reCAPTCHA answer.")
+            raise TimeoutException
 
     def _is_timeout(self):
         """任务超时简易判断"""
@@ -325,13 +399,13 @@ class BaseAction:
             except AttributeError:
                 pass
             return _api
-        except PermissionError:
+        except (PermissionError, WebDriverException):
             if 'linux' in sys.platform:
-                logger.debug("Attempting to give executable permission to the `chromedriver`. | "
-                             f"path={CHROMEDRIVER_PATH}")
+                logger.critical("Attempting to give executable permission to the `chromedriver`. | "
+                                f"path={CHROMEDRIVER_PATH}")
                 os.system(f"chmod +x {CHROMEDRIVER_PATH}")
             else:
-                logger.warning("The `chromedriver` executable may have wrong permissions.")
+                logger.critical("The `chromedriver` executable may have wrong permissions.")
         except SessionNotCreatedException as e:
             logger.error(
                 f"<{self.action_name}> 任務核心無法啓動：ChromeDriver 與 Chrome 版本不匹配。 "
@@ -429,6 +503,18 @@ class BaseAction:
                 email_code = api.find_element(By.ID, "email_code")
                 email_code.clear()
                 email_code.send_keys(verification_code)
+            # 人机声纹验证
+            if self.anti_recaptcha:
+                try:
+                    self.utils_recaptcha(api)
+                    # 回到 main-frame 否则后续DOM操作无法生效
+                    api.switch_to.default_content()
+                except TimeoutException:
+                    time.sleep(0.5 + self.beat_dance)
+                    continue
+                # Google reCAPTCHA 风控
+                except WebDriverException:
+                    raise WebDriverException
             # ======================================
             # 提交注册数据，完成注册任务
             # ======================================
@@ -605,9 +691,7 @@ class BaseAction:
 
         :return:
         """
-        title = ">> {} <{}> slider={} ".format(
-            protocol, self.action_name, self.anti_slider
-        )
+        title = ">> {} <{}> ".format(protocol, self.action_name)
         if hyper_params:
             title += " ".join([f"{i[0]}={i[1]}" for i in hyper_params.items()])
 
@@ -644,7 +728,11 @@ class BaseAction:
                 )
             ).get_attribute(href_xpath_str)
         )
-
+        logger.success(
+            ">> GET <{}> --> [{}] {}".format(
+                self.action_name, class_, self.subscribe
+            )
+        )
         # 无持久化权限，链接不送入数据库
         if not self.endurance:
             logger.success(
@@ -669,11 +757,6 @@ class BaseAction:
                     }
                     # 分发订阅
                     FlexibleDistributeV2().publish(image)
-                    logger.success(
-                        ">> GET <{}> --> [{}] {}".format(
-                            self.action_name, class_, self.subscribe
-                        )
-                    )
                     # 数据存储成功后结束循环
                     break
                 except Exception as e:
@@ -847,7 +930,6 @@ class ActionMasterGeneral(BaseAction):
             beat_sync: bool = True,
             email: str = None,
             life_cycle: int = None,
-            anti_slider: bool = False,
             hyper_params: dict = None,
             action_name: str = None,
             debug: bool = False,
@@ -858,7 +940,6 @@ class ActionMasterGeneral(BaseAction):
 
         @param register_url: 机场注册网址，STAFF原生register接口
         @param silence: 静默启动；为True时静默访问<linux 必须启用>
-        @param anti_slider: 目标是否有反爬虫措施；默认为True BaseAction将根据目标是否具备反爬虫措施做出不同的行为
         @param email: register页面显示的默认邮箱；常见为 @qq.com or @gmail.com
         @param life_cycle: 会员试用时长 trail time；
         @param hyper_params: 模型超级参数
@@ -869,7 +950,6 @@ class ActionMasterGeneral(BaseAction):
             beat_sync=beat_sync,
             email_class=email,
             life_cycle=life_cycle,
-            anti_slider=anti_slider,
             debug=debug,
             chromedriver_path=chromedriver_path,
             endurance=endurance,
@@ -880,8 +960,8 @@ class ActionMasterGeneral(BaseAction):
         self.register_url = register_url
         # 定义模型超级参数
         self.hyper_params = {
-            "v2ray": True,
-            "ssr": True,
+            "v2ray": False,
+            "ssr": False,
             # "trojan": False,
             # # Shadowrocket
             # "rocket": False,
@@ -893,10 +973,14 @@ class ActionMasterGeneral(BaseAction):
             "usr_email": False,
             # check_in | 机场签到（仅在注册时签到，不提供每日维护）
             "check_in": False,
-            # co-invite 协同增益模式（园丁系统子模块）
+            # co-invite 协同订阅模式（园丁系统子模块）
             "co-invite": False,
             # anti_email 邮箱验证模式
             "anti_email": False,
+            # anti_recaptcha Google reCAPTCHA 人机验证模式
+            "anti_recaptcha": False,
+            # anti_slider GeeTest 滑块验证
+            "anti_slider": False
         }
         # 更新模型超参数
         if hyper_params:
@@ -908,6 +992,8 @@ class ActionMasterGeneral(BaseAction):
         # 切换工作模式
         self.need_collaborator = bool(self.hyper_params["co-invite"])
         self.anti_email = bool(self.hyper_params["anti_email"])
+        self.anti_recaptcha = bool(self.hyper_params["anti_recaptcha"])
+        self.anti_slider = bool(self.hyper_params["anti_slider"])
         # 集群节拍
         self.beat_dance = self.hyper_params.get("beat_dance", 0)
 
@@ -1003,7 +1089,7 @@ class ActionMasterGeneral(BaseAction):
                 pass
 
         # 回到主页
-        time.sleep(0.1 + self.beat_dance)
+        time.sleep(1 + self.beat_dance)
         api.get(self.register_url)
 
     def run(self, api=None):
@@ -1087,7 +1173,6 @@ class ActionMasterGeneral(BaseAction):
             "name": self.action_name,
             "register_url": self.register_url,
             "life_cycle": self.life_cycle,
-            "anti_slider": self.anti_slider,
             "hyper_params": self.hyper_params,
             "email": "@gmail.com",
         }

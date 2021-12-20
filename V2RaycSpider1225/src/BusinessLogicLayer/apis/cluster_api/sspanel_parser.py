@@ -23,10 +23,9 @@ from BusinessLogicLayer.cluster.master import ActionMasterGeneral
 class SSPanelParser(ActionMasterGeneral):
     def __init__(self, url, silence=False, assault=True, anti_slider=True):
         super(SSPanelParser, self).__init__(
-            url,
-            silence,
-            assault,
-            anti_slider=anti_slider,
+            register_url=url,
+            silence=silence,
+            assault=assault
         )
 
         self.obj_parser = {}

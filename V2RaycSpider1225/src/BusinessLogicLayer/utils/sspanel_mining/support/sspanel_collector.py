@@ -1,6 +1,3 @@
-__all__ = ["StaffCollector"]
-
-import functools
 import random
 import sys
 import time
@@ -15,34 +12,37 @@ from tqdm import tqdm
 from ..common.exceptions import CollectorSwitchError
 
 
-class StaffCollector:
+class SSPanelHostsCollector:
     def __init__(
             self,
-            cache_path: str,
+            path_file_txt: str,
             chromedriver_path: str,
             silence: bool = True,
             debug: bool = False,
     ):
         """
 
-        :param cache_path:
+        :param path_file_txt:
         :param silence:
         :param debug:
         :param chromedriver_path:
         """
+        # 筛选 Malio 站点
         self._QUERY = "由 @editXY 修改适配。"
-        self.GOOGLE_SEARCH_API = f'https://www.google.com.hk/search?q="{self._QUERY}"&filter=0'
-        # self.SEARCH_QUERY = '"特此免费授予任何获得副本的人这个软件和相关的文档文件"'
 
+        # 全量搜集
+        # self._QUERY = 'inurl:staff "SSPanel V3 Mod UIM"'
+
+        self.GOOGLE_SEARCH_API = f'https://www.google.com.hk/search?q="{self._QUERY}"&filter=0'
         self.CHROMEDRIVER_PATH = chromedriver_path
-        self.cache_path = cache_path
+        self.path_file_txt = path_file_txt
         self.debug = debug
         self.silence = silence
         self.page_num = 1
 
     @staticmethod
     def _down_to_api(api: Chrome, search_query: str):
-        """键入并跳转至相关页面"""
+        """检索关键词并跳转至相关页面"""
         while True:
             try:
                 input_tag = api.find_element(By.XPATH, "//input[@name='q']")
@@ -139,16 +139,9 @@ class StaffCollector:
             "//div[contains(@class,'NJjxre')]//cite[@class='iUh30 qLRx3b tjvcx']"
         )
 
-        with open(self.cache_path, "a", encoding="utf8") as f:
+        with open(self.path_file_txt, "a", encoding="utf8") as f:
             for host in hosts:
                 f.write(f"{host.text.split(' ')[0].strip()}/auth/register\n")
-
-    @staticmethod
-    def counterattack(f):
-        @functools.wraps(f)
-        def wrapper(*args, **kwargs):
-            return f(*args, **kwargs)
-        return wrapper
 
     def set_spider_options(self) -> Chrome:
         # 实例化Chrome可选参数
@@ -174,25 +167,13 @@ class StaffCollector:
             options.add_argument("--headless")
             options.add_argument("--disable-gpu")
             options.add_argument("--disable-software-rasterizer")
-
         # 抑制自动化控制特征
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_experimental_option("useAutomationExtension", False)
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
         try:
-            _api = Chrome(options=options, executable_path=self.CHROMEDRIVER_PATH)
-            _api.execute_cdp_cmd(
-                "Page.addScriptToEvaluateOnNewDocument",
-                {
-                    "source": """
-                           Object.defineProperty(navigator, 'webdriver', {
-                             get: () => undefined
-                           })
-                         """
-                },
-            )
-            return _api
+            return Chrome(options=options, executable_path=self.CHROMEDRIVER_PATH)
         except WebDriverException as e:
             if "chromedriver" in str(e):
                 print(f">>> 指定目录下缺少chromedriver {self.CHROMEDRIVER_PATH}")
@@ -224,7 +205,13 @@ class StaffCollector:
         if new_status:
             loop_progress.set_postfix({"status": new_status})
 
-    def run(self, page_num: int = 26, sleep_node: int = 5):
+    def run(self, page_num: int = None, sleep_node: int = 5):
+        """
+
+        :param page_num: 期望采集数量
+        :param sleep_node: 休眠间隔
+        :return:
+        """
         self.page_num = 26 if page_num is None else page_num
 
         # API 实例化
@@ -235,7 +222,6 @@ class StaffCollector:
 
         try:
             api.get(self.GOOGLE_SEARCH_API)
-            # self._down_to_api(api=api, search_query=self._QUERY)
 
             self.reset_loop_progress(api=api, new_status="__pending__")
             # 获取page_num页的注册链接

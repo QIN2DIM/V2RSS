@@ -85,14 +85,5 @@ class _ClashTaskAsh:
             print(">>> 程序執行結束 請手動關閉交互窗口")
 
 
-class _Interface:
-    @staticmethod
-    def run(debug: bool = True, decouple: bool = True):
-        return _ClashTaskAsh(debug=debug, decouple=decouple).startup()
-
-
-api = _Interface()
-
-
 def ash(debug: bool = True, decouple: bool = True):
     return _ClashTaskAsh(debug=debug, decouple=decouple).startup()

@@ -7,7 +7,6 @@ ActionOhrCloud = {
     "name": "ActionOhrCloud",
     "register_url": "https://www.ssr99.xyz/auth/register",
     "life_cycle": 2,
-    "anti_slider": False,
     "hyper_params": {"ssr": True, "v2ray": True},
     "email": "@qq.com",
 }
@@ -21,8 +20,7 @@ ActionKakCloud = {
     "name": "ActionKakCloud",
     "register_url": "https://www.kaikaiyun.icu/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 4},
+    "hyper_params": {"v2ray": True, "anti_slider": True, "co-invite": 4},
     "email": "@gmail.com",
 }
 # =============================================
@@ -34,7 +32,6 @@ ActionJfCloud = {
     "name": "ActionJfCloud",
     "register_url": "https://www.jafiyun.cc/auth/register",
     "life_cycle": 1,
-    "anti_slider": False,
     "hyper_params": {"ssr": False, "v2ray": True},
     "email": "@gmail.com",
 }
@@ -47,7 +44,6 @@ ActionN95Cloud = {
     "name": "ActionN95Cloud",
     "register_url": "https://n95cloud.vip/auth/register",
     "life_cycle": 1,
-    "anti_slider": False,
     "hyper_params": {"ssr": True, "v2ray": True},
     "email": "@gmail.com",
 }
@@ -60,7 +56,6 @@ ActionTheSSR = {
     "name": "ActionTheSSR",
     "register_url": "https://ssrthe.shop/auth/register",
     "life_cycle": 1,
-    "anti_slider": False,
     "hyper_params": {"ssr": True, "v2ray": True},
     "email": "@qq.com",
 }
@@ -73,8 +68,7 @@ ActionUfoCloud = {
     "name": "ActionUfoCloud",
     "register_url": "https://ufocloud.xyz/auth/register",
     "life_cycle": 1,
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "hyper_params": {"v2ray": True},
     "email": "@qq.com",
 }
 # =============================================
@@ -86,8 +80,7 @@ ActionWgCloud = {
     "name": "ActionWgCloud",
     "register_url": "https://www.wiougong.space/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": True, "v2ray": True},
+    "hyper_params": {"ssr": True, "v2ray": True, "anti_slider": True, },
     "email": "@gmail.com",
 }
 # =============================================
@@ -99,8 +92,7 @@ ActionZuiSuCloud = {
     "name": "ActionZuiSuCloud",
     "register_url": "https://zuisucloud.cloud/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": True, "v2ray": True},
+    "hyper_params": {"ssr": True, "v2ray": True, "anti_slider": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -112,8 +104,7 @@ ActionJdSuCloud = {
     "name": "ActionJdSuCloud",
     "register_url": "https://jdycloud.xyz/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": True, "v2ray": False, "usr_email": True},
+    "hyper_params": {"ssr": True, "anti_slider": True, "usr_email": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -126,8 +117,7 @@ ActionHuoJianCloud = {
     "name": "ActionHuoJianCloud",
     "register_url": "https://www.666hjy.com/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": True, "v2ray": False},
+    "hyper_params": {"ssr": True, "anti_slider": True},
     "email": "@qq.com",
 }
 # =============================================
@@ -139,8 +129,7 @@ ActionUUCloud = {
     "name": "ActionUUCloud",
     "register_url": "https://www.uuyun.club/auth/register",
     "life_cycle": 1,
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "hyper_params": {"v2ray": True},
     "email": "@gmail.com",
 }
 
@@ -153,8 +142,7 @@ ActionMiTaoCloud = {
     "name": "ActionMiTaoCloud",
     "register_url": "https://mitaocloud.net/auth/register",
     "life_cycle": 1,
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "hyper_params": {"v2ray": True},
     "email": "@gmail.com",
 }
 
@@ -167,21 +155,20 @@ ActionMxCloud = {
     "name": "ActionMxCloud",
     "register_url": "https://www.mxyssr.com/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "hyper_params": {"v2ray": True, "anti_slider": True, },
     "email": "@gmail.com",
 }
 # =============================================
 # ActionGsouCloud
 # - change log:
-#   - 2021-06-16 [停用]新增九宫格人机验证
+#   - 2021-06-16 [停用]新增 reCAPTCHA 人机验证
+#   - 2021-12-19 [备选]
 # =============================================
 ActionGsouCloud = {
     "name": "ActionGsouCloud",
     "register_url": "https://gsou.cloud/auth/register",
-    "life_cycle": 3,
-    "anti_slider": False,
-    "hyper_params": {"ssr": True, "v2ray": False},
+    "life_cycle": 1,
+    "hyper_params": {"v2ray": True, "anti_recaptcha": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -197,8 +184,7 @@ ActionDuosCloud = {
     "name": "ActionDuosCloud",
     "register_url": "https://www.jiuyecaody.xyz/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 3},
+    "hyper_params": {"v2ray": True, "anti_slider": True, "co-invite": 3},
     "email": "@gmail.com",
 }
 # =============================================
@@ -210,8 +196,7 @@ ActionThunderCloud = {
     "name": "ActionThunderCloud",
     "register_url": "https://sdyun.cc/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": True, "v2ray": False},
+    "hyper_params": {"ssr": True, "v2ray": False, "anti_slider": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -225,8 +210,7 @@ ActionBitEbCloud = {
     "name": "ActionBitEbCloud",
     "register_url": "https://biteb.me/auth/register",
     "life_cycle": 3,
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "hyper_params": {"v2ray": True},
     "email": "@gmail.com",
 }
 
@@ -243,8 +227,7 @@ ActionJssForSSRCloud = {
     "name": "ActionJssForSSRCloud",
     "register_url": "https://www.jssr.cc/auth/register",
     "life_cycle": 2,
-    "anti_slider": True,
-    "hyper_params": {"ssr": True, "v2ray": False},
+    "hyper_params": {"v2ray": False, "anti_slider": True, },
     "email": "@gmail.com",
 }
 
@@ -252,22 +235,21 @@ ActionJssForV2rayCloud = {
     "name": "ActionJssForV2rayCloud",
     "register_url": "https://www.jssr.cc/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "hyper_params": {"v2ray": True, "anti_slider": True},
     "email": "@gmail.com",
 }
 
 # =============================================
 # Action7ccCloud
 # - change log:
-#   -2021-06-16 [剔除] 邮箱验证
+#   - 2021-06-16 [剔除] 邮箱验证
+#   - 2021-12-20 v2ray 1day 5G 1000*2'
 # =============================================
 Action7ccCloud = {
     "name": "Action7ccCloud",
     "register_url": "https://7cc.buzz/auth/register",
-    "life_cycle": 5,
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "life_cycle": 1,
+    "hyper_params": {"v2ray": True, "anti_email": True, "co-invite": 3},
     "email": "@qq.com",
 }
 # =============================================
@@ -278,8 +260,7 @@ Action7ccCloud = {
 ActionAaxCloud = {
     "name": "ActionAaxCloud",
     "register_url": "https://aaxc.club/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "prism": True},
+    "hyper_params": {"v2ray": True, "prism": True},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -292,8 +273,7 @@ ActionJs8cCloud = {
     "name": "ActionJs8cCloud",
     "register_url": "https://js8c.xyz/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True},
+    "hyper_params": {"v2ray": True, "anti_slider": True, "usr_email": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -305,8 +285,7 @@ ActionMaoQCloud = {
     "name": "ActionMaoQCloud",
     "register_url": "https://maoqiang.xyz/auth/register",
     "life_cycle": 2,
-    "anti_slider": False,
-    "hyper_params": {"ssr": True, "v2ray": False, "usr_email": True},
+    "hyper_params": {"ssr": True, "usr_email": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -318,8 +297,7 @@ ActionZZCloud = {
     "name": "ActionZZCloud",
     "register_url": "http://zhuzhu12.xyz/auth/register",
     "life_cycle": 15,
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "hyper_params": {"v2ray": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -331,8 +309,7 @@ ActionZZCloud = {
 ActionAzIcoCloud = {
     "name": "ActionAzIcoCloud",
     "register_url": "https://azi.azzico.cc/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "hyper_params": {"v2ray": True, "co-invite": 5},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -345,8 +322,7 @@ ActionKuaiZaiCloud = {
     "name": "ActionKuaiZaiCloud",
     "register_url": "https://www.kuaizai.xyz/auth/register",
     "life_cycle": 30,
-    "anti_slider": False,
-    "hyper_params": {"ssr": True, "v2ray": False},
+    "hyper_params": {"ssr": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -358,8 +334,7 @@ ActionKuaiZaiCloud = {
 ActionHuoXingCloud = {
     "name": "ActionHuoXingCloud",
     "register_url": "https://wolaile.icu/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "hyper_params": {"v2ray": True, "co-invite": 5},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -373,8 +348,7 @@ ActionJcBbCloud = {
     "name": "ActionJcBbCloud",
     "register_url": "https://www.jcbb.xyz/auth/register",
     "life_cycle": 1,
-    "anti_slider": False,
-    "hyper_params": {"ssr": True, "v2ray": False, "co-invite": 10},
+    "hyper_params": {"v2ray": False, "co-invite": 10},
     "email": "@qq.com",
 }
 # =============================================
@@ -386,9 +360,8 @@ ActionJcBbCloud = {
 ActionMfCloud = {
     "name": "ActionMfCloud",
     "register_url": "https://mfcloud.host/auth/register",
-    "life_cycle": 14,
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "life_cycle": 1,
+    "hyper_params": {"v2ray": True, "anti_slider": False},
     "email": "@gmail.com",
 }
 # =============================================
@@ -400,8 +373,7 @@ ActionMfCloud = {
 ActionPPCloud = {
     "name": "ActionPPCloud",
     "register_url": "https://www.ppyun.fun/auth/register",
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 3},
+    "hyper_params": {"v2ray": True, "anti_slider": True, "co-invite": 3},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -414,8 +386,7 @@ ActionPPCloud = {
 ActionSuFeiCloud = {
     "name": "ActionSuFeiCloud",
     "register_url": "https://www.sufeiyun.icu/auth/register",
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
+    "hyper_params": {"v2ray": True, "anti_slider": True, "co-invite": 10},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -428,8 +399,7 @@ ActionSuFeiCloud = {
 ActionReCloud = {
     "name": "ActionReCloud",
     "register_url": "https://www.reoen.top/auth/register",
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 6},
+    "hyper_params": {"v2ray": True, "anti_slider": True, "co-invite": 6},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -442,8 +412,7 @@ ActionReCloud = {
 ActionGiraffeCloud = {
     "name": "ActionGiraffeCloud",
     "register_url": "https://www.gftech.cc/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10, "anti_email": True},
+    "hyper_params": {"v2ray": True, "co-invite": 4, "anti_email": True},
     "email": "@gmail.com",
     "life_cycle": 2,
 }
@@ -457,8 +426,7 @@ ActionXiaoCloud = {
     "name": "ActionXiaoCloud",
     "register_url": "https://www.xiaoxiaoyun.xyz/auth/register",
     "life_cycle": 1,
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True},
+    "hyper_params": {"v2ray": True, "anti_slider": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -470,8 +438,7 @@ ActionXiaoCloud = {
 ActionGoGoCloud = {
     "name": "ActionGoGoCloud",
     "register_url": "https://gogo.bid/auth/register",
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "hyper_params": {"v2ray": True, "anti_slider": True, "co-invite": 5},
     "email": "@qq.com",
     "life_cycle": 1,
 }
@@ -484,8 +451,7 @@ ActionGoGoCloud = {
 ActionViCloud = {
     "name": "ActionViCloud",
     "register_url": "https://www.viyun.pw/auth/register",
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "hyper_params": {"v2ray": True, "co-invite": 5, "anti_slider": True},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -498,8 +464,7 @@ ActionViCloud = {
 ActionLittleCloud = {
     "name": "ActionLittleCloud",
     "register_url": "https://littleq.me/auth/register",
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 6},
+    "hyper_params": {"v2ray": True, "usr_email": True, "co-invite": 6, "anti_slider": True},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -512,8 +477,7 @@ ActionLittleCloud = {
 ActionFETVCloud = {
     "name": "ActionFETVCloud",
     "register_url": "https://de1.foreign-expat-tv.win/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5},
+    "hyper_params": {"v2ray": True, "co-invite": 5},
     "email": "@fetv.com",
     "life_cycle": 2,
 }
@@ -526,8 +490,7 @@ ActionFETVCloud = {
 ActionYesDaddyCloud = {
     "name": "ActionYesDaddyCloud",
     "register_url": "https://www.yesdaddy.win/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 5},
+    "hyper_params": {"v2ray": True, "usr_email": True, "co-invite": 5},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -540,8 +503,7 @@ ActionYesDaddyCloud = {
 ActionTaoHaiCloud = {
     "name": "ActionTaoHaiCloud",
     "register_url": "https://hntaohai.xyz/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 10},
+    "hyper_params": {"v2ray": True, "co-invite": 10},
     "email": "@gmail.com",
     "life_cycle": 2,
 }
@@ -553,8 +515,7 @@ ActionTaoHaiCloud = {
 ActionLilyCloud = {
     "name": "ActionLilyCloud",
     "register_url": "https://lilyco.cc/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "co-invite": 5, "usr_email": True},
+    "hyper_params": {"v2ray": True, "co-invite": 5, "usr_email": True},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -567,8 +528,7 @@ ActionLilyCloud = {
 ActionDogeCloud = {
     "name": "ActionDogeCloud",
     "register_url": "https://doggetech.com/auth/register",
-    "anti_slider": True,
-    "hyper_params": {"ssr": False, "v2ray": True, "prism": True, "co-invite": 7},
+    "hyper_params": {"v2ray": True, "prism": True, "co-invite": 7, "anti_slider": True},
     "email": "@gmail.com",
     "life_cycle": 4,
 }
@@ -580,8 +540,7 @@ ActionDogeCloud = {
 ActionLieBaoCloud = {
     "name": "ActionLieBaoCloud",
     "register_url": "https://www.xiaoliebao.xyz/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": True, "v2ray": False, "co-invite": 3, "anti_email": True},
+    "hyper_params": {"ssr": True, "co-invite": 3, "usr_email": True},
     "email": "@gmail.com",
     "life_cycle": 3,
 }
@@ -594,8 +553,7 @@ ActionLieBaoCloud = {
 ActionPorkCloud = {
     "name": "ActionPorkCloud",
     "register_url": "https://prime.ypork.com/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "anti_email": True, "prism": True, "co-invite": 3},
+    "hyper_params": {"v2ray": True, "anti_email": True, "prism": True, "co-invite": 3},
     "email": "@gmail.com",
     "life_cycle": 4,
 }
@@ -607,8 +565,7 @@ ActionPorkCloud = {
 ActionMaTrixCloud = {
     "name": "ActionMaTrixCloud",
     "register_url": "https://matrixap.com/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "anti_email": True, "co-invite": 3},
+    "hyper_params": {"v2ray": True, "anti_email": True, "co-invite": 3},
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -620,34 +577,50 @@ ActionMaTrixCloud = {
 ActionGoWorldCloud = {
     "name": "ActionGoWorldCloud",
     "register_url": "https://v.goworld.xyz/auth/register",
-    "anti_slider": False,
-    "hyper_params": {"ssr": False, "v2ray": True, "usr_email": True, "co-invite": 10},
+    "hyper_params": {"v2ray": True, "usr_email": True, "co-invite": 10},
     "email": "@gmail.com",
     "life_cycle": 7,
 }
+# =============================================
+# ActionSDVCloud
+# - change log:
+#   - 2021-12-15 [365day 5G + 10 * 2G co-invite]
+#   - 仅提供一个免费节点，as bPlan
+# =============================================
+ActionSDVCloud = {
+    "name": "ActionSDVCloud",
+    "register_url": "https://www.sdvfly.top/auth/register",
+    "hyper_params": {"v2ray": True, "usr_email": True, "co-invite": 1},
+    "email": "@gmail.com",
+    "life_cycle": 3,
+}
+# =============================================
+# ActionShanSuCloud
+# - change log:
+#   - 2021-12-15 [N day 2G + 100 * 20G co-invite]
+# =============================================
+ActionShanSuCloud = {
+    "name": "ActionShanSuCloud",
+    "register_url": "https://shansuv2.top/auth/register",
+    "hyper_params": {"v2ray": True, "anti_email": True, "prism": True, "co-invite": 2},
+    "email": "@gmail.com",
+    "life_cycle": 2,
+}
 # 执行队列
 __entropy__ = [
-    # tmux attach -t v2rss
-    # cd .. && git pull origin master && cd src && python3 main.py synergy
-    # cd .. && git pull origin master && cd src && python3 main.py deploy --synergy=False
     # ------------------------------------------
     # [启动] 无障碍
     # ------------------------------------------
     ActionFETVCloud,  # v2ray 2day
     ActionYesDaddyCloud,  # v2ray 1day
     ActionAzIcoCloud,  # v2ray 1day
-    ActionLilyCloud,  # v2ray 1day
-    ActionGoWorldCloud,  # v2ray 35day
     # ------------------------------------------
     # [启动] 需要滑动验证
     # ------------------------------------------
-    ActionGoGoCloud,  # v2ray 1day
-    ActionDogeCloud,  # v2ray N-day prism
     # ------------------------------------------
     # [启动] 需要邮箱验证
     # ------------------------------------------
-    # ActionGiraffeCloud,  # v2ray 2day 23G=(3'+10*2')G
-    # ActionMaTrixCloud,  # v2ray 4h
+    ActionGiraffeCloud,  # v2ray 2day 23G=(3'+10*2')G
     ActionPorkCloud,  # v2ray N-day prism
     # ------------------------------------------
     # [启动] 需要声纹验证
@@ -660,7 +633,11 @@ __pending__ = [
     # [启动] 无障碍
     # ------------------------------------------
     ActionZZCloud,  # v2ray 6day 100G
+    ActionAaxCloud,  # v2ray 1day 10G
     ActionHuoXingCloud,  # v2ray 1day 11G=(1'+5*2')G
+    ActionSDVCloud,  # v2ray N-day 5G
+    ActionGoWorldCloud,  # v2ray 35day 404
+
     # ------------------------------------------
     # [启动] 需要滑动验证
     # ------------------------------------------
@@ -672,7 +649,11 @@ __pending__ = [
     # ------------------------------------------
     # [启动] 需要邮箱验证
     # ------------------------------------------
-    ActionLieBaoCloud,
+    ActionMaTrixCloud,  # v2ray 4h
+    ActionShanSuCloud,  # v2ray 2day2G
+    ActionMaTrixCloud,  # v2ray 1day(4h) 10G
+    Action7ccCloud,  # v2ray 1day 5G
+
     # ------------------------------------------
     # [启动] 需要声纹验证
     # ------------------------------------------
@@ -681,25 +662,18 @@ __pending__ = [
 # 弃用
 deprecated_actions = [
     # ------------------------------------------
-    # [停用] 公益节点
+    # [停用] 限定邮箱
     # ------------------------------------------
-    # ------------------------------------------
-    # [停用] 邮箱注册
-    # ------------------------------------------
-    # <限定>
-    Action7ccCloud,
     ActionKuaiZaiCloud,  # ssr [30day 500G]
     ActionTaoHaiCloud,  # v2ray 1day 30G=(10'+10*2')G
     ActionMfCloud,  # v2ray [14day 60G + 10 * 2 co-invite]
     ActionJcBbCloud,  # ssr [1day 0G + 30 * 2 co-invite]
+    ActionThunderCloud,
 
-    # <自选>
+    # 动态队列 -->
+    ActionDogeCloud,  # v2ray N-day prism
+    ActionLilyCloud,  # v2ray 1day
 
-    # ------------------------------------------
-    # [停用] GoogleCAPTHCA
-    # ------------------------------------------
-    ActionGsouCloud,
-    ActionBitEbCloud,
     # ------------------------------------------
     # [停用] 流量不达标
     # ------------------------------------------
@@ -714,22 +688,21 @@ deprecated_actions = [
 
     # 无免费节点
     ActionMiTaoCloud,
-    # ------------------------------------------
-    # [剔除] 框架更换
-    # ------------------------------------------
-    ActionThunderCloud,
-    ActionHuoJianCloud,
-    # ------------------------------------------
-    # [剔除] 拒绝注册
-    # ------------------------------------------
-    # ------------------------------------------
-    # [剔除] 站点瘫痪
-    # ------------------------------------------
-    ActionKakCloud,  # v2ray [1day co-invite 3 * 10 = 30G]
-    ActionAaxCloud,  # v2ray 1day 10G
+    ActionBitEbCloud,
+    ActionGsouCloud,
+    ActionLieBaoCloud,
 
     # ------------------------------------------
-    # [剔除] 跑路
+    # [剔除] 限制注册（邀请码/接口关闭）
+    # ------------------------------------------
+    ActionHuoJianCloud,
+    ActionGoGoCloud,  # v2ray 1day
+
+]
+# 禁止调用
+_see_you_in_the_world = [
+    # ------------------------------------------
+    # 江湖再见！
     # ------------------------------------------
     ActionUUCloud,
     ActionJs8cCloud,
@@ -738,4 +711,27 @@ deprecated_actions = [
     ActionN95Cloud,
     ActionZuiSuCloud,
     ActionOhrCloud,
+    ActionKakCloud,
 ]
+"""
+TODO [√]安装 ffmpeg
+-------------------------
+# Ubuntu
+apt-get update && apt install -y ffmpeg
+
+# Centos7 及之前
+sudo yum install epel-release
+sudo yum localinstall --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
+sudo yum install ffmpeg ffmpeg-devel
+ffmpeg -version
+
+# CentOS8 及之后
+dnf install ffmpeg ffmpeg-devel
+"""
+"""
+TODO [√]服务升级
+-------------------------
+tmux attach -t v2rss 
+cd .. && git pull origin master && pip install -r requirements.txt && cd src && python3 main.py synergy
+cd .. && git pull origin master && pip install -r requirements.txt && cd src && python3 main.py deploy --synergy=False
+"""
