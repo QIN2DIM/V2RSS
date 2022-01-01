@@ -4,9 +4,9 @@
 # Github  : https://github.com/QIN2DIM
 # Description: 🚀 Welcome to use V2RSS!
 
-import fire
+from fire import Fire
 
-from BusinessCentralLayer.scaffold import Scaffold
+from services.scaffold import Scaffold
 
-if __name__ == "__main__":
-    fire.Fire(Scaffold)
+if __name__ == '__main__':
+    Fire(Scaffold)

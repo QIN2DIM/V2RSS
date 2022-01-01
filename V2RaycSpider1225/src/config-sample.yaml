@@ -1,181 +1,72 @@
-# >>> 推荐配置
+# [√]需要手动修改 [-]不推荐修改 [※]可选项，不影响系统运行
+# ===================================================
+# [√] Redis 节点连接配置
 # ---------------------------------------------------
-# TODO 单机部署
-# ---------------------------------------------------
-# -- SINGLE_DEPLOYMENT: True
-#   -- ENABLE_DEPLOY: All tasks open
-#   -- ENABLE_SERVER: use flask
-
-# ---------------------------------------------------
-# TODO 多机部署
-# ---------------------------------------------------
-# -- SINGLE_DEPLOYMENT: False
-#   -- Master:
-#     -- ENABLE_DEPLOY: shut down the collector！
-#     -- ENABLE_SERVER: use flask
-#   -- Slaves:
-#     -- ENABLE_DEPLOY: open the collector, close other tasks,
-#     -- ENABLE_SERVER: shut down the flask！
-
-# ---------------------------------------------------
-# TODO 其他建议
-# ---------------------------------------------------
-# -- ENABLE_COROUTINE: True
-# -- ENABLE_KERNEL: use 'basic' service only
+# Tips：使用脚手架检测连接 python main.py ping
+# ===================================================
+REDIS_NODE:
+  host: "127.0.0.1"
+  password: ""
+  port: 8848
+  db: 777
 
 # ===================================================
-# >>> 符号说明
-# [√] 核心参数 强制填写；不填写或填写有误无法正常启动项目
-# [*] 边枝功能 可选项/使用默认配置；不填写不影响项目启动
-# [x] 当前版本弃用
+# [√] 订阅池容量
+# ---------------------------------------------------
+# POOL_CAP 为订阅池容量，用于限制采集器的行为
+# ---------------------------------------------------
+# Tips: POOL_CAP >= 80% 不再添加新任务
+# Tips: POOL_CAP >= 50% 开始优选待办任务
+# Tips: POOL_CAP >= 0% 灌入数据集
+# Tips: 个人使用推荐 POOL_CAP∈[5,8]
+# ---------------------------------------------------
+# Warning: POOL_CAP不能超过30，这会带来极大的性能开支
 # ===================================================
+POOL_CAP: 0
 
+# ===================================================
+# [-] 定时任务配置
 # ---------------------------------------------------
-# TODO [√] Function Authority -- 功能权限
+# collector     |采集器
+# decouple      |订阅池检测（heartbeat），清洗无效订阅
 # ---------------------------------------------------
-
-# SINGLE_DEPLOYMENT 部署模式，单机部署True(默认)，分布式False
-SINGLE_DEPLOYMENT: True
-
-# ENABLE_DEPLOY 定时任务开关
-ENABLE_DEPLOY:
-  # 定时任务总开关
-  global: True
-  # 建议在多服务器场景下将采集任务和ddt任务分离，
-  tasks:
-    # 采集订阅
-    collector: true
-    # 移除过期订阅
-    ddt_overdue: true
-    # 解耦订阅
-    ddt_decouple: false
-
-# ENABLE_DEPLOY 服务器内核开关
-ENABLE_KERNEL:
-  # 基准服务
-  basic: true
-  # 数据挖掘
-  async_dm:
-    enable: false
-  # 园丁系统
-  gardener:
-    enable: false
-  # 破冰船
-  ice-breaker:
+# interval      |任务间隔，单位秒
+# Default: interval--(collector)--120s
+# Default: interval--(decouple)--600s
+# ---------------------------------------------------
+# Tips: 手动修改的 interval 不可小于默认值
+# ===================================================
+scheduler:
+  collector:
     enable: true
-    collaborator: true
-
-# ENABLE_SERVER 部署 flask for v2rss-service
-ENABLE_SERVER: false
-
-# ENABLE_PROXY_POOL 开启弹性代理访问
-ENABLE_PROXY: True
-
-# ENABLE_COROUTINE 协程加速
-ENABLE_COROUTINE: True
-
-# ENABLE_REBOUND 数据回弹
-# 当master server宕机后，将slave中的订阅清洗后传回。
-# 该选项会反转主从关系，仅在主机数据丢失情况下手动开启。
-# 在完成数据覆盖后应立即将ENABLE_REBOUND置False后重启项目。
-ENABLE_REBOUND: False
-
-# ---------------------------------------------------
-# TODO [√] SINGLE_TASK_CAP -- 单类订阅的队列容载极限
-# 当某种链接的数量达到这个阈值则不会启动该类链接的采集任务
-# <Performance limit of 1xCPU 1GRAM VPS KVM>
-# Defaults type:int = 25
-# 推荐个人使用 场景下SINGLE_TASK_CAP不超过3
-# ---------------------------------------------------
-SINGLE_TASK_CAP: 25
-
-# ---------------------------------------------------
-# TODO [√] DEPLOY_INTERVAL -- schedule任务间隔,单位秒（s）
-# 定时任务中采集任务频次： 1轮/INTERVAL_ACTION
-# Defaults type:int = 5 * 60 s 既5分钟
-#
-# 定时任务中数据备份/过期移除频次： 1轮/INTERVAL_REFRESH
-# Defaults type:int = 60 * 60 s 既1小时
-
-# 定时任务中数据解耦/检查频次： 1轮/INTERVAL_REFRESH
-# Defaults type:int = 1 * 60 s 既1分钟
-
-# 为保证系统高可用性，请不要让任务巡回频次低于以上预设值
-# ---------------------------------------------------
-LAUNCH_INTERVAL:
-  collector: 120
-  ddt_overdue: 60
-  ddt_decouple: 120
-
-# ---------------------------------------------------
-# TODO [√] Redis Cluster Configuration(SSH-BASE)
-# 若您不知道如何配置Redis远程连接，请自行搜索或↓
-# >> https://shimo.im/docs/5bqnroJYDbU4rGqy/
-# 注：password为redis密码
-# ---------------------------------------------------
-
-# TODO [√] Settings of the Master-Redis responsible for leading the cluster
-REDIS_MASTER:
-  host: &main_host ''
-  password: &main_password ''
-  port: 6379
-  db: 0
-
-# TODO [*] Setting of the Slave-Redis responsible for data disaster tolerance（DDT）
-REDIS_SLAVER_DDT:
-  # If you deploy this project on a single server
-  #  host: *main_host
-  #  password: *main_password
-  #  port: 6379
-  #  db: 1
-
-  # If you have extra servers please use the following settings
-  host: ''
-  password: ''
-  port: 6379
-  db: 0
-
-# ---------------------------------------------------
-# TODO [√] Communication port for flask
-# flask开放的端口号，通信方式为HTTP
-# ---------------------------------------------------
-API_PORT: 6500
-
-# ---------------------------------------------------
-# TODO [√] PROXY_POOL setting
-# PROXY_POOL 代理池通信配置，通信方式为HTTP
-# ---------------------------------------------------
-PROXY_POOL:
-  host: 'localhost'
-  port: 6501
-
-# ---------------------------------------------------
-# TODO [x] The domain name used to deploy the gardener
-# 园丁系统部署域名，当启动该项功能时，必须配置如: www.bbq.club
-# 由于性能受限，该域名必须为当前主机的域名
-# ---------------------------------------------------
-GARDENER_HOST: ''
-
-# ---------------------------------------------------
-# TODO [x] Communication port for micro-service
-# ---------------------------------------------------
-REC_PORT: 6600
+    interval: 120
+  decoupler:
+    enable: true
+    interval: 600
 
 # ===================================================
-# TODO [x] Noticer -- 用于发送panic信息警报，默认发送给自己
-#   当只需要发送给自己时推荐使用SERVER酱，两种通讯方式SERVER酱优先级更高
-#   此项非必要填写，若为空则不会发送警告信息
+# [-※] 订阅池服务监控接口
+# ---------------------------------------------------
+# name       |微服务注册表名称，保持默认即可。
+# uuid       |穿插在router-path中的随机字符串，默认为空。
+# host       |老规矩，根据需要切换到 ``0.0.0.0``
+#             建议手动指定，否则每次启动项目uuid都会随机生成
+# apis       |开放使用的订阅池监控接口模板，不建议修改。
 # ===================================================
-# 1. 使用Email推送-推荐使用QQ邮箱，开启邮箱SMTP服务教程如下
-# https://service.mail.qq.com/cgi-bin/help?subtype=1&&id=28&&no=1001256
-SMTP_ACCOUNT:
-  # SMTP邮箱
-  email: ''
-  # SMTP授权码
-  sid: ''
-# ---------------------------------------------------
-# 2. 使用<SERVER酱>推送，请在SERVERCHAN_SCKEY填写自己的Key
-# http://sc.ftqq.com/3.version
-# ---------------------------------------------------
-SERVERCHAN_SCKEY: ''
-
+router:
+  name: "V2RSS"
+  host: "127.0.0.1"
+  port: 22333
+  uuid: "v1"
+  apis:
+    # 快速获取 v2ray 订阅链接
+    get_v2ray: "/v2rss/{}/super_admin/get/v2ray"
+    # 快速获取某个类型的订阅链接，
+    #    - 如 ``_entropy_name=v2ray`` GET http://host:port/v2rss/[uuid]/super_admin/get/v2ray
+    get_subs: "/v2rss/{}/super_admin/get/<_entropy_name>"
+    # 通过传入域名缩写进行模糊匹配，返回返回指定订阅源链接
+    get_subs_v2: "/v2rss/{}/super_admin/match/<_entropy_name>"
+    # v2 的调试接口，通过此接口请求的链接不会从数据库中移除
+    get_subs_v2_debug: "/v2rss/{}/super_admin/match/debug/<_entropy_name>"
+    # 获取池中来自不同订阅源的链接剩余数
+    get_pool_status: "/v2rss/{}/get_pool_status"

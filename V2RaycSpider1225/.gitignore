@@ -129,10 +129,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/src/Database
+/src/database
+/src/driver
+/src/config.yaml
 .idea
 /tests
 /bin
-.log
-/src/BusinessCentralLayer/chromedriver.exe
-examples/*.png
+/examples/*.png
+*.session
+*.session-journal
