@@ -22,16 +22,23 @@ from selenium.common.exceptions import (
     TimeoutException
 )
 from selenium.webdriver import Chrome, ChromeOptions
+from urllib3.exceptions import MaxRetryError
 
 from services.middleware.subscribe_io import SubscribeManager
+from services.middleware.workers_io import MessageQueue
 from services.settings import (
     logger, DIR_CACHE_IMAGE, DIR_CACHE_AUDIO
 )
 from services.utils import (
     GeeTestAdapter, ToolBox, apis_get_email_context, apis_get_verification_code,
-    activate_recaptcha, handle_audio, parse_audio, submit_recaptcha
+    activate_recaptcha, handle_audio, parse_audio, submit_recaptcha, apis_check_availability
 )
-from services.utils.armor.anti_email.exceptions import GetEmailTimeout,GetEmailCodeTimeout
+from services.utils.armor.anti_email.exceptions import GetEmailTimeout, GetEmailCodeTimeout
+from services.utils.armor.anti_recaptcha.exceptions import (
+    RiskControlSystemArmor,
+    AntiBreakOffWarning
+)
+from .exceptions import GetPageTimeoutException
 
 
 class ArmorUtils:
@@ -70,6 +77,16 @@ class ArmorUtils:
             except TimeoutException:
                 raise GetEmailCodeTimeout
 
+    @staticmethod
+    def is_available(**pending) -> dict:
+        if pending.get("anti_email") is True:
+            return {"result": apis_check_availability(), "util": "anti_email"}
+        if pending.get("anti_slider") is True:
+            return {"result": True, "util": "anti_slider"}
+        if pending.get("anti_recaptcha") is True:
+            return {"result": True, "util": "anti_recaptcha"}
+        return {"result": True, "util": "normal"}
+
     def anti_slider(self, api: Chrome):
         path_bg_full = os.path.join(DIR_CACHE_IMAGE, f"full_{self.action_name}.{int(time.time())}.png")
         path_bg_notch = os.path.join(DIR_CACHE_IMAGE, f"notch_{self.action_name}.{int(time.time())}.png")
@@ -105,18 +122,14 @@ class ArmorUtils:
         TODO [√]激活 reCAPTCHA 并获取音频文件下载链接
         ------------------------------------------------------
         """
-        audio_url: str = activate_recaptcha(api)
+        try:
+            audio_url: str = activate_recaptcha(api)
+        except AntiBreakOffWarning:
+            return True
 
         # Google reCAPTCHA 风控
         if not audio_url:
-            logger.error("运行实例已被风控。\n"
-                         "可能原因及相关建议如下：\n"
-                         "1.目标站点可能正在遭受流量攻击，请更换测试用例；\n"
-                         "2.代理IP可能已被风控，建议关闭代理运行或更换代理节点；\n"
-                         "3.本机设备所在网络正在传输恶意流量，建议切换网络如切换WLAN。\n"
-                         ">>> https://developers.google.com/recaptcha/docs/faq#"
-                         "my-computer-or-network-may-be-sending-automated-queries")
-            raise WebDriverException
+            raise RiskControlSystemArmor("陷入无法逃逸的风控上下文")
 
         """
         TODO [√]音频转码 （MP3 --> WAV） 增加识别精度
@@ -126,7 +139,7 @@ class ArmorUtils:
             audio_url=audio_url,
             dir_audio_cache=DIR_CACHE_AUDIO
         )
-        # logger.success("Handle Audio - path_audio_wav=`{}`".format(path_audio_wav))
+        logger.success("Handle Audio - path_audio_wav=`{}`".format(path_audio_wav))
 
         """
         TODO [√]声纹识别 --(output)--> 文本数据
@@ -135,10 +148,10 @@ class ArmorUtils:
         # http.client.IncompleteRead 网速不佳，音频文件未下载完整就开始解析
         """
         self.audio_answer: str = parse_audio(path_audio_wav)
-        # logger.success("Parse Audio - answer=`{}`".format(self.audio_answer))
+        logger.success("Parse Audio - answer=`{}`".format(self.audio_answer))
 
         """
-        TODO [√] 定位输入框并填写文本数据
+        TODO [√]定位输入框并填写文本数据
         ------------------------------------------------------
         # speech_recognition.RequestError 需要挂起代理
         # http.client.IncompleteRead 网速不佳，音频文件未下载完整就开始解析
@@ -192,6 +205,7 @@ class TheElderBlood:
             "synergy": False,
             "tos": False,
             # 对抗阶段
+            "skip": False,
             "anti_email": False,
             "anti_recaptcha": False,
             "anti_slider": False,
@@ -209,11 +223,13 @@ class TheElderBlood:
         self.aff = self.hyper_params.get("aff", 0)
         self.synergy = bool(self.hyper_params.get("synergy"))
         self.prism = bool(self.hyper_params["prism"])
+        self.skip_checker = bool(self.hyper_params["skip"])
         self.anti_email = bool(self.hyper_params["anti_email"])
         self.anti_recaptcha = bool(self.hyper_params["anti_recaptcha"])
         self.anti_slider = bool(self.hyper_params["anti_slider"])
         self.anti_cloudflare = bool(self.hyper_params["anti_cloudflare"])
         self.threshold = self.hyper_params["threshold"]
+        self.end_date = "2048-01-01 00:00"
 
         self.context_anti_email = {}
         """
@@ -291,6 +307,12 @@ class TheElderBlood:
             logger.critical("The `chromedriver` executable may have wrong permissions.")
 
     def generate_account(self, api):
+        """
+        生成临时账号
+
+        :param api:
+        :return:
+        """
         username = "".join(
             [random.choice(printable[: printable.index("!")]) for _ in range(9)]
         )
@@ -307,11 +329,17 @@ class TheElderBlood:
             email = self.armor.anti_email(api, method="email")
         return username, password, email
 
-    def sign_in(self):
+    def sign_in(self, api: Chrome):
+        """
+        登录账号
+
+        :return:
+        """
         pass
 
     def sign_up(self, api: Chrome):
         """
+        注册账号
 
         :param api:
         :return:
@@ -320,6 +348,7 @@ class TheElderBlood:
 
     def buy_free_plan(self, api, force_draw: int = 2):
         """
+        购买免费套餐
 
         :param api:
         :param force_draw:
@@ -329,6 +358,7 @@ class TheElderBlood:
 
     def get_aff_link(self, api: Chrome) -> str:
         """
+        获取邀请链接
 
         :param api:
         :return:
@@ -336,11 +366,17 @@ class TheElderBlood:
         raise ImportError
 
     def check_in(self):
+        """
+        签到，收益较低，已弃用
+
+        :return:
+        """
         pass
 
     @staticmethod
     def get_html_handle(api: Chrome, url, timeout: float = 45):
         """
+        复杂化页面访问过程
 
         :param api:
         :param url:
@@ -350,39 +386,70 @@ class TheElderBlood:
         raise ImportError
 
     def check_heartbeat(self, debug: bool = False):
-        ToolBox.runtime_report(self.action_name, motive="CHECK")
+        """
+        检测实例的健康状态
 
+        :param debug:
+        :return:
+        """
+        _report = self.armor.is_available(
+            anti_email=self.anti_email,
+            anti_slider=self.anti_slider,
+            anti_recaptcha=self.anti_recaptcha
+        )
+
+        if not _report["result"]:
+            logger.critical(ToolBox.runtime_report(
+                motive="BLOCK",
+                action_name=self.action_name,
+                message="实例构建失败，原因为实例依赖的基础设施不可用。",
+                util=_report["util"]
+            ))
+            return
+            # ToolBox.runtime_report(self.action_name, motive="CHECK")
         url = self.register_url
         scraper = create_scraper()
         try:
             response = scraper.get(url, timeout=5)
         except (SSLError, HTTPError):
             if debug:
-                logger.warning(f">> Block <{self.action_name}> Need to use a proxy to access the site "
-                               f"url={url}")
+                logger.warning(ToolBox.runtime_report(
+                    motive="BLOCK",
+                    action_name=self.action_name,
+                    message="Need to use a proxy to access the site.",
+                    url=url
+                ))
             return True
-        except ConnectionError as e:
-            logger.warning(f">> Block <{self.action_name}> ConnectionError "
-                           f"url={url} error={e}")
-            return False
-        except Timeout as e:
-            logger.warning(f">> Block <{self.action_name}> ResponseTimeout "
-                           f"url={url} error={e}")
-            return False
-        except RequestException as e:
-            logger.warning(f">> Block <{self.action_name}> RequestException "
-                           f"url={url} error={e}")
+        except (ConnectionError, Timeout, RequestException) as e:
+            logger.warning(ToolBox.runtime_report(
+                motive="BLOCK",
+                action_name=self.action_name,
+                url=url,
+                error=e
+            ))
             return False
         else:
             if response.status_code > 400:
-                logger.error(f">> Block <{self.action_name}> InstanceStatusException "
-                             f"status_code={response.status_code} url={url}")
+                if self.skip_checker and response.status_code == 403:
+                    logger.warning(ToolBox.runtime_report(
+                        motive="FORCE-RUN",
+                        action_name=self.action_name,
+                        message="The instance may deploy an implicit traffic defense component."
+                    ))
+                    return True
+                logger.error(ToolBox.runtime_report(
+                    motive="BLOCK",
+                    action_name=self.action_name,
+                    message="InstanceStatusException",
+                    status_code=response.status_code,
+                    url=url,
+                ))
                 return False
             return True
 
     def get_subscribe(self, api: Chrome):
         """
-        获取订阅
+        获取订阅链接
 
         引入健壮工程 + 手动标注数据集，大幅度增强模型的泛化能力
         :param api:
@@ -391,16 +458,25 @@ class TheElderBlood:
         raise ImportError
 
     def cache_subscribe(self, sm: SubscribeManager = None):
+        """
+        存储订阅链接
+
+        :param sm:
+        :return:
+        """
         if self.subscribe_url == "":
             return
 
         sm = SubscribeManager() if sm is None else sm
 
+        # Calculate ``life_cycle`` of the ``subscribe_url``.
+        self.life_cycle -= self.threshold
+        self.end_date = ToolBox.date_format_life_cycle(self.life_cycle)
+
         # 缓存订阅链接
         sm.add(
             subscribe=self.subscribe_url,
-            life_cycle=self.life_cycle,
-            threshold=self.threshold
+            end_date=self.end_date
         )
 
         # 更新别名映射
@@ -417,3 +493,137 @@ class TheElderBlood:
             motive="STORE",
             subscribe_url=self.subscribe_url
         ))
+
+    # =====================================================
+    # 超级参数融合模式
+    # =====================================================
+    def activate(self, api, synergy: bool = False, sm: SubscribeManager = None):
+        """
+        整合 实例生产注册，订阅获取，订阅存储，协同任务广播的流程
+
+        :param sm:
+        :param api:
+        :param synergy:
+        :return:
+        """
+        logger.debug(ToolBox.runtime_report(
+            action_name=self.action_name,
+            motive="RUN" if not synergy else "SYNERGY",
+            params={hp[0]: hp[-1] for hp in self.hyper_params.items() if hp[-1]}
+        ))
+
+        self.get_html_handle(api=api, url=self.register_url)
+        self.sign_up(api)
+
+        if not synergy:
+            self.waiting_to_load(api)
+            if self.prism:
+                self.buy_free_plan(api)
+            self.get_subscribe(api)
+            self.cache_subscribe(sm)
+        else:
+            logger.success(ToolBox.runtime_report(
+                action_name=self.action_name,
+                motive="DETACH",
+                message="Mission Completed!"
+            ))
+
+    def fight(self, api, mq: MessageQueue = None):
+        """
+        广播协同任务的上下文信息
+
+        :param api:
+        :param mq:
+        :return:
+        """
+        aff = 0 if self.aff < 1 or self.aff > 10 else self.aff
+        if aff == 0:
+            return True
+
+        aff_link = self.get_aff_link(api)
+        if not aff_link:
+            return
+
+        mq = MessageQueue() if mq is None else mq
+
+        atomic = self.atomic
+        atomic["register_url"] = aff_link
+        atomic["synergy"] = True
+        atomic["hyper_params"]["endpoint"] = self.end_date
+        atomic["hyper_params"]["aff"] = 0
+        context = {
+            "atomic": atomic,
+            "hostname": ToolBox.reset_url(self.register_url, get_domain=True),
+        }
+        for _ in range(aff):
+            mq.broadcast_synergy_context(context)
+
+    def assault(self, api=None, synergy: bool = None, force: bool = False, **kwargs):
+        """
+        activate() 的外层包装，用于丰富实例运行前后的工作。
+        包含实例心跳检测，实例生产，运行时的顶级异常捕获以及运行后的安全释放
+
+        :param api:
+        :param synergy:
+        :param force:
+        :param kwargs:
+        :return:
+        """
+        # 心跳检测
+        if not force:
+            if not self.check_heartbeat():
+                return
+
+        # 获取驱动器
+        api = self.set_chrome_options() if api is None else api
+        if not api:
+            return
+
+        # 执行驱动
+        try:
+            self.activate(api, synergy=synergy, sm=kwargs.get("sm"))
+            if not synergy:
+                self.fight(api)
+
+        except GetPageTimeoutException:
+            logger.error(ToolBox.runtime_report(
+                motive="QUIT",
+                action_name=self.action_name,
+                message="初始页面渲染超时"
+            ))
+        except GetEmailTimeout:
+            logger.error(ToolBox.runtime_report(
+                motive="QUIT",
+                action_name=self.action_name,
+                message="获取邮箱账号超时"
+            ))
+        except GetEmailCodeTimeout:
+            logger.error(ToolBox.runtime_report(
+                motive="QUIT",
+                action_name=self.action_name,
+                message="获取邮箱验证码超时"
+            ))
+        except RiskControlSystemArmor as e:
+            logger.error(ToolBox.runtime_report(
+                motive="QUIT",
+                action_name=self.action_name,
+                error=e.msg
+            ))
+            logger.info("运行实例已被风控。\n"
+                        "可能原因及相关建议如下：\n"
+                        "1.目标站点可能正在遭受流量攻击，请更换测试用例；\n"
+                        "2.代理IP可能已被风控，建议关闭代理运行或更换代理节点；\n"
+                        "3.本机设备所在网络正在传输恶意流量，建议切换网络如切换WLAN。\n"
+                        ">>> https://developers.google.com/recaptcha/docs/faq#"
+                        "my-computer-or-network-may-be-sending-automated-queries")
+        except WebDriverException as e:
+            logger.exception(e)
+        finally:
+            # MaxRetryError
+            # --------------
+            # 场景：多个句柄争抢驱动权限 且有行为在驱动退出后发生。也即调用了已回收的类的方法。
+            # 在 deploy 模式下，调度器可以在外部中断失活实例，此时再进行 api.quit() 则会引起一系列的 urllib3 异常
+            try:
+                api.quit()
+            except MaxRetryError:
+                pass

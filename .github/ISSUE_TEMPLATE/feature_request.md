@@ -1,9 +1,6 @@
 ---
-name: Feature request
-about: 描述您关于本项目的想法与建议
-title: "[Hamster]"
-labels: enhancement
-assignees: QIN2DIM
+name: Feature request about: 描述您关于本项目的想法与建议 title: "[Hamster]"
+labels: enhancement assignees: QIN2DIM
 
 ---
 

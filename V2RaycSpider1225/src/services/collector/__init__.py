@@ -4,9 +4,9 @@
 # Github     : https://github.com/QIN2DIM
 # Description:
 
+from services.decoupler.decoupler import DecoupleBooster, decouple
 from .actions import __entropy__, __pending__
-from .mage import DecoupleBooster, decouple
-from .spawn import devil_king_armed, LionCubOfCintra, LaraDorren
+from .operator import devil_king_armed, LionCubOfCintra, LaraDorren
 
 __all__ = ["LionCubOfCintra", "LaraDorren", "devil_king_armed",
            "DecoupleBooster", "decouple",

@@ -11,21 +11,11 @@ from selenium.common.exceptions import (
     TimeoutException,
     ElementNotInteractableException
 )
-from selenium.common.exceptions import (
-    WebDriverException
-)
+from selenium.common.exceptions import WebDriverException
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
-from urllib3.exceptions import MaxRetryError
 
-from services.middleware.subscribe_io import SubscribeManager
-from services.settings import logger
-from services.utils import (
-    ToolBox, SubscribeParser
-)
-from services.utils.armor.anti_email.exceptions import (
-    GetEmailCodeTimeout, GetEmailTimeout
-)
+from services.utils import ToolBox, SubscribeParser
 from ..core import TheElderBlood
 
 
@@ -148,70 +138,7 @@ class TheElf(TheElderBlood):
             context: str = api.find_element(By.XPATH, "//pre").text
             self.subscribe_url = SubscribeParser.parse_url_from_page(context)
 
-    def activate(self, api=None, synergy: bool = False, sm: SubscribeManager = None):
-        """
-
-        :param sm:
-        :param api:
-        :param synergy:
-        :return:
-        """
-        logger.debug(ToolBox.runtime_report(
-            action_name=self.action_name,
-            motive="RUN",
-            params=self.hyper_params
-        ))
-
-        self.get_html_handle(api=api, url=self.register_url, wait_seconds=45 + self.beat_dance)
-        self.sign_up(api)
-
-        if not synergy:
-            self.waiting_to_load(api)
-            self.get_subscribe(api)
-
-            # 由于 v2board 使用的是 token 通用订阅，不需要区分模板通道
-            self.cache_subscribe(sm)
-
 
 class LaraDorren(TheElf):
     def __init__(self, atomic: dict, chromedriver_path: str = None, silence: bool = None):
         super(LaraDorren, self).__init__(atomic, chromedriver_path=chromedriver_path, silence=silence)
-
-    def assault(self, api=None, synergy: bool = None, force: bool = False, **kwargs):
-
-        # 心跳检测
-        if not force:
-            if not self.check_heartbeat():
-                return
-
-        # 获取驱动器
-        api = self.set_chrome_options() if api is None else api
-        if not api:
-            return
-
-        # 执行驱动
-        try:
-            self.activate(api, synergy=synergy, sm=kwargs.get("sm"))
-        except GetEmailTimeout:
-            logger.error(ToolBox.runtime_report(
-                motive="QUIT",
-                action_name=self.action_name,
-                message="获取邮箱账号超时"
-            ))
-        except GetEmailCodeTimeout:
-            logger.error(ToolBox.runtime_report(
-                motive="QUIT",
-                action_name=self.action_name,
-                message="获取邮箱验证码超时"
-            ))
-        except WebDriverException as e:
-            logger.exception(e)
-        finally:
-            # MaxRetryError
-            # --------------
-            # 场景：多个句柄争抢驱动权限 且有行为在驱动退出后发生。也即调用了已回收的类的方法。
-            # 在 deploy 模式下，调度器可以在外部中断失活实例，此时再进行 api.quit() 则会引起一系列的 urllib3 异常
-            try:
-                api.quit()
-            except MaxRetryError:
-                pass

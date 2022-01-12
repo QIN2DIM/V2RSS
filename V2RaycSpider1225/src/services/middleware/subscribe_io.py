@@ -48,7 +48,7 @@ class SubscribeManager(RedisClient):
         """
         return dict(Counter([self.db.hgetall(self.PREFIX_ALIAS)[urlparse(url).netloc] for url in self.sync()]))
 
-    def add(self, subscribe: str, life_cycle: int, threshold: int = 0):
+    def add(self, subscribe: str, end_date: str):
         """
         添加订阅
 
@@ -57,9 +57,6 @@ class SubscribeManager(RedisClient):
         :param life_cycle:
         :return:
         """
-        # Calculate ``life_cycle`` of the ``subscribe_url``.
-        life_cycle -= threshold
-        end_date = ToolBox.date_format_life_cycle(life_cycle)
 
         # Cache a ``subscribe_url`` that bind the available time.
         for _ in range(3):

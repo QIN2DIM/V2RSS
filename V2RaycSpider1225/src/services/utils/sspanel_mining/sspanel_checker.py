@@ -7,12 +7,12 @@
 from urllib.parse import urlparse
 
 from cloudscraper.exceptions import CloudflareChallengeError
+from loguru import logger
 from requests.exceptions import (
     Timeout,
     ConnectionError, SSLError, HTTPError, ProxyError,
 )
 
-from loguru import logger
 from .sspanel_classifier import SSPanelHostsClassifier
 
 

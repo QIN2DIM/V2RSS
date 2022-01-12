@@ -16,12 +16,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 class SliderValidator:
     def __init__(
-        self,
-        driver: Chrome,
-        debug: bool = False,
-        full_img_path: str = None,
-        notch_img_path: str = None,
-        business_name: str = "SliderValidator",
+            self,
+            driver: Chrome,
+            debug: bool = False,
+            full_img_path: str = None,
+            notch_img_path: str = None,
+            business_name: str = "SliderValidator",
     ):
         self.debug = debug
         # Selenium操作句柄
@@ -178,9 +178,9 @@ class SliderValidator:
         pix2 = img2.load()[x, y]
 
         if (
-            abs(pix1[0] - pix2[0] < self.threshold)
-            and abs(pix1[1] - pix2[1] < self.threshold)
-            and abs(pix1[2] - pix2[2] < self.threshold)
+                abs(pix1[0] - pix2[0] < self.threshold)
+                and abs(pix1[1] - pix2[1] < self.threshold)
+                and abs(pix1[2] - pix2[2] < self.threshold)
         ):
             return True
         return False
@@ -234,14 +234,14 @@ class SliderValidator:
         return pending_step
 
     def drag_slider(
-        self,
-        track,
-        slider,
-        position: int,
-        boundary: int,
-        use_imitate=True,
-        is_hold=False,
-        momentum_convergence=False,
+            self,
+            track,
+            slider,
+            position: int,
+            boundary: int,
+            use_imitate=True,
+            is_hold=False,
+            momentum_convergence=False,
     ):
         """
 

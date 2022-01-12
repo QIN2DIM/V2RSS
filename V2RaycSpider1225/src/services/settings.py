@@ -7,8 +7,6 @@ import os
 import sys
 from os.path import join, dirname, exists
 
-from loguru import logger
-
 # ---------------------------------------------------
 # TODO [√]工程根目录定位
 # ---------------------------------------------------
@@ -35,37 +33,16 @@ DIR_CACHE_MINING = join(DIR_TEMP_CACHE, "_mining")
 DIR_CACHE_CLASSIFY = join(DIR_CACHE_MINING, "classify")
 # 服务日志目录
 DIR_LOG = join(PROJECT_DATABASE, "logs")
+DIR_LOG_COLLECTOR = join(DIR_LOG, "collector")
+DIR_LOG_SYNERGY = join(DIR_LOG, "synergy")
 # ---------------------------------------------------
 # TODO [√]服务器日志配置
 # ---------------------------------------------------
-event_logger_format = (
-    "<g>{time:YYYY-MM-DD HH:mm:ss}</g> | "
-    "<lvl>{level}</lvl> - "
-    # "<c><u>{name}</u></c> | "
-    "{message}"
-)
-logger.remove()
-logger.add(
-    sink=sys.stdout,
-    colorize=True,
-    level="DEBUG",
-    format=event_logger_format,
-    diagnose=False
-)
-logger.add(
-    sink=join(DIR_LOG, "error.log"),
-    level="ERROR",
-    rotation="1 week",
-    encoding="utf8",
-    diagnose=False
-)
-logger.add(
-    sink=join(DIR_LOG, "runtime.log"),
-    level="DEBUG",
-    rotation="1 day",
-    retention="20 days",
-    encoding="utf8",
-    diagnose=False
+from services.utils import InitLog
+
+logger = InitLog.init_log(
+    error=join(DIR_LOG, "error.log"),
+    runtime=join(DIR_LOG, "runtime.log")
 )
 
 # ---------------------------------------------------
@@ -75,7 +52,7 @@ for _pending in [
     DIR_DRIVERS, PROJECT_DATABASE,
     DIR_TEMP_CACHE, DIR_CACHE_IMAGE, DIR_CACHE_AUDIO,
     DIR_CACHE_MINING, DIR_CACHE_CLASSIFY,
-    DIR_LOG,
+    DIR_LOG, DIR_LOG_COLLECTOR, DIR_LOG_SYNERGY
 ]:
     if not exists(_pending):
         os.mkdir(_pending)
@@ -90,11 +67,12 @@ __all__ = [
     # SETTINGS
     # ------------------------------
     "logger", "PATH_CHROMEDRIVER", "DIR_CACHE_IMAGE", "DIR_CACHE_AUDIO",
-    "DIR_CACHE_MINING", "DIR_CACHE_CLASSIFY",
+    "DIR_CACHE_MINING", "DIR_CACHE_CLASSIFY", "DIR_LOG_COLLECTOR",
+    "DIR_LOG_SYNERGY",
     # ------------------------------
     # CONFIG
     # ------------------------------
     "REDIS_NODE", "POOL_CAP", "TIME_ZONE_CN", "TIME_ZONE_NY",
     "SCHEDULER_SETTINGS", "ROUTER_API", "ROUTER_NAME", "ROUTER_HOST",
-    "ROUTER_PORT"
+    "ROUTER_PORT", "DETACH_SUBSCRIPTIONS"
 ]

@@ -8,9 +8,10 @@ import random
 import re
 import time
 
+import requests
 from bs4 import BeautifulSoup
 from cloudscraper import create_scraper
-from selenium.common.exceptions import WebDriverException,NoSuchElementException
+from selenium.common.exceptions import WebDriverException, NoSuchElementException
 # from undetected_chromedriver.v2 import Chrome, ChromeOptions
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
@@ -173,3 +174,10 @@ def apis_get_verification_code(api: Chrome, link: str, main_handle, collaborate_
     api.switch_to.window(main_handle)
 
     return email_code
+
+
+def apis_check_availability():
+    response = requests.get("https://www.linshiyouxiang.net/")
+    if response.status_code != 200:
+        return False
+    return True

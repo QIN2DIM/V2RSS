@@ -3,36 +3,26 @@
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description:
-import multiprocessing
 
-from services.deploy import CollectorScheduler, SynergyScheduler
-from services.settings import SCHEDULER_SETTINGS, logger
+from services.deploy import CollectorScheduler
+from services.settings import (
+    SCHEDULER_SETTINGS, logger
+)
 from services.utils import ToolBox
 
-__all__ = ["SystemService"]
+__all__ = ["SystemCrontab"]
 
 
-class SystemService:
-    """部署前后端服务"""
+class SystemCrontab:
+    """部署定时任务"""
 
-    def __init__(
-            self,
-            enable_scheduler: bool = False,
-            enable_synergy: bool = False,
-            enable_flask: bool = False,
-            **optional
-    ):
+    def __init__(self, **optional):
         self.ACTION_NAME = "SystemService"
 
-        self.enable_scheduler = enable_scheduler
-        self.enable_synergy = enable_synergy
-        self.enable_flask = enable_flask
+        self.scheduler_settings = self._calibrate(**optional)
 
-        if enable_scheduler:
-            self.scheduler_settings = self.calibrate(**optional)
-
-    def calibrate(self, **optional):
-        scheduler_settings = SCHEDULER_SETTINGS
+    def _calibrate(self, **optional):
+        scheduler_settings: dict = SCHEDULER_SETTINGS
         task_stack = ["collector", "decoupler"]
 
         for lok in task_stack:
@@ -55,7 +45,6 @@ class SystemService:
         return scheduler_settings
 
     def service_scheduler(self):
-
         # 实例化子模块任务
         collector = CollectorScheduler(job_settings={
             "interval_collector": self.scheduler_settings["collector"]["interval"],
@@ -67,53 +56,3 @@ class SystemService:
             available_collector=self.scheduler_settings["collector"]["enable"],
             available_decoupler=self.scheduler_settings["decoupler"]["enable"]
         )
-
-    @staticmethod
-    def service_synergy():
-        synergy = SynergyScheduler()
-        synergy.deploy()
-        synergy.start()
-
-    def startup(self):
-        process_list = []
-        try:
-
-            if self.enable_scheduler:
-                process_list.append(
-                    multiprocessing.Process(
-                        target=self.service_scheduler,
-                        name=f"{self.ACTION_NAME}|Scheduler"
-                    )
-                )
-
-            if self.enable_synergy:
-                process_list.append(
-                    multiprocessing.Process(
-                        target=self.service_synergy,
-                        name=f"{self.ACTION_NAME}|Synergy"
-                    )
-                )
-
-            for process in process_list:
-                process.start()
-                logger.success(ToolBox.runtime_report(
-                    motive="STARTUP",
-                    action_name=process.name,
-                    message="Activate child process."
-                ))
-            for process in process_list:
-                process.join()
-        except (KeyboardInterrupt, SystemExit):
-            logger.debug(ToolBox.runtime_report(
-                motive="EXITS",
-                action_name=self.ACTION_NAME,
-                message="Received keyboard interrupt signal."
-            ))
-            for process_ in process_list:
-                process_.terminate()
-        finally:
-            logger.success(ToolBox.runtime_report(
-                motive="EXITS",
-                action_name=self.ACTION_NAME,
-                message="V2RSS server exits completely."
-            ))

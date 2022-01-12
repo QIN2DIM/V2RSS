@@ -6,9 +6,9 @@
 import os
 import sys
 
-from services.cluster import __entropy__
-from services.cluster import devil_king_armed
-from services.cluster.exceptions import UnknownNestException
+from services.collector import __entropy__
+from services.collector import devil_king_armed
+from services.collector.exceptions import UnknownNestTypeException
 from services.middleware.subscribe_io import SubscribeManager
 from services.middleware.workers_io import EntropyHeap
 from services.settings import logger
@@ -31,7 +31,7 @@ class SpawnBooster(CoroutineSpeedup):
         for atomic in self.docker:
             try:
                 cirilla = devil_king_armed(atomic=atomic, silence=self.silence, mirror=True)
-            except UnknownNestException:
+            except UnknownNestTypeException:
                 logger.warning(ToolBox.runtime_report(
                     motive="REJECT",
                     action_name="SpawnBooster",

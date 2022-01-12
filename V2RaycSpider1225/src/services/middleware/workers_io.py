@@ -4,11 +4,13 @@
 # Github     : https://github.com/QIN2DIM
 # Description:
 import ast
+from datetime import timedelta, datetime
 from typing import List
 
 from redis.exceptions import ConnectionError, ResponseError
 
 from services.middleware.stream_io import RedisClient
+from services.settings import TIME_ZONE_CN
 
 
 class EntropyHeap(RedisClient):
@@ -83,3 +85,42 @@ class MessageQueue(RedisClient):
                 if task_queue:
                     _, message = task_queue[0]
                     yield message
+
+
+class AccessControl(RedisClient):
+    def __init__(self, token: str = None):
+        super(AccessControl, self).__init__()
+        self.PREFIX_ACCESS_USER = "v2rss:access:user"
+        self.PREFIX_ACCESS_LIMIT = "v2rss:access:limit"
+
+        if token:
+            self.init_tracer(token)
+
+    def init_tracer(self, token: str):
+        self.PREFIX_ACCESS_USER += f":{token}"
+        self.PREFIX_ACCESS_LIMIT += f":{token}"
+
+        # 自动注册
+        self._register()
+
+    def _register(self):
+        self.db.setnx(self.PREFIX_ACCESS_USER, 0)
+
+    def update(self):
+        self.db.setnx(self.PREFIX_ACCESS_LIMIT, 0)
+        self.db.incr(self.PREFIX_ACCESS_LIMIT)
+        self.db.incr(self.PREFIX_ACCESS_USER)
+
+    def _capture_access_trace(self):
+        _lifecycle = 10
+        self.db.setex(
+            name=self.PREFIX_ACCESS_LIMIT,
+            time=timedelta(seconds=_lifecycle),
+            value=str(datetime.now(TIME_ZONE_CN) + timedelta(seconds=_lifecycle))
+        )
+
+    def is_user(self) -> bool:
+        return bool(self.db.exists(self.PREFIX_ACCESS_USER))
+
+    def is_repeat(self) -> bool:
+        return bool(self.db.exists(self.PREFIX_ACCESS_LIMIT))

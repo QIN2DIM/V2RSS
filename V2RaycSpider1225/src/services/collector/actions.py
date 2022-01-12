@@ -246,18 +246,7 @@ Action7ccCloud = {
     "hyper_params": {"v2ray": True, "anti_email": True, "co-invite": 3},
     "email": "@qq.com",
 }
-# =============================================
-# ActionAaxCloud
-# - change log:
-#   -2021-07-18 [Create] 更新实例
-# =============================================
-ActionAaxCloud = {
-    "name": "ActionAaxCloud",
-    "register_url": "https://aaxc.club/auth/register",
-    "hyper_params": {"v2ray": True, "prism": True},
-    "email": "@gmail.com",
-    "life_cycle": 1,
-}
+
 # =============================================
 # ActionJs8cCloud
 # - change log:
@@ -561,7 +550,7 @@ ActionAzIcoCloud = {
     "name": "ActionAzIcoCloud",
     "register_url": "https://azi.azzico.cc/auth/register",
     "nest": "sspanel",
-    "hyper_params": {},
+    "hyper_params": {"anti-recaptcha": True},
 }
 # =============================================
 # - intro: Giraffe
@@ -571,7 +560,7 @@ ActionGiraffeCloud = {
     "name": "ActionGiraffeCloud",
     "register_url": "https://www.gftech.cc/auth/register",
     "nest": "sspanel",
-    "hyper_params": {"anti_email": True},
+    "hyper_params": {"anti_email": True, "aff": 4},
     "life_cycle": 24 * 2,
 }
 # =============================================
@@ -680,13 +669,43 @@ ActionXFssCloud = {
     "hyper_params": {"anti_email": True},
     "life_cycle": 24 * 7,
 }
+# =============================================
+# - intro: 酸奶
+# - plan: 1D10GB 10*100GB[s]
+# =============================================
+ActionShyNiaCloud = {
+    "name": "ActionShyNiaCloud",
+    "register_url": "https://shynia.com/auth/register",
+    "nest": "sspanel",
+    "hyper_params": {"anti_recaptcha": True, "aff": 1, "skip": True},
+}
+# =============================================
+# - intro: CHEAP-V2RAY
+# - plan: 7D30GB 10*2GB[s]
+# =============================================
+ActionCheapCloud = {
+    "name": "ActionCheapCloud",
+    "register_url": "https://cv2.us/auth/register",
+    "nest": "sspanel",
+    "hyper_params": {"prism": True},
+}
+# =============================================
+# - intro: AAXC加速
+# - plan: 1D10GB 5*0.1GB[s]
+# =============================================
+ActionAaxCloud = {
+    "name": "ActionAaxCloud",
+    "register_url": "https://aaxc.club/auth/register",
+    "nest": "sspanel",
+    "hyper_params": {"prism": True},
+}
 __entropy__ = [
     # ------------------------------------------
     # 无障碍
     # ------------------------------------------
-    ActionZZCloud,  # sspanel 1D10GB 20*10GB[s]
-    # ActionCtwCloud,  # v2board 2D5G
     ActionFETVCloud,  # sspanel 2D1GB 10*2GB[s]
+    ActionCheapCloud,  # sspanel 7D30GB 10*2GB[s]
+    ActionAaxCloud,  # sspanel 1D10G 10*0.1GB[s]
 
     # ------------------------------------------
     # 滑动验证
@@ -697,10 +716,11 @@ __entropy__ = [
     # 邮箱验证
     # ------------------------------------------
     # ActionGiraffeCloud,  # sspanel 2D3GB 10*2GB[s]
-    # ActionAgateCloud,  # v2board 3D2G
-    # ActionPorkCloud,  # sspanel v2ray N-day prism
-    ActionXFssCloud,  # v2board 7D5G
 
+    # ------------------------------------------
+    # 需要声纹验证
+    # ------------------------------------------
+    ActionShyNiaCloud  # sspanel 1D10GB 10*100gb[s]
 ]
 
 # 备选可执行队列
@@ -708,106 +728,53 @@ __pending__ = [
     # ------------------------------------------
     # [启动] 无障碍
     # ------------------------------------------
-    ActionAzIcoCloud,  # sspanel v2ray 1day rookie
-    ActionYesDaddyCloud,  # sspanel v2ray 1day
-    ActionAaxCloud,  # sspanel v2ray 1day 10G
-    ActionHuoXingCloud,  # sspanel v2ray 1day 11G=(1'+5*2')G
-    ActionSDVCloud,  # sspanel v2ray N-day 5G
+    ActionZZCloud,  # sspanel 1D10GB 20*10GB[s]
+    ActionCtwCloud,  # v2board 2D5G
+    ActionYesDaddyCloud,  # sspanel 1day
+    ActionHuoXingCloud,  # sspanel 1day 11G=(1'+5*2')G
+    ActionSDVCloud,  # sspanel N-day 5G
 
     # ------------------------------------------
     # [启动] 需要滑动验证
     # ------------------------------------------
-    # ActionReCloud,  # sspanel v2ray 1day
-    # ActionSuFeiCloud,  # sspanel v2ray 1day
-    ActionViCloud,  # sspanel v2ray 2day 11G=(1'+5*2')G
-    ActionPPCloud,  # sspanel v2ray 1day 62G=(2'+3*20')G
-    ActionLittleCloud,  # sspanel v2ray 1day 40G=(10'+6*5')G
+    ActionViCloud,  # sspanel  2D 11G=(1'+5*2')G
+    ActionPPCloud,  # sspanel  1D 62G=(2'+3*20')G
+    ActionLittleCloud,  # sspanel  1D 40G=(10'+6*5')G
+
     # ------------------------------------------
     # [启动] 需要邮箱验证
     # ------------------------------------------
-    ActionShanSuCloud,  # sspanel v2ray 2day2G
-    ActionMaTrixCloud,  # sspanel v2ray 1day(4h) 10G
-    Action7ccCloud,  # sspanel v2ray 1day 5G
+    ActionShanSuCloud,  # sspanel 2D2GB
+    ActionMaTrixCloud,  # sspanel 4H10GB
+    Action7ccCloud,  # sspanel 1D5GB
+    ActionPorkCloud,  # sspanel v2ray N-day prism
+    ActionAgateCloud,  # v2board 3D2G
+
+    # 限定注册
+    ActionXFssCloud,  # v2board 7D5G
 
     # ------------------------------------------
-    # [启动] 需要声纹验证
+    # 未测试主题
     # ------------------------------------------
+    ActionAzIcoCloud,  # sspanel-cool 1D1G 1000*0.1GB[s]
+
 ]
 
-# # 弃用
-# deprecated_actions = [
-#     # ------------------------------------------
-#     # [停用] 限定邮箱
-#     # ------------------------------------------
-#     ActionKuaiZaiCloud,  # sspanel ssr [30day 500G]
-#     ActionTaoHaiCloud,  # sspanel v2ray 1day 30G=(10'+10*2')G
-#     ActionMfCloud,  # sspanel v2ray [14day 60G + 10 * 2 co-invite]
-#     ActionJcBbCloud,  # sspanel ssr [1day 0G + 30 * 2 co-invite]
-#     ActionThunderCloud,
-#
-#     # 动态队列 -->
-#     ActionDogeCloud,  # sspanel v2ray N-day prism
-#     ActionLilyCloud,  # sspanel v2ray 1day
-#
-#     # ------------------------------------------
-#     # [停用] 流量不达标
-#     # ------------------------------------------
-#     ActionDuosCloud,  # sspanel v2ray [1day co-invite 1 * 10 = 10G]
-#     ActionWgCloud,  # sspanel [v2ray] [1day 2G + non co-invite]
-#     ActionFeiSuCloud,  # sspanel [v2ray] [1day 500M + 0.1G/co-invite]
-#     ActionJssForV2rayCloud,  # sspanel [v2ray] [1day 2G + non co-invite]
-#     ActionMxCloud,  # sspanel [v2ray] [1day 2G + non co-invite]
-#     ActionMaoQCloud,  # sspanel [v2ray] [3day 1G + 10 * 1 G = 10G]
-#     ActionJfCloud,  # sspanel [v2ray][1day 1G + non co-invite]
-#     ActionXiaoCloud, # sspanel
-#
-#     # 无免费节点
-#     ActionMiTaoCloud,# sspanel
-#     ActionBitEbCloud,# sspanel
-#     ActionGsouCloud,# sspanel
-#     ActionLieBaoCloud,# sspanel
-#     ActionOhrCloud,# sspanel
-#
-#     # ------------------------------------------
-#     # [剔除] 限制注册（邀请码/接口关闭）
-#     # ------------------------------------------
-#     ActionHuoJianCloud,# sspanel
-#
-# ]
-# # 禁止调用
-# _see_you_in_the_world = [
-#     # ------------------------------------------
-#     # 江湖再见！
-#     # ------------------------------------------
-#     ActionUUCloud,
-#     ActionJs8cCloud,
-#     ActionTheSSR,
-#     ActionUfoCloud,
-#     ActionN95Cloud,
-#     ActionZuiSuCloud,
-#     ActionKakCloud,
-#     ActionGoWorldCloud,
-
-# ]
 """
 TODO [√]安装 ffmpeg
 -------------------------
 # Ubuntu
 apt-get update && apt install -y ffmpeg
-
-# Centos7 及之前
-sudo yum install epel-release
-sudo yum localinstall --nogpgcheck https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm
-sudo yum install ffmpeg ffmpeg-devel
-ffmpeg -version
-
-# CentOS8 及之后
-dnf install ffmpeg ffmpeg-devel
 """
+
 """
 TODO [√]服务升级
 -------------------------
 tmux attach -t v2rss 
-cd .. && git pull origin master && pip install -r requirements.txt && cd src && python3 main.py synergy
-cd .. && git pull origin master && pip install -r requirements.txt && cd src && python3 main.py deploy 
+
+# 部署协同节点
+cd .. && git reset --hard HEAD && git pull && pip install -r requirements.txt && cd src && clear && python3 main.py synergy
+
+# 部署采集节点
+cd .. && git pull origin master && pip install -r requirements.txt && cd src && && clear && python3 main.py deploy 
 """

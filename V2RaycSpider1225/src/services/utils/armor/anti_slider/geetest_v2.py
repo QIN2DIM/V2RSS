@@ -12,12 +12,12 @@ from .core import SliderValidator, By, ec, ActionChains
 
 class GeeTest2(SliderValidator):
     def __init__(
-        self,
-        driver,
-        debug=False,
-        business_name="GeeTest_v2",
-        full_img_path=None,
-        notch_img_path=None,
+            self,
+            driver,
+            debug=False,
+            business_name="GeeTest_v2",
+            full_img_path=None,
+            notch_img_path=None,
     ):
         super(GeeTest2, self).__init__(
             driver=driver,

@@ -3,10 +3,9 @@
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description:
-
 import os
-import time
 import random
+import time
 import urllib
 from random import randint
 from time import sleep
@@ -14,7 +13,8 @@ from urllib.request import urlretrieve
 
 import pydub
 from selenium.common.exceptions import (
-    NoSuchElementException
+    NoSuchElementException,
+    ElementClickInterceptedException
 )
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
@@ -22,6 +22,8 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.expected_conditions import presence_of_element_located
 from selenium.webdriver.support.wait import WebDriverWait
 from speech_recognition import Recognizer, AudioFile
+
+from .exceptions import AntiBreakOffWarning, ElementLocationException
 
 
 def activate_recaptcha(api: Chrome) -> str:
@@ -45,12 +47,27 @@ def activate_recaptcha(api: Chrome) -> str:
     api.switch_to.default_content()
 
     # 切换到 main_frame 中的另一个 frame
-    api.switch_to.frame(api.find_element(By.XPATH, "//iframe[@title='reCAPTCHA 验证将于 2 分钟后过期']"))
+    for p in [
+        "recaptcha challenge expires in two minutes",
+        "reCAPTCHA 验证将于 2 分钟后过期"
+    ]:
+        try:
+            api.switch_to.frame(api.find_element(By.XPATH, f"//iframe[@title='{p}']"))
+            break
+        except NoSuchElementException:
+            pass
+    else:
+        raise ElementLocationException(msg="出现意外的语种请求")
 
     sleep(randint(2, 4))
 
     # 点击切换到声纹识别界面
-    api.find_element(By.ID, "recaptcha-audio-button").click()
+    # 接受错误 selenium.common.exceptions.ElementClickInterceptedException
+    # 说明点击确认框时就已经通过了人机验证，无需进行声纹识别
+    try:
+        api.find_element(By.ID, "recaptcha-audio-button").click()
+    except ElementClickInterceptedException:
+        raise AntiBreakOffWarning
 
     sleep(randint(2, 4))
 

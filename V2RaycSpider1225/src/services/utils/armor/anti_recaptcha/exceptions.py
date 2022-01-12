@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-# Time       : 2021/12/27 21:56
+# Time       : 2022/1/4 13:15
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description:
-
 from typing import Optional, Sequence
 
 
-class ClusterException(Exception):
+class AntiReCaptchaException(Exception):
 
     def __init__(self, msg: Optional[str] = None, stacktrace: Optional[Sequence[str]] = None) -> None:
         self.msg = msg
@@ -21,9 +20,16 @@ class ClusterException(Exception):
         return exception_msg
 
 
-class GetPageTimeoutException(ClusterException):
+class RiskControlSystemArmor(AntiReCaptchaException):
+    """出现不可抗力的风控拦截"""
     pass
 
 
-class UnknownNestException(ClusterException):
+class AntiBreakOffWarning(AntiReCaptchaException):
+    """切换到声纹验证异常时抛出，此时在激活checkbox时就已经通过了验证，无需进行声纹识别"""
+    pass
+
+
+class ElementLocationException(AntiReCaptchaException):
+    """多语种问题导致的强定位方法失效"""
     pass

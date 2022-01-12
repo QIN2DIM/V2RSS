@@ -4,6 +4,7 @@
 # Github     : https://github.com/QIN2DIM
 # Description:
 import ast
+import os.path
 import random
 import time
 import warnings
@@ -20,19 +21,35 @@ from apscheduler.triggers.date import DateTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from urllib3.exceptions import HTTPError
 
-from services.cluster import __entropy__
-from services.cluster import devil_king_armed
-from services.cluster.mage import decouple
+from services.collector import __entropy__
+from services.collector import devil_king_armed
+from services.decoupler.decoupler import decouple
 from services.middleware.subscribe_io import SubscribeManager
 from services.middleware.workers_io import EntropyHeap, MessageQueue
-from services.settings import logger, TIME_ZONE_CN, POOL_CAP
-from services.utils import CoroutineSpeedup, Queue, ToolBox
+from services.settings import (
+    TIME_ZONE_CN, POOL_CAP,
+    DIR_LOG_COLLECTOR, DIR_LOG_SYNERGY
+)
+from services.utils import CoroutineSpeedup, Queue, ToolBox, InitLog
 
 warnings.simplefilter("ignore", category=UserWarning)
 
 
+def _init_log(sink_mark: str):
+    sink_mark = sink_mark.lower()
+    sink_mapping = {
+        "collector": DIR_LOG_COLLECTOR,
+        "synergy": DIR_LOG_SYNERGY,
+    }
+    log_ = InitLog().init_log(
+        error=os.path.join(sink_mapping[sink_mark], "error.log"),
+        runtime=os.path.join(sink_mapping[sink_mark], "runtime.log")
+    )
+    return log_
+
+
 class CollectorScheduler(CoroutineSpeedup):
-    def __init__(self, job_settings: dict = None):
+    def __init__(self, job_settings: dict = None, scheduler_name: str = None):
         super(CollectorScheduler, self).__init__()
 
         job_settings = {} if job_settings is None else job_settings
@@ -45,7 +62,7 @@ class CollectorScheduler(CoroutineSpeedup):
         self.checker_name = "Checker[M]"
         self.decoupler_name = "Decoupler[M]"
 
-        self.scheduler_name = "CollectorScheduler[M]"
+        self.scheduler_name = "Collector" if scheduler_name is None else scheduler_name
 
         self.job_settings = {
             "interval_collector": 120,
@@ -63,6 +80,8 @@ class CollectorScheduler(CoroutineSpeedup):
         # True: 不打印 monitor-log
         self.freeze_screen = False
 
+        self.logger = _init_log(sink_mark=self.scheduler_name)
+
     def deploy_jobs(self, available_collector=True, available_decoupler=True):
         if available_collector:
             self._deploy_collector()
@@ -70,7 +89,7 @@ class CollectorScheduler(CoroutineSpeedup):
                 callback=self._monitor,
                 mask=(EVENT_JOB_ERROR | EVENT_JOB_SUBMITTED | EVENT_JOB_MAX_INSTANCES)
             )
-            logger.success(ToolBox.runtime_report(
+            self.logger.success(ToolBox.runtime_report(
                 action_name=self.scheduler_name,
                 motive="JOB",
                 message="The Collector was created successfully."
@@ -78,7 +97,7 @@ class CollectorScheduler(CoroutineSpeedup):
 
         if available_decoupler:
             self._deploy_decoupler()
-            logger.success(ToolBox.runtime_report(
+            self.logger.success(ToolBox.runtime_report(
                 action_name=self.scheduler_name,
                 motive="JOB",
                 message="The Decoupler was created successfully."
@@ -92,7 +111,7 @@ class CollectorScheduler(CoroutineSpeedup):
             self.scheduler.start()
         except KeyboardInterrupt:
             self.scheduler.shutdown()
-            logger.debug(ToolBox.runtime_report(
+            self.logger.debug(ToolBox.runtime_report(
                 motive="EXITS",
                 action_name=self.scheduler_name,
                 message="Received keyboard interrupt signal."
@@ -149,7 +168,7 @@ class CollectorScheduler(CoroutineSpeedup):
             message = "{} {}".format(
                 debug_log.get("message"), pool_status
             )
-            logger.debug(ToolBox.runtime_report(
+            self.logger.debug(ToolBox.runtime_report(
                 motive="HEARTBEAT",
                 action_name=self.scheduler_name,
                 message=message,
@@ -176,13 +195,13 @@ class CollectorScheduler(CoroutineSpeedup):
             try:
                 instance["service"].quit()
                 self.running_jobs.pop(session_id)
-                logger.error(ToolBox.runtime_report(
+                self.logger.error(ToolBox.runtime_report(
                     motive="KILL",
                     action_name=instance["name"],
                     inactivated_instance=session_id
                 ))
             except (HTTPError, ConnectionError) as e:
-                logger.critical(ToolBox.runtime_report(
+                self.logger.critical(ToolBox.runtime_report(
                     motive="ERROR",
                     action_name=instance["name"],
                     by="CollectorSchedulerMonitor停用失活实例时出现未知异常",
@@ -198,7 +217,7 @@ class CollectorScheduler(CoroutineSpeedup):
             self.scheduler.remove_job(job_id=self.checker_name)
             self._deploy_collector()
 
-            logger.warning(ToolBox.runtime_report(
+            self.logger.warning(ToolBox.runtime_report(
                 motive="HEARTBEAT",
                 action_name=self.scheduler_name,
                 message="The echo-loop job of collector has been reset."
@@ -263,7 +282,6 @@ class CollectorScheduler(CoroutineSpeedup):
             atomic = self.worker.get_nowait()
             self.control_driver(atomic=atomic, sm=self._sm, *args, **kwargs)
 
-    @logger.catch()
     def control_driver(self, atomic: dict, *args, **kwargs):
         """
 
@@ -321,9 +339,8 @@ class CollectorScheduler(CoroutineSpeedup):
 
 class SynergyScheduler(CollectorScheduler):
     def __init__(self):
-        super(SynergyScheduler, self).__init__()
+        super(SynergyScheduler, self).__init__(scheduler_name="Synergy")
 
-        self.scheduler_name = "SynergyScheduler[M]"
         self.scheduler = BlockingScheduler()
 
         self._mq = MessageQueue()
@@ -335,7 +352,7 @@ class SynergyScheduler(CollectorScheduler):
 
         :return:
         """
-        # 同步远程协同指令
+        # 添加协同任务监听器
         self.scheduler.add_job(
             func=self.sync_context,
             id="sync_remote_tasks",
@@ -344,7 +361,7 @@ class SynergyScheduler(CollectorScheduler):
             ),
         )
 
-        # 处理协同任务
+        # 添加协同任务处理器
         self.scheduler.add_job(
             func=self.go,
             id=self.scheduler_name,
@@ -385,7 +402,7 @@ class SynergyScheduler(CollectorScheduler):
         :return:
         """
 
-        logger.success(ToolBox.runtime_report(
+        self.logger.success(ToolBox.runtime_report(
             motive="JOB",
             action_name=self.scheduler_name,
             message="协同者加入聊天室！"
@@ -411,7 +428,7 @@ class SynergyScheduler(CollectorScheduler):
                 # 检查系统负载
                 if self.is_overheating():
                     self._mq.broadcast_synergy_context(context)
-                    logger.warning(ToolBox.runtime_report(
+                    self.logger.warning(ToolBox.runtime_report(
                         motive="SKIP",
                         action_name=self.scheduler_name,
                         message="节点过热，不接收新的协同任务",
@@ -421,7 +438,7 @@ class SynergyScheduler(CollectorScheduler):
                     continue
 
             except (ValueError, SyntaxError, AttributeError):
-                logger.warning(ToolBox.runtime_report(
+                self.logger.warning(ToolBox.runtime_report(
                     motive="SKIP",
                     action_name=self.scheduler_name,
                     message="捕获到上下文协议异常的脏数据，协同任务已跳过"

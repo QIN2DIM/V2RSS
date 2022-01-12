@@ -3,7 +3,7 @@
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description:
-from services.cluster import __entropy__, __pending__
+from services.collector import __entropy__, __pending__
 from services.middleware.workers_io import EntropyHeap
 from services.settings import logger
 from services.utils import CoroutineSpeedup

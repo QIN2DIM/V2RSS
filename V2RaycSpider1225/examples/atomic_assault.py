@@ -3,10 +3,13 @@
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description: The Elder Blood is about to be activated!
+import sys
+
+sys.path.append("src")
 from gevent import monkey
 
 monkey.patch_all()
-from services.cluster import actions
+from services.collector import actions
 from apis.scaffold.runner import booster
 from loguru import logger
 

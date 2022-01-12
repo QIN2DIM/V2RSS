@@ -7,6 +7,8 @@
 from gevent import monkey
 
 monkey.patch_all()
+import os
+from services.deploy import SynergyScheduler
 from apis.scaffold import (
     entropy,
     runner,
@@ -15,10 +17,10 @@ from apis.scaffold import (
 )
 from services.middleware.subscribe_io import SubscribeManager
 from services.settings import (
-    logger, POOL_CAP, ROUTER_HOST, ROUTER_PORT
+    logger, POOL_CAP, ROUTER_HOST, ROUTER_PORT, DETACH_SUBSCRIPTIONS
 )
 from services.utils import ToolBox, build
-from services.cluster import decouple
+from services.collector import decouple
 
 
 class Scaffold:
@@ -136,6 +138,28 @@ class Scaffold:
         or: python main.py entropy --remote 输出 ``远程执行队列`` 的摘要信息
         or: python main.py entropy --update 将 ``本地执行队列`` 辐射至远端
         or: python main.py entropy --check 检查 ``本地执行队列`` 的健康状态
+        ______________________________________________________________________
+
+        ## Remote EntropyHeap
+
+        在 v6.0.1-alpha 之后，采集器默认使用<远程共享队列>同步待办任务。意味着采集节点不再关心
+        当前物理服务器中的 ``action.py`` 的 entropy 列表，而是 Remote EntropyHeap 对象。
+
+        Remote EntropyHeap Object 存储着若干个采集实例的上下文摘要信息，采集器读取这些数据后，
+        根据一系列的生产逻辑，生成符合特征的实例，进而启动采集任务。
+
+        手动修改 Remote EntropyHeap 需要执行 ``python main.py entropy --update`` 更新
+        远程共享队列，此时所有采集器节点都会使用新的任务队列。这种切换是立即执行的，将在采集器
+        下一次任务加载时生效。
+
+        项目初始化时 Remote EntropyHeap 并不存在，直接执行脚手架 deploy 指令部署采集器后必然
+        会保持空转，也即需要在项目初始化后执行一次 ``python main.py entropy --update`` 用以
+        创建 Remote EntropyHeap，这样采集器才会读取到待办任务。
+
+        ``--update`` 的逻辑是将本地的 entropy 辐射到远端，一般在管理员服务器上使用（比如你的笔记本）。
+        在后期运维中，管理员发现新的可执行实例时，可以手动编写上下文摘要信息，录入 entropy，再使用此指令
+        同步任务队列。
+
 
         :param check:
         :param remote:
@@ -201,7 +225,7 @@ class Scaffold:
         or: python main.py deploy --collector=False         |强制关闭采集器
         or: python main.py deploy --collector               |强制开启采集器
         or: python main.py deploy --collector --decoupler   |强制开启采集器和订阅解耦器
-
+        ______________________________________________________________________
         >> 默认不使用命令行参数，但若使用参数启动项目，命令行参数的优先级高于配置文件
         >> 初次部署需要先运行 ``python main.py entropy --update`` 初始化远程队列
 
@@ -209,11 +233,10 @@ class Scaffold:
         :param decoupler:强制开启/关闭订阅解耦器
         :return:
         """
-        services.SystemService(
-            enable_scheduler=True,
+        services.SystemCrontab(
             collector=collector,
             decoupler=decoupler
-        ).startup()
+        ).service_scheduler()
 
     @staticmethod
     def synergy():
@@ -222,31 +245,46 @@ class Scaffold:
 
         :return:
         """
-        services.SystemService(
-            enable_synergy=True,
-        ).startup()
+        synergy = SynergyScheduler()
+        synergy.deploy()
+        synergy.start()
 
     @staticmethod
-    def router(debug=False, access_log=True):
+    def server(host: str = None, port: int = None, detach=None):
         """
-        部署接口服务器
+        ``PRODUCTION`` 接口服务器（仅在linux部署时生效）
 
-        Usage: python main.py router
+        Usage: python main.py server
         ______________________________________________________________________
-        or: python main.py router --access_log=False        |禁用访问日志
-        or: python main.py router --debug=True              |切换到开发环境
+        or: python main.py server --host=127.0.0.1 --port=22332   |指定端口运行
+        or: python main.py server --detach=False                  |订阅耦合
+        ______________________________________________________________________
 
-        >>为了在生产环境下获得最佳性能，建议在禁用 ``debug`` 和 ``access_log`` 的情况下运行 Sanic
+        ## 额外声明
 
-        :param debug: 当 Sanic 作为子模块使用时，禁用 debug 就可用于生产环境
-        :param access_log: 如果您的确需要请求访问日志，又想获得更好的性能，可以考虑使用 Nginx
-        作为代理，让 Nginx 来处理您的访问日志。这种方式要比用 Python 处理快得多得多。
+        >> 为了在生产环境下获得最佳性能，默认禁用 ``debug`` 和 ``access_log``。
+
+        >> Sanic 可指定 workers 充分利用多核性能，也可直接指定 --fast 参数直接拉满，子进程间可以负载均衡。
+        而云彩姬服务端口仅供个人使用，不存在高并发的应用场景，也即 workers=1 既可（默认），无需更改指定，徒增功耗。
+
+        >> 若要运行开发环境调试代码，请手动运行 ``examples/server_dev.py`` 或 ``src/services/app/server``
+
+        :param detach: 分离订阅（默认 True）。此项为True时，通过接口层申请的订阅才会被系统删除。
+        意味着在接口调试时，指定 ``detach=False`` 被请求的链接不会被删除。
+        :param port:
+        :param host:
+
         :return:
         """
-        from services.app.server.router import app
-        app.run(
-            host=ROUTER_HOST,
-            port=ROUTER_PORT,
-            debug=debug,
-            access_log=access_log,
-        )
+        _host = ROUTER_HOST if host is None else host
+        _p = ROUTER_PORT if port is None else port
+        if detach is not False:
+            os.environ[DETACH_SUBSCRIPTIONS] = "True"
+
+        _command = "sanic services.app.server.app.app " \
+                   f"{'--host ' + _host if _host in ['127.0.0.1', '0.0.0.0'] else ''} " \
+                   f"{'-p ' + str(_p) if 1024 <= _p <= 65535 else ''}"
+
+        # 假设不会被注入
+        logger.info(f"{_command} | detach={bool(os.getenv(DETACH_SUBSCRIPTIONS))}")
+        os.system(_command)

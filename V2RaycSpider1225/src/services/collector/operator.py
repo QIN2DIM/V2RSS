@@ -5,7 +5,7 @@
 # Description: 催化剂
 
 from services.settings import PATH_CHROMEDRIVER
-from .exceptions import UnknownNestException
+from .exceptions import UnknownNestTypeException
 from .nest import LionCubOfCintra, LaraDorren
 
 
@@ -33,5 +33,7 @@ def devil_king_armed(atomic: dict, silence=True, mirror=False):
             chromedriver_path=PATH_CHROMEDRIVER
         )
         return cirilla if mirror is False else cirilla.assault
+    elif _blood == "sspanel-v3":
+        raise ImportError
 
-    raise UnknownNestException
+    raise UnknownNestTypeException

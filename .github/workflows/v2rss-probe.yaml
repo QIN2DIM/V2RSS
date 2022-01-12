@@ -34,42 +34,42 @@ jobs:
     # TODO [√] 检查工作分支及 Workflows 运行环境
     # ============================================
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    # ============================================
-    # TODO [√] 创建 Python3.6+ 编译环境
-    # ============================================
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
-    # ============================================
-    # TODO [√] 安装 Project 第三方依赖
-    # ============================================
-    # 拉取 requirement
-    - name: Install dependencies
-      run: |
+      # ============================================
+      # TODO [√] 创建 Python3.6+ 编译环境
+      # ============================================
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      # ============================================
+      # TODO [√] 安装 Project 第三方依赖
+      # ============================================
+      # 拉取 requirement
+      - name: Install dependencies
+        run: |
           python -m pip install --upgrade pip
           if [ -f ${{ env.REQUIREMENTS }} ]; then pip install -r ${{ env.REQUIREMENTS }}; fi
-    # 1. 拉取最新版 Chrome 并适配对应版本的 ChromeDriver
-    # 2. 初始化工作目录
-    - name: V2RSS setup
-      run: |
-        if [ -e ${{ env.BUILDER }} ]; then python ${{ env.BUILDER }}; fi
-        if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} build; fi
-    # ============================================
-    # TODO [√] 测试 Scaffold 脚手架指令
-    # ============================================
-    # 执行一次数据库连接作业，检查相关配置信息是否填写正确
-    - name: V2RSS ping
-      run: |
-        if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} ping; fi
-    # 执行一次清洗作业，检查订阅监听模块是否正常工作
-    - name: V2RSS overdue/decouple
-      run: |
-        if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} overdue; fi
-        if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} --env=production decouple; fi
-    # 执行一次采集作业，检查采集模块是否正常工作；使用 Spawn 指令可不受限制地采集订阅
-    - name: V2RSS spawn
-      run: |
-        if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} spawn; fi
+      # 1. 拉取最新版 Chrome 并适配对应版本的 ChromeDriver
+      # 2. 初始化工作目录
+      - name: V2RSS setup
+        run: |
+          if [ -e ${{ env.BUILDER }} ]; then python ${{ env.BUILDER }}; fi
+          if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} build; fi
+      # ============================================
+      # TODO [√] 测试 Scaffold 脚手架指令
+      # ============================================
+      # 执行一次数据库连接作业，检查相关配置信息是否填写正确
+      - name: V2RSS ping
+        run: |
+          if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} ping; fi
+      # 执行一次清洗作业，检查订阅监听模块是否正常工作
+      - name: V2RSS overdue/decouple
+        run: |
+          if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} overdue; fi
+          if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} --env=production decouple; fi
+      # 执行一次采集作业，检查采集模块是否正常工作；使用 Spawn 指令可不受限制地采集订阅
+      - name: V2RSS spawn
+        run: |
+          if [ -e ${{ env.SCAFFOLD }} ]; then python ${{ env.SCAFFOLD }} spawn; fi
