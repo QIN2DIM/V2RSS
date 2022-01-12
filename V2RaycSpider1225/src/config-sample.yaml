@@ -57,16 +57,12 @@ router:
   name: "V2RSS"
   host: "127.0.0.1"
   port: 22333
-  uuid: "v1"
   apis:
-    # 快速获取 v2ray 订阅链接
-    get_v2ray: "/v2rss/{}/super_admin/get/v2ray"
-    # 快速获取某个类型的订阅链接，
-    #    - 如 ``_entropy_name=v2ray`` GET http://host:port/v2rss/[uuid]/super_admin/get/v2ray
-    get_subs: "/v2rss/{}/super_admin/get/<_entropy_name>"
-    # 通过传入域名缩写进行模糊匹配，返回返回指定订阅源链接
-    get_subs_v2: "/v2rss/{}/super_admin/match/<_entropy_name>"
-    # v2 的调试接口，通过此接口请求的链接不会从数据库中移除
-    get_subs_v2_debug: "/v2rss/{}/super_admin/match/debug/<_entropy_name>"
-    # 获取池中来自不同订阅源的链接剩余数
-    get_pool_status: "/v2rss/{}/get_pool_status"
+    # GET 快速获取 v2ray 订阅链接
+    get_v2ray: "/api/v2rss/get/v2ray"
+    # POST 快速获取某个类型的订阅链接
+    get_subs_v1: "/api/v2rss/get_subs/v1"
+    # POST 通过传入域名缩写进行模糊匹配，返回返回指定订阅源链接
+    get_subs_v2: "/api/v2rss/get_subs/v2"
+    # GET 获取池中来自不同订阅源的链接剩余数
+    get_pool_status: "/api/v2rss/status"
