@@ -10,7 +10,7 @@ from typing import List
 from redis.exceptions import ConnectionError, ResponseError
 
 from services.middleware.stream_io import RedisClient
-from services.settings import TIME_ZONE_CN
+from services.settings import TIME_ZONE_CN, POOL_CAP
 
 
 class EntropyHeap(RedisClient):
@@ -29,6 +29,23 @@ class EntropyHeap(RedisClient):
             return []
         except ConnectionError:
             return []
+
+    def set_new_cap(self, new_cap: int):
+        """
+        设置新的统一队列容量
+        :param new_cap:
+        :return:
+        """
+        self.db.set(name=self.PREFIX_CAPACITY, value=new_cap)
+
+    def get_unified_cap(self) -> int:
+        """
+        返回统一队列容量，若没有设置，则返回配置文件的设定
+
+        :return:
+        """
+        _unified_cap = self.db.get(self.PREFIX_CAPACITY)
+        return int(_unified_cap) if _unified_cap else POOL_CAP
 
     def is_empty(self) -> bool:
         return not bool(self.db.llen(self.PREFIX_ENTROPY))

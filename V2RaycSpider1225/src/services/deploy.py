@@ -82,6 +82,10 @@ class CollectorScheduler(CoroutineSpeedup):
 
         self.logger = _init_log(sink_mark=self.scheduler_name)
 
+        # 协同模式下的任务队列以及队列容量
+        self.pending_entropy = []
+        self.pool_cap = 0
+
     def deploy_jobs(self, available_collector=True, available_decoupler=True):
         if available_collector:
             self._deploy_collector()
@@ -163,10 +167,12 @@ class CollectorScheduler(CoroutineSpeedup):
 
         if not self.freeze_screen:
             pool_status = "pool_status[{}/{}]".format(
-                self._eh.__len__(), POOL_CAP
+                self._eh.__len__(),
+                "__pending__" if not self.pool_cap else self.pool_cap
             )
             message = "{} {}".format(
-                debug_log.get("message"), pool_status
+                debug_log.get("message"),
+                pool_status
             )
             self.logger.debug(ToolBox.runtime_report(
                 motive="HEARTBEAT",
@@ -246,18 +252,23 @@ class CollectorScheduler(CoroutineSpeedup):
             return []
 
         # 根据任务源选择本地/远程任务队列 默认使用远程队列
-        pending_entropy = self._eh.sync() if self.task_source == "remote" else __entropy__.copy()
+        if self.task_source == "remote":
+            self.pending_entropy = self._eh.sync()
+            self.pool_cap = self._eh.get_unified_cap()
+        else:
+            self.pending_entropy = __entropy__.copy()
+            self.pool_cap = POOL_CAP
 
         # 弹回空任务，防止订阅溢出
-        if self._eh.__len__() >= POOL_CAP or not pending_entropy:
+        if self._eh.__len__() >= self.pool_cap or not self.pending_entropy:
             return []
 
         # 消减任务实例，控制订阅池容量
-        mirror_entropy = pending_entropy.copy()
-        qsize = pending_entropy.__len__()
+        mirror_entropy = self.pending_entropy.copy()
+        qsize = self.pending_entropy.__len__()
         random.shuffle(mirror_entropy)
 
-        while self._eh.__len__() + qsize > int(POOL_CAP * 0.8):
+        while self._eh.__len__() + qsize > int(self.pool_cap * 0.8):
             if mirror_entropy.__len__() < 1:
                 break
             mirror_entropy.pop()

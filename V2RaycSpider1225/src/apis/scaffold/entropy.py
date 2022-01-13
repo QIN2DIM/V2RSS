@@ -5,13 +5,15 @@
 # Description:
 from services.collector import __entropy__, __pending__
 from services.middleware.workers_io import EntropyHeap
-from services.settings import logger
+from services.settings import logger, POOL_CAP
 from services.utils import CoroutineSpeedup
 from services.utils import ToolBox
 
+eh = EntropyHeap()
+
 
 def update():
-    EntropyHeap().update(local_entropy=__entropy__)
+    eh.update(local_entropy=__entropy__)
 
     logger.success(ToolBox.runtime_report(
         motive="UPDATE",
@@ -22,7 +24,7 @@ def update():
 
 def preview(remote: bool = False):
     # 将要输出的摘要数据 <localQueue> or <remoteQueue>
-    check_entropy = __entropy__ if not remote else EntropyHeap().sync()
+    check_entropy = __entropy__ if not remote else eh.sync()
 
     # 当摘要数据非空时输出至控制台
     if check_entropy:
@@ -63,4 +65,30 @@ def check(power: int = None):
     logger.success(ToolBox.runtime_report(
         motive="CHECK",
         action_name="ScaffoldEntropy",
+    ))
+
+
+def cap(new_capacity: int = None):
+    if not new_capacity:
+        return
+
+    new_capacity = new_capacity if type(new_capacity) == int else POOL_CAP
+    if new_capacity <= 2 or new_capacity >= 28:
+        logger.error(ToolBox.runtime_report(
+            motive="SET POOL CAPACITY",
+            action_name="ScaffoldEntropy",
+            message=f"new_capacity({new_capacity}) 设置不合理"
+        ))
+        return
+
+    stable_capacity = eh.get_unified_cap()
+
+    eh.set_new_cap(new_capacity)
+
+    logger.success(ToolBox.runtime_report(
+        motive="SET POOL CAPACITY",
+        action_name="ScaffoldEntropy",
+        message=f"更新远程队列容量",
+        new_capacity=new_capacity,
+        old_capacity=stable_capacity
     ))

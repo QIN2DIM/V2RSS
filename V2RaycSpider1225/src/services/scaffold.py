@@ -128,16 +128,19 @@ class Scaffold:
     def entropy(
             update: bool = False,
             remote: bool = False,
-            check: bool = False
+            check: bool = False,
+            cap: int = None
     ):
         """
         采集队列的命令行管理工具。
 
         Usage: python main.py entropy
         ______________________________________________________________________
-        or: python main.py entropy --remote 输出 ``远程执行队列`` 的摘要信息
-        or: python main.py entropy --update 将 ``本地执行队列`` 辐射至远端
-        or: python main.py entropy --check 检查 ``本地执行队列`` 的健康状态
+        or: python main.py entropy --remote |输出 ``远程执行队列`` 的摘要信息
+        or: python main.py entropy --update |将 ``本地执行队列`` 辐射至远端
+        or: python main.py entropy --check  |检查 ``本地执行队列`` 的健康状态
+        or: python main.py entropy --cap    |将 ``POOL_CAP`` 队列容量映射到远端
+        or: python main.py entropy --cap=8  |手动修改远程队列容量
         ______________________________________________________________________
 
         ## Remote EntropyHeap
@@ -160,12 +163,21 @@ class Scaffold:
         在后期运维中，管理员发现新的可执行实例时，可以手动编写上下文摘要信息，录入 entropy，再使用此指令
         同步任务队列。
 
+        ## Unified Pool Capacity
 
+        在 v6.0.2-alpha 之后，可以通过脚手架指令 `entropy --cap` 手动指定远程队列容量，同步操作是立即完成的，
+        将在采集器下次任务发起时的 ``preload`` 预加载阶段生效。
+
+        此指令不会覆盖本地 ``POOL_CAP`` 全局变量的值，也不会覆写任一节点的配置文件，而是创建或更新一个指定的 Redis-Key。
+
+        :param cap:
         :param check:
         :param remote:
         :param update:
         :return:
         """
+        if cap:
+            return entropy.cap(cap)
         if not check:
             entropy.preview(remote=remote)
         if update:

@@ -37,6 +37,7 @@ class RedisClient:
         self.PREFIX_API = "sspanel:apis:"
         self.PREFIX_DETACH = "sspanel:detach"
         self.PREFIX_ENTROPY = "sspanel:entropy"
+        self.PREFIX_CAPACITY = "sspanel:pool_cap"
 
         self.PREFIX_STREAM = "sspanel:synergy"
 
