@@ -19,5 +19,5 @@ _THE_PROPHECY = """
 """
 import random
 
-if random.uniform(0, 1) > 0.81:
+if random.uniform(0, 1) > 0.911:
     print(_THE_PROPHECY)

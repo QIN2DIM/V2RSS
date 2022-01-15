@@ -11,9 +11,11 @@ from selenium.common.exceptions import (
     TimeoutException,
     ElementNotInteractableException
 )
-from selenium.common.exceptions import WebDriverException
+from selenium.common.exceptions import WebDriverException, NoSuchElementException
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
 
 from services.utils import ToolBox, SubscribeParser
 from ..core import TheElderBlood
@@ -25,6 +27,7 @@ class TheElf(TheElderBlood):
 
         self._API_GET_SUBSCRIBE = self.hyper_params.get("api", self.register_url)
         self._PATH_GET_SUBSCRIBE = "/api/v1/user/getSubscribe"
+        self._PATH_PLAN_STORE = "/#/plan"
 
     @staticmethod
     def get_html_handle(api, url, wait_seconds: int = 15):
@@ -77,10 +80,6 @@ class TheElf(TheElderBlood):
                 # 填写验证码
                 api.find_element(By.XPATH, "//input[@placeholder='邮箱验证码']").send_keys(email_code)
 
-            # Google reCAPTCHA 人机验证
-            if self.anti_recaptcha:
-                raise ImportWarning
-
             """
             [√]提交数据
             ---------------------
@@ -101,6 +100,18 @@ class TheElf(TheElderBlood):
                     )
                     time.sleep(3 + self.beat_dance)
                     continue
+
+            """
+            [√]捕获隐藏的 checkbox
+            ---------------------
+            """
+            # Google reCAPTCHA 人机验证
+            if self.anti_recaptcha:
+                WebDriverWait(api, 10, poll_frequency=1, ignored_exceptions=NoSuchElementException).until(
+                    EC.presence_of_element_located((By.XPATH, "//div[@class='ant-modal-body']"))
+                )
+                self.armor.anti_recaptcha(api)
+
             return True
 
     def waiting_to_load(self, api):
@@ -110,16 +121,11 @@ class TheElf(TheElderBlood):
         :param api:
         :return:
         """
-        url = ToolBox.reset_url(url=self._API_GET_SUBSCRIBE, path=self._PATH_GET_SUBSCRIBE)
-
-        time.sleep(0.5)
-        for _ in range(45):
-            api.get(url)
+        while api.current_url == self.register_url:
             if self._is_timeout():
                 raise TimeoutException
-            if api.current_url != self.register_url:
-                break
-            time.sleep(0.2)
+
+        api.get(ToolBox.reset_url(url=self._API_GET_SUBSCRIBE, path=self._PATH_GET_SUBSCRIBE))
 
     def get_subscribe(self, api: Chrome):
         """
@@ -137,6 +143,37 @@ class TheElf(TheElderBlood):
         except (CloudflareChallengeError, JSONDecodeError):
             context: str = api.find_element(By.XPATH, "//pre").text
             self.subscribe_url = SubscribeParser.parse_url_from_page(context)
+
+    def buy_free_plan(self, api: Chrome, force_draw: int = 2):
+        # New subtask tab.
+        user_tab = api.current_window_handle
+        api.switch_to.new_window('tab')
+
+        # Jump to the `plan store` page.
+        api.get(ToolBox.reset_url(url=self._API_GET_SUBSCRIBE, path=self._PATH_PLAN_STORE))
+
+        # Click `Buy Free Plan` Button.
+        if self.plan_index == 0:
+            WebDriverWait(api, 60, poll_frequency=0.5, ignored_exceptions=NoSuchElementException).until(
+                EC.element_to_be_clickable((By.XPATH, "//span[@class='btn btn-hero-primary btn-rounded px-4']"))
+            ).click()
+
+        # Place an order and jump to the payment page to terminate the cycle.
+        order_ = api.current_url
+        while api.current_url == order_:
+            WebDriverWait(api, 60, poll_frequency=0.5, ignored_exceptions=NoSuchElementException).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(@class,'btn-block')]"))
+            ).click()
+            time.sleep(0.5)
+
+        # Payment.
+        WebDriverWait(api, 60, poll_frequency=0.5, ignored_exceptions=NoSuchElementException).until(
+            EC.element_to_be_clickable((By.XPATH, "//button[contains(@class,'btn-block')]"))
+        ).click()
+
+        # Return to the main business tab and refresh the interface.
+        api.switch_to.window(user_tab)
+        api.refresh()
 
 
 class LaraDorren(TheElf):

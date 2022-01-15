@@ -140,9 +140,11 @@ class TheWitcher(TheElderBlood):
             # Google reCAPTCHA 人机验证
             if self.anti_recaptcha:
                 try:
-                    self.armor.anti_recaptcha(api)
-                    # 回到 main-frame 否则后续DOM操作无法生效
-                    api.switch_to.default_content()
+                    ok = self.armor.anti_recaptcha(api)
+                    if not ok:
+                        self._update_clock()
+                        api.refresh()
+                        continue
                 except TimeoutException:
                     time.sleep(0.5 + self.beat_dance)
                     continue
@@ -179,27 +181,23 @@ class TheWitcher(TheElderBlood):
 
             return True
 
-    def waiting_to_load(self, api):
+    def waiting_to_load(self, api: Chrome):
         """
         register --> dashboard
 
         :param api:
         :return:
         """
-        url = ToolBox.reset_url(url=self._API_GET_SUBSCRIBE, path=self._PATH_GET_SUBSCRIBE)
 
-        time.sleep(0.5)
-        for _ in range(45):
+        while api.current_url == self.register_url:
             if self._is_timeout():
                 raise TimeoutException
-            if api.current_url == self.register_url:
-                time.sleep(1)
-                self.get_html_handle(api, url)
-            elif "/auth/login" in api.current_url:
-                self.sign_in(api)
-            else:
-                break
-            time.sleep(0.3)
+
+        if "/auth/login" in api.current_url:
+            self.sign_in(api)
+
+        if self._PATH_GET_SUBSCRIBE not in api.current_url:
+            api.get(ToolBox.reset_url(url=self._API_GET_SUBSCRIBE, path=self._PATH_GET_SUBSCRIBE))
 
     def buy_free_plan(self, api, force_draw: int = 2):
         xpath_page_shop = "//div[contains(@onclick,'shop')]"
@@ -245,13 +243,10 @@ class TheWitcher(TheElderBlood):
         :return:
         """
         # 兼容性改动，仅获取通用链接
-        method_ = self._ABSOLUTE_INDEX["v2ray"]
-        for _ in range(30):
-            try:
-                self.subscribe_url = api.find_element(By.XPATH, method_["xpath"]).get_attribute(method_["attr"])
-                break
-            except NoSuchElementException:
-                time.sleep(1)
+        tag = WebDriverWait(api, 45, poll_frequency=0.5, ignored_exceptions=NoSuchElementException).until(
+            EC.presence_of_element_located((By.XPATH, self._ABSOLUTE_INDEX["v2ray"]["xpath"]))
+        )
+        self.subscribe_url = tag.get_attribute(self._ABSOLUTE_INDEX["v2ray"]["attr"])
 
         if self.subscribe_url == "":
             logger.error(ToolBox.runtime_report(

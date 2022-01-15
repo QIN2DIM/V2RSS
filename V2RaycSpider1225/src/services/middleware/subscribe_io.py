@@ -52,9 +52,8 @@ class SubscribeManager(RedisClient):
         """
         添加订阅
 
-        :param threshold: 视为将原定的结束时间提前 x 小时。
+        :param end_date:
         :param subscribe:
-        :param life_cycle:
         :return:
         """
 

@@ -13,20 +13,23 @@ from apis.scaffold import (
     entropy,
     runner,
     services,
-    mining
+    mining,
+    pool
 )
 from services.middleware.subscribe_io import SubscribeManager
 from services.settings import (
-    logger, POOL_CAP, ROUTER_HOST, ROUTER_PORT, DETACH_SUBSCRIPTIONS
+    logger, ROUTER_HOST, ROUTER_PORT, DETACH_SUBSCRIPTIONS
 )
 from services.utils import ToolBox, build
-from services.collector import decouple
 
 
 class Scaffold:
     def __init__(self):
         pass
 
+    # ----------------
+    # 基础指令
+    # ----------------
     @staticmethod
     def build(force: bool = None):
         """
@@ -51,78 +54,102 @@ class Scaffold:
             message="欢迎使用 - V2RSS云彩姬 - " if response else "网络连接异常"
         ))
 
+    # ----------------
+    # 订阅管理
+    # ----------------
     @staticmethod
-    def mining(
-            env: str = "development",
-            silence: bool = True,
-            power: int = 16,
-            collector: bool = False,
-            classifier: bool = False,
-            source: str = "local",
-            batch: int = 1,
-    ):
+    def pool(overdue: bool = False, decouple: bool = False, status: bool = True):
         """
-        运行 Collector 以及 Classifier 采集并过滤基层数据
+        订阅池管理
 
-        Usage: python main.py mining
+        :param status: 输出订阅池状态（不指定执行参数时默认输出）
+        :param decouple: 清除失效订阅（decouple 与 overdue 仅能同时执行一项）
+        :param overdue: 清除过期订阅（decouple 与 overdue 仅能同时执行一项）
+        :return:
+        """
+        if overdue:
+            return pool.overdue()
+        if decouple:
+            return pool.decouple()
+        if status:
+            return pool.status
+
+    # ----------------
+    # 系统任务
+    # ----------------
+    @staticmethod
+    def deploy(collector: bool = None, decoupler: bool = None):
+        """
+        部署定时任务
+
+        Usage: python main.py deploy
         ______________________________________________________________________
-        or: python main.py mining --env=production                |在 GitHub Actions 中构建生产环境
-        or: python main.py mining --silence=False                 |显式启动，在 linux 中运行时无效
-        or: python main.py mining --power=4                       |指定分类器运行功率
-        or: python main.py mining --classifier --source=local     |启动分类器，指定数据源为本地缓存
-        or: python main.py mining --classifier --source=remote    |启动分类器，指定远程数据源
-        or: python main.py mining --collector                     |启动采集器
+        or: python main.py deploy --collector=False         |强制关闭采集器
+        or: python main.py deploy --collector               |强制开启采集器
+        or: python main.py deploy --collector --decoupler   |强制开启采集器和订阅解耦器
+        ______________________________________________________________________
+        >> 默认不使用命令行参数，但若使用参数启动项目，命令行参数的优先级高于配置文件
+        >> 初次部署需要先运行 ``python main.py entropy --update`` 初始化远程队列
 
-        :param source: within [local remote] 指定数据源，仅对分类器生效
-            - local：使用本地 Collector 采集的数据进行分类
-            - remote：使用 SSPanel-Mining 母仓库数据进行分类（需要下载数据集）
-        :param batch: batch 应是自然数，仅在 source==remote 时生效，用于指定拉取的数据范围。
-            - batch=1 表示拉取昨天的数据（默认），batch=2 表示拉取昨天+前天的数据，以此类推往前堆叠
-            - 显然，当设置的 batch 大于母仓库存储量时会自动调整运行了逻辑，防止溢出。
-        :param env: within [development production]
-        :param silence: 采集器是否静默启动，默认静默。
-        :param power: 分类器运行功率。
-        :param collector: 采集器开启权限，默认关闭。
-        :param classifier: 分类器控制权限，默认关闭。
+        :param collector:强制开启/关闭采集器
+        :param decoupler:强制开启/关闭订阅解耦器
         :return:
         """
-        if collector:
-            mining.run_collector(env=env, silence=silence)
-        if classifier:
-            mining.run_classifier(power=power, source=source, batch=batch)
+        services.SystemCrontab(
+            collector=collector,
+            decoupler=decoupler
+        ).service_scheduler()
 
     @staticmethod
-    @logger.catch()
-    def decouple():
+    def synergy():
         """
-        清除无效订阅
+        部署协同工作节点
 
         :return:
         """
-        logger.info(ToolBox.runtime_report(
-            motive="DECOUPLE",
-            action_name="ScaffoldDecoupler",
-            message="Clearing invalid subscriptions..."
-        ))
-        decouple(debug=True)
+        synergy = SynergyScheduler()
+        synergy.deploy()
+        synergy.start()
 
     @staticmethod
-    @logger.catch()
-    def overdue():
+    def server(host: str = None, port: int = None, detach: bool = None):
         """
-        清除过期订阅
+        ``PRODUCTION`` 接口服务器（仅在linux部署时生效）
+
+        Usage: python main.py server
+        ______________________________________________________________________
+        or: python main.py server --host=127.0.0.1 --port=22332   |指定端口运行
+        or: python main.py server --detach=False                  |订阅耦合
+        ______________________________________________________________________
+
+        ## 额外声明
+
+        >> 为了在生产环境下获得最佳性能，默认禁用 ``debug`` 和 ``access_log``。
+
+        >> Sanic 可指定 workers 充分利用多核性能，也可直接指定 --fast 参数直接拉满，子进程间可以负载均衡。
+        而云彩姬服务端口仅供个人使用，不存在高并发的应用场景，也即 workers=1 既可（默认），无需更改指定，徒增功耗。
+
+        >> 若要运行开发环境调试代码，请手动运行 ``examples/server_dev.py`` 或 ``src/services/app/server``
+
+        :param detach: 分离订阅（默认 True）。此项为True时，通过接口层申请的订阅才会被系统删除。
+        意味着在接口调试时，指定 ``detach=False`` 被请求的链接不会被删除。
+        :param port:
+        :param host:
 
         :return:
         """
-        try:
-            pool_len = SubscribeManager().refresh()
-            logger.debug(ToolBox.runtime_report(
-                motive="OVERDUE",
-                action_name="RemotePool | SpawnRhythm",
-                message="pool_status[{}/{}]".format(pool_len, POOL_CAP)
-            ))
-        except ConnectionError:
-            pass
+        _host = ROUTER_HOST if host is None else host
+        _p = ROUTER_PORT if port is None else port
+        if detach is not False:
+            os.environ[DETACH_SUBSCRIPTIONS] = "True"
+
+        _command = "sanic services.app.server.app.app " \
+                   f"{'--host ' + _host if _host in ['127.0.0.1', '0.0.0.0'] else ''} " \
+                   f"{'-p ' + str(_p) if 1024 <= _p <= 65535 else ''}"
+
+        # 假设不会被注入
+        logger.info(f"{_command} | detach={bool(os.getenv(DETACH_SUBSCRIPTIONS))}")
+        os.system(_command)
 
     @staticmethod
     def entropy(
@@ -185,17 +212,9 @@ class Scaffold:
         if check:
             entropy.check()
 
-    @staticmethod
-    @logger.catch()
-    def pool():
-        """
-        获取订阅的活跃状态
-
-        :return:
-        """
-        pool_status = SubscribeManager().get_pool_status()
-        ToolBox.echo(str(pool_status) if pool_status else "无可用订阅", 1 if pool_status else 0)
-
+    # ----------------
+    # 高级指令
+    # ----------------
     @staticmethod
     @logger.catch()
     def spawn(
@@ -212,6 +231,7 @@ class Scaffold:
         or: python main.py nest --power=4          |指定并发数
         or: python main.py nest --remote           |读取远程队列的运行实例
         or: python main.py nest --safe             |安全启动，过滤掉需要人机验证的任务
+        ______________________________________________________________________
 
         :param safe: 安全启动，过滤掉需要人机验证的实例
         :param silence:静默启动
@@ -228,75 +248,42 @@ class Scaffold:
         )
 
     @staticmethod
-    def deploy(collector: bool = None, decoupler: bool = None):
+    def mining(
+            env: str = "development",
+            silence: bool = True,
+            power: int = 16,
+            collector: bool = False,
+            classifier: bool = False,
+            source: str = "local",
+            batch: int = 1,
+    ):
         """
-        部署定时任务
+        运行 Collector 以及 Classifier 采集并过滤基层数据
 
-        Usage: python main.py deploy
+        Usage: python main.py mining
         ______________________________________________________________________
-        or: python main.py deploy --collector=False         |强制关闭采集器
-        or: python main.py deploy --collector               |强制开启采集器
-        or: python main.py deploy --collector --decoupler   |强制开启采集器和订阅解耦器
+        or: python main.py mining --env=production                |在 GitHub Actions 中构建生产环境
+        or: python main.py mining --silence=False                 |显式启动，在 linux 中运行时无效
+        or: python main.py mining --power=4                       |指定分类器运行功率
+        or: python main.py mining --classifier --source=local     |启动分类器，指定数据源为本地缓存
+        or: python main.py mining --classifier --source=remote    |启动分类器，指定远程数据源
+        or: python main.py mining --collector                     |启动采集器
         ______________________________________________________________________
-        >> 默认不使用命令行参数，但若使用参数启动项目，命令行参数的优先级高于配置文件
-        >> 初次部署需要先运行 ``python main.py entropy --update`` 初始化远程队列
 
-        :param collector:强制开启/关闭采集器
-        :param decoupler:强制开启/关闭订阅解耦器
+        :param source: within [local remote] 指定数据源，仅对分类器生效
+            - local：使用本地 Collector 采集的数据进行分类
+            - remote：使用 SSPanel-Mining 母仓库数据进行分类（需要下载数据集）
+        :param batch: batch 应是自然数，仅在 source==remote 时生效，用于指定拉取的数据范围。
+            - batch=1 表示拉取昨天的数据（默认），batch=2 表示拉取昨天+前天的数据，以此类推往前堆叠
+            - 显然，当设置的 batch 大于母仓库存储量时会自动调整运行了逻辑，防止溢出。
+        :param env: within [development production]
+        :param silence: 采集器是否静默启动，默认静默。
+        :param power: 分类器运行功率。
+        :param collector: 采集器开启权限，默认关闭。
+        :param classifier: 分类器控制权限，默认关闭。
         :return:
         """
-        services.SystemCrontab(
-            collector=collector,
-            decoupler=decoupler
-        ).service_scheduler()
-
-    @staticmethod
-    def synergy():
-        """
-        部署协同工作节点
-
-        :return:
-        """
-        synergy = SynergyScheduler()
-        synergy.deploy()
-        synergy.start()
-
-    @staticmethod
-    def server(host: str = None, port: int = None, detach=None):
-        """
-        ``PRODUCTION`` 接口服务器（仅在linux部署时生效）
-
-        Usage: python main.py server
-        ______________________________________________________________________
-        or: python main.py server --host=127.0.0.1 --port=22332   |指定端口运行
-        or: python main.py server --detach=False                  |订阅耦合
-        ______________________________________________________________________
-
-        ## 额外声明
-
-        >> 为了在生产环境下获得最佳性能，默认禁用 ``debug`` 和 ``access_log``。
-
-        >> Sanic 可指定 workers 充分利用多核性能，也可直接指定 --fast 参数直接拉满，子进程间可以负载均衡。
-        而云彩姬服务端口仅供个人使用，不存在高并发的应用场景，也即 workers=1 既可（默认），无需更改指定，徒增功耗。
-
-        >> 若要运行开发环境调试代码，请手动运行 ``examples/server_dev.py`` 或 ``src/services/app/server``
-
-        :param detach: 分离订阅（默认 True）。此项为True时，通过接口层申请的订阅才会被系统删除。
-        意味着在接口调试时，指定 ``detach=False`` 被请求的链接不会被删除。
-        :param port:
-        :param host:
-
-        :return:
-        """
-        _host = ROUTER_HOST if host is None else host
-        _p = ROUTER_PORT if port is None else port
-        if detach is not False:
-            os.environ[DETACH_SUBSCRIPTIONS] = "True"
-
-        _command = "sanic services.app.server.app.app " \
-                   f"{'--host ' + _host if _host in ['127.0.0.1', '0.0.0.0'] else ''} " \
-                   f"{'-p ' + str(_p) if 1024 <= _p <= 65535 else ''}"
-
-        # 假设不会被注入
-        logger.info(f"{_command} | detach={bool(os.getenv(DETACH_SUBSCRIPTIONS))}")
-        os.system(_command)
+        if collector:
+            mining.run_collector(env=env, silence=silence)
+        if classifier:
+            mining.run_classifier(power=power, source=source, batch=batch)

@@ -31,7 +31,8 @@ from services.settings import (
 )
 from services.utils import (
     GeeTestAdapter, ToolBox, apis_get_email_context, apis_get_verification_code,
-    activate_recaptcha, handle_audio, parse_audio, submit_recaptcha, apis_check_availability
+    activate_recaptcha, handle_audio, parse_audio, submit_recaptcha,
+    EmailRelayV2, EmailRelay, correct_answer
 )
 from services.utils.armor.anti_email.exceptions import GetEmailTimeout, GetEmailCodeTimeout
 from services.utils.armor.anti_recaptcha.exceptions import (
@@ -54,33 +55,77 @@ class ArmorUtils:
         # 声纹验证音频转文本的输出
         self.audio_answer = ""
 
+        # 服务注册
+        self.register_util = {
+            "anti_email": "",
+            "anti_slider": None,
+            "anti_recaptcha": None,
+        }
+        self.er_v1 = EmailRelay()
+        self.er_v2 = EmailRelayV2()
+
     def anti_email(self, api: Chrome, method="email") -> str:
-        if method == "email":
-            try:
-                self.context_anti_email = apis_get_email_context(
+        """
+        当解决方案数量超过4时，需要引入设计模式简化代码
+        :param api:
+        :param method:
+        :return:
+        """
+
+        def v1():
+            if method == "email":
+                try:
+                    self.context_anti_email = apis_get_email_context(
+                        api=api,
+                        main_handle=api.current_window_handle,
+                    )
+                    return self.context_anti_email["email"]
+                except TimeoutException:
+                    raise GetEmailTimeout
+            if method == "code":
+                try:
+                    # 切换标签页监听验证码
+                    email_code = apis_get_verification_code(
+                        api=api,
+                        link=self.context_anti_email["link"],
+                        main_handle=api.current_window_handle,
+                        collaborate_tab=self.context_anti_email["handle"],
+                    )
+                    return email_code
+                except TimeoutException:
+                    raise GetEmailCodeTimeout
+
+        def v2():
+            if method == "email":
+                self.context_anti_email = self.er_v2.apis_get_temp_email(
                     api=api,
-                    main_handle=api.current_window_handle,
+                    handle_obj=api.current_window_handle
                 )
                 return self.context_anti_email["email"]
-            except TimeoutException:
-                raise GetEmailTimeout
-        if method == "code":
-            try:
-                # 切换标签页监听验证码
-                email_code = apis_get_verification_code(
-                    api=api,
-                    link=self.context_anti_email["link"],
-                    main_handle=api.current_window_handle,
-                    collaborate_tab=self.context_anti_email["handle"],
-                )
+            if method == "code":
+                email_code = self.er_v2.apis_get_email_code()
                 return email_code
-            except TimeoutException:
-                raise GetEmailCodeTimeout
 
-    @staticmethod
-    def is_available(**pending) -> dict:
+        util_mapping = {
+            "v1": v1,
+            "v2": v2
+        }
+
+        if not self.register_util["anti_email"]:
+            if self.er_v2.is_availability():
+                self.register_util["anti_email"] = "v2"
+            elif self.er_v1.is_availability():
+                self.register_util["anti_email"] = "v1"
+
+        solution = self.register_util["anti_email"]
+        return util_mapping[solution]()
+
+    def is_available(self, **pending) -> dict:
         if pending.get("anti_email") is True:
-            return {"result": apis_check_availability(), "util": "anti_email"}
+            return {
+                "result": self.er_v2.is_availability() or self.er_v1.is_availability(),
+                "util": "anti_email"
+            }
         if pending.get("anti_slider") is True:
             return {"result": True, "util": "anti_slider"}
         if pending.get("anti_recaptcha") is True:
@@ -103,7 +148,7 @@ class ArmorUtils:
         except WebDriverException:
             return False
 
-    def anti_recaptcha(self, api):
+    def anti_recaptcha(self, api: Chrome):
         """
                 处理 SSPanel 中的 Google reCAPTCHA v2 Checkbox 人机验证。
 
@@ -161,6 +206,13 @@ class ArmorUtils:
             logger.error("Submit reCAPTCHA answer.")
             raise TimeoutException
 
+        # 回到 main-frame 否则后续DOM操作无法生效
+        api.switch_to.default_content()
+
+        if not correct_answer(api):
+            return False
+        return True
+
 
 class TheElderBlood:
 
@@ -213,6 +265,7 @@ class TheElderBlood:
             # 延拓阶段
             "prism": False,
             "aff": 0,
+            "plan_index": 0,
             # 缓存阶段
             "threshold": 3,
         }
@@ -222,6 +275,7 @@ class TheElderBlood:
         self.usr_email = bool(self.hyper_params["usr_email"])
         self.aff = self.hyper_params.get("aff", 0)
         self.synergy = bool(self.hyper_params.get("synergy"))
+        self.plan_index = int(self.hyper_params["plan_index"])
         self.prism = bool(self.hyper_params["prism"])
         self.skip_checker = bool(self.hyper_params["skip"])
         self.anti_email = bool(self.hyper_params["anti_email"])

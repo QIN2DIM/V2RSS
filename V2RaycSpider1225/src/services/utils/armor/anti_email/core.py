@@ -3,7 +3,7 @@
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description:
-
+import json
 import random
 import re
 import time
@@ -15,6 +15,7 @@ from selenium.common.exceptions import WebDriverException, NoSuchElementExceptio
 # from undetected_chromedriver.v2 import Chrome, ChromeOptions
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.expected_conditions import (
     presence_of_all_elements_located
 )
@@ -31,15 +32,21 @@ class EmailCodeParser:
             return [i.strip() for i in context.split('\n') if i.strip().isdigit()]
 
     @staticmethod
-    def patterns(url: str) -> str:
-        scraper = create_scraper()
-        response = scraper.get(url)
+    def patterns(url: str = None, email_body: str = None) -> str:
 
-        if response.status_code != 200:
-            return ""
+        _email_body = email_body
+        if url:
+            scraper = create_scraper()
+            response = scraper.get(url)
 
-        soup = BeautifulSoup(response.text, "html.parser")
+            if response.status_code != 200:
+                return ""
+
+            _email_body = response.text
+
+        soup = BeautifulSoup(_email_body, "html.parser")
         context = soup.text
+
         for mode in range(1, 3):
             email_code = EmailCodeParser._pattern(context, mode)
             if not email_code:
@@ -119,6 +126,12 @@ class EmailRelay:
     def get_numer_by_selenium(api: Chrome):
         pass
 
+    def is_availability(self):
+        response = requests.get(self.register_url)
+        if response.status_code != 200:
+            return False
+        return True
+
 
 def apis_get_email_context(api: Chrome, main_handle) -> dict:
     """
@@ -176,8 +189,114 @@ def apis_get_verification_code(api: Chrome, link: str, main_handle, collaborate_
     return email_code
 
 
-def apis_check_availability():
-    response = requests.get("https://www.linshiyouxiang.net/")
-    if response.status_code != 200:
-        return False
-    return True
+class EmailRelayV2:
+    def __init__(self):
+        self._home = "https://temp-mail.to/"
+        self._mailbox_api = "https://temp-mail.to/a/mailbox"
+
+        self._headers = {
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                          "Chrome/97.0.4692.71 Safari/537.36 Edg/97.0.1072.62",
+        }
+
+        self._temp_email_tab = None
+
+    def _context_switch(self, api: Chrome, handle_obj=None):
+        if handle_obj is None:
+            api.switch_to.new_window('tab')
+            self._temp_email_tab = api.current_window_handle
+        else:
+            api.switch_to.window(handle_obj)
+
+    def _handle_token(self, api: Chrome):
+        api.get(self._home)
+
+        WebDriverWait(api, 10, poll_frequency=0.5, ignored_exceptions=NoSuchElementException).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@class='cta-refresh']//a"))
+        ).click()
+
+        WebDriverWait(api, 10, poll_frequency=0.5, ignored_exceptions=NoSuchElementException).until(
+            EC.element_to_be_clickable((By.XPATH, "//input[@class='email-g']"))
+        ).click()
+
+        _cookie: str = "; ".join([f"{i['name']}={i['value']}" for i in api.get_cookies()])
+        _token = api.get_cookie("XSRF-TOKEN")["value"].replace("%3D", "=")
+
+        self._headers.update({"cookie": _cookie, "x-xsrf-token": _token})
+
+    def _listen_email(self, ignore: bool = None) -> str:
+        """
+
+        :param ignore: True: 返回 Address， False: 监听来件
+        :return:
+        """
+        scraper = create_scraper()
+        response = scraper.post(self._mailbox_api, headers=self._headers)
+
+        try:
+            data: dict = response.json()
+            if ignore is True:
+                return data.get("address")
+        except json.decoder.JSONDecodeError:
+            print("data 解析失败 | status_code={}".format(response.status_code))
+            return ""
+        else:
+            try:
+                email_body = data["inbox"][-1]["body"]
+            except (AttributeError, IndexError):
+                return ""
+            else:
+                return email_body
+
+    def is_availability(self) -> bool:
+        response = requests.get(self._home)
+        if response.status_code != 200:
+            return False
+        return True
+
+    def apis_get_temp_email(self, api: Chrome, handle_obj=None) -> dict:
+
+        # 新建 TAB 作业
+        self._context_switch(api, handle_obj=None)
+
+        # 模拟登录获取身份认证信息
+        self._handle_token(api)
+
+        # 携带 TOKEN POST 获取临时邮箱账号
+        address = self._listen_email(ignore=True)
+
+        # 切换回 MAIN_TAB
+        self._context_switch(api, handle_obj=handle_obj)
+
+        context = {
+            "email": address,
+            "id": address.split("@")[0],
+            "link": "",
+            "handle": self._temp_email_tab
+        }
+
+        return context
+
+    def apis_get_email_code(self, timeout=60) -> str:
+        """
+
+        :param timeout:
+        :return:
+        """
+
+        start = time.time()
+
+        while True:
+            # 超时
+            if time.time() - start > timeout:
+                return ""
+
+            email_body = self._listen_email()
+
+            # 空邮件
+            if not email_body:
+                time.sleep(3)
+                continue
+
+            # 来件
+            return EmailCodeParser.patterns(email_body=email_body)

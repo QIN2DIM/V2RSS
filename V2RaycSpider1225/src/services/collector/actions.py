@@ -699,6 +699,28 @@ ActionAaxCloud = {
     "nest": "sspanel",
     "hyper_params": {"prism": True},
 }
+# =============================================
+# - intro: 神秘之地
+# - plan: 2D10GB
+# =============================================
+ActionMysticalCloud = {
+    "name": "ActionMysticalCloud",
+    "register_url": "https://jc.005431.xyz/#/register",
+    "nest": "v2board",
+    "hyper_params": {"anti_email": True},
+    "life_cycle": 24 * 2
+}
+# =============================================
+# - intro: 摆烂云
+# - plan: 31D100GB
+# =============================================
+ActionBaiLanCloud = {
+    "name": "ActionBaiLanCloud",
+    "register_url": "https://ayyy.space/#/register",
+    "nest": "v2board",
+    "hyper_params": {"anti_recaptcha": True, "prism": True},
+    "life_cycle": 24 * 31
+}
 __entropy__ = [
     # ------------------------------------------
     # 无障碍
@@ -715,12 +737,13 @@ __entropy__ = [
     # ------------------------------------------
     # 邮箱验证
     # ------------------------------------------
-    # ActionGiraffeCloud,  # sspanel 2D3GB 10*2GB[s]
+    ActionMysticalCloud,  # v2board 2D10GB
 
     # ------------------------------------------
     # 需要声纹验证
     # ------------------------------------------
-    ActionShyNiaCloud  # sspanel 1D10GB 10*100gb[s]
+    # ActionShyNiaCloud,  # sspanel 1D10GB 10*100gb[s]
+    ActionBaiLanCloud,  # v2board 31D100GB
 ]
 
 # 备选可执行队列
@@ -749,6 +772,7 @@ __pending__ = [
     Action7ccCloud,  # sspanel 1D5GB
     ActionPorkCloud,  # sspanel v2ray N-day prism
     ActionAgateCloud,  # v2board 3D2G
+    ActionGiraffeCloud,  # sspanel 2D3GB 10*2GB[s]
 
     # 限定注册
     ActionXFssCloud,  # v2board 7D5G

@@ -151,3 +151,11 @@ def submit_recaptcha(api: Chrome, answer: str) -> bool:
         return True
     except (NameError, NoSuchElementException):
         return False
+
+
+def correct_answer(api: Chrome) -> bool:
+    try:
+        api.find_element(By.CLASS_NAME, "rc-audiochallenge-error-message")
+        return False
+    except NoSuchElementException:
+        return True
