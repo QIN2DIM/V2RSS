@@ -22,7 +22,9 @@ from selenium.common.exceptions import (
     TimeoutException
 )
 from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver.chrome.service import Service
 from urllib3.exceptions import MaxRetryError
+from webdriver_manager.chrome import ChromeDriverManager
 
 from services.middleware.subscribe_io import SubscribeManager
 from services.middleware.workers_io import MessageQueue
@@ -219,20 +221,17 @@ class TheElderBlood:
     def __init__(
             self,
             atomic: dict,
-            chromedriver_path: str = None,
             silence: bool = None,
     ):
         """
 
         :param atomic:
-        :param chromedriver_path:
         :param silence:
         """
         """
         TODO [√]驱动参数
         ---------------------
         """
-        self.chromedriver_path = "chromedriver" if chromedriver_path is None else chromedriver_path
         self.silence = True if silence is None else silence
 
         """
@@ -350,7 +349,9 @@ class TheElderBlood:
         options.add_experimental_option("excludeSwitches", ["enable-logging"])
 
         try:
-            return Chrome(options=options, executable_path=self.chromedriver_path)
+            _service = Service(ChromeDriverManager(log_level=0).install())
+            _api = Chrome(service=_service, options=options)
+            return _api
         except SessionNotCreatedException as e:
             logger.critical(
                 f"<{self.action_name}> 任務核心無法啓動：ChromeDriver 與 Chrome 版本不匹配。 "
@@ -666,8 +667,9 @@ class TheElderBlood:
             logger.info("运行实例已被风控。\n"
                         "可能原因及相关建议如下：\n"
                         "1.目标站点可能正在遭受流量攻击，请更换测试用例；\n"
-                        "2.代理IP可能已被风控，建议关闭代理运行或更换代理节点；\n"
-                        "3.本机设备所在网络正在传输恶意流量，建议切换网络如切换WLAN。\n"
+                        "2.代理IP可能已被风控，建议关闭代理或更换代理节点；\n"
+                        "3.本机设备所在网络正在传输恶意流量，建议切换WLAN。\n"
+                        "4.浏览器自动化特征被精准识别，建议开启无定向驱动模式规避检测。\n"
                         ">>> https://developers.google.com/recaptcha/docs/faq#"
                         "my-computer-or-network-may-be-sending-automated-queries")
         except WebDriverException as e:

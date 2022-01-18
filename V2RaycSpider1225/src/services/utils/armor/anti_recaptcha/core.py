@@ -19,7 +19,7 @@ from selenium.common.exceptions import (
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.expected_conditions import presence_of_element_located
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
 from speech_recognition import Recognizer, AudioFile
 
@@ -35,13 +35,15 @@ def activate_recaptcha(api: Chrome) -> str:
     """
     # 定位并切换至 reCAPTCHA iframe
     time.sleep(random.randint(2, 4))
-    recaptcha_iframe = WebDriverWait(api, 10).until(presence_of_element_located((
-        By.XPATH, "//iframe[@title='reCAPTCHA']"
-    )))
+    recaptcha_iframe = WebDriverWait(api, 10).until(
+        EC.presence_of_element_located((By.XPATH, "//iframe[@title='reCAPTCHA']"))
+    )
     api.switch_to.frame(recaptcha_iframe)
 
     # 点击并激活 recaptcha
-    api.find_element(By.CLASS_NAME, "recaptcha-checkbox-border").click()
+    WebDriverWait(api, 10, poll_frequency=0.5, ignored_exceptions=NoSuchElementException).until(
+        EC.element_to_be_clickable((By.CLASS_NAME, "recaptcha-checkbox-border"))
+    ).click()
 
     # 回到 main_frame
     api.switch_to.default_content()

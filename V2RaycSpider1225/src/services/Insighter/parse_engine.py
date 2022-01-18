@@ -14,10 +14,6 @@ def login(page: Page, email: str, password: str):
     page.click("//button[@type='submit']")
 
 
-def is_prism(page: Page, ) -> bool:
-    pass
-
-
 def go():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)

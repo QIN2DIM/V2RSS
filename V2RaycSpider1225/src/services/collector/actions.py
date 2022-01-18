@@ -571,7 +571,7 @@ ActionPorkCloud = {
     "name": "ActionPorkCloud",
     "register_url": "https://prime.ypork.com/auth/register",
     "nest": "sspanel",
-    "hyper_params": {"anti_email": True, "prism": True, "aff": 1},
+    "hyper_params": {"anti_email": True, "prism": True, "aff": 2},
     "life_cycle": 24 * 3,
 }
 # =============================================
@@ -737,12 +737,12 @@ __entropy__ = [
     # ------------------------------------------
     # 邮箱验证
     # ------------------------------------------
-    ActionMysticalCloud,  # v2board 2D10GB
+    ActionPorkCloud,  # sspanel 3D3GB 100*30GB[s]
 
     # ------------------------------------------
     # 需要声纹验证
     # ------------------------------------------
-    # ActionShyNiaCloud,  # sspanel 1D10GB 10*100gb[s]
+    ActionShyNiaCloud,  # sspanel 1D10GB 10*100GB[s]
     ActionBaiLanCloud,  # v2board 31D100GB
 ]
 
@@ -770,12 +770,12 @@ __pending__ = [
     ActionShanSuCloud,  # sspanel 2D2GB
     ActionMaTrixCloud,  # sspanel 4H10GB
     Action7ccCloud,  # sspanel 1D5GB
-    ActionPorkCloud,  # sspanel v2ray N-day prism
     ActionAgateCloud,  # v2board 3D2G
     ActionGiraffeCloud,  # sspanel 2D3GB 10*2GB[s]
 
     # 限定注册
     ActionXFssCloud,  # v2board 7D5G
+    ActionMysticalCloud,  # v2board 2D10GB
 
     # ------------------------------------------
     # 未测试主题

@@ -3,8 +3,6 @@
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description: 催化剂
-
-from services.settings import PATH_CHROMEDRIVER
 from .exceptions import UnknownNestTypeException
 from .nest import LionCubOfCintra, LaraDorren
 
@@ -23,14 +21,12 @@ def devil_king_armed(atomic: dict, silence=True, mirror=False):
         cirilla = LionCubOfCintra(
             atomic=atomic,
             silence=silence,
-            chromedriver_path=PATH_CHROMEDRIVER
         )
         return cirilla if mirror is False else cirilla.assault
     elif _blood == "v2board":
         cirilla = LaraDorren(
             atomic=atomic,
             silence=silence,
-            chromedriver_path=PATH_CHROMEDRIVER
         )
         return cirilla if mirror is False else cirilla.assault
     elif _blood == "sspanel-v3":

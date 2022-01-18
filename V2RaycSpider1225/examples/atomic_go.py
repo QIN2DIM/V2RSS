@@ -7,10 +7,9 @@ import sys
 
 sys.path.append("src")
 from loguru import logger
-from undetected_chromedriver.v2 import Chrome
 
 from services.collector import actions, devil_king_armed
-from services.settings import PATH_CHROMEDRIVER
+from undetected_chromedriver import Chrome
 
 # The Fighter
 ATOMIC = actions.ActionFETVCloud
@@ -21,10 +20,13 @@ SILENCE = True
 
 
 @logger.catch()
-def demo(api=None):
+def demo():
     cirilla = devil_king_armed(ATOMIC, silence=SILENCE)
-    cirilla.assault(api=api, force=False)
+    cirilla.assault(
+        api=None if not INCOGNITO else Chrome(headless=SILENCE),
+        force=False
+    )
 
 
 if __name__ == '__main__':
-    demo(Chrome(executable_path=PATH_CHROMEDRIVER) if INCOGNITO else None)
+    demo()

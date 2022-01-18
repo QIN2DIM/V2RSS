@@ -22,8 +22,8 @@ from ..core import TheElderBlood
 
 
 class TheElf(TheElderBlood):
-    def __init__(self, atomic: dict, chromedriver_path: str = None, silence: bool = None):
-        super(TheElf, self).__init__(atomic=atomic, chromedriver_path=chromedriver_path, silence=silence)
+    def __init__(self, atomic: dict, silence: bool = None):
+        super(TheElf, self).__init__(atomic=atomic, silence=silence)
 
         self._API_GET_SUBSCRIBE = self.hyper_params.get("api", self.register_url)
         self._PATH_GET_SUBSCRIBE = "/api/v1/user/getSubscribe"
@@ -177,5 +177,5 @@ class TheElf(TheElderBlood):
 
 
 class LaraDorren(TheElf):
-    def __init__(self, atomic: dict, chromedriver_path: str = None, silence: bool = None):
-        super(LaraDorren, self).__init__(atomic, chromedriver_path=chromedriver_path, silence=silence)
+    def __init__(self, atomic: dict, silence: bool = None):
+        super(LaraDorren, self).__init__(atomic, silence=silence)

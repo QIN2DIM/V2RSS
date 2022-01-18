@@ -25,8 +25,8 @@ from ..core import TheElderBlood
 
 
 class TheWitcher(TheElderBlood):
-    def __init__(self, atomic: dict, chromedriver_path: str = None, silence: bool = None, ):
-        super(TheWitcher, self).__init__(atomic=atomic, chromedriver_path=chromedriver_path, silence=silence)
+    def __init__(self, atomic: dict, silence: bool = None, ):
+        super(TheWitcher, self).__init__(atomic=atomic, silence=silence)
 
         """
         TODO [√]平台对象参数
@@ -121,9 +121,9 @@ class TheWitcher(TheElderBlood):
 
                 # 确认发送邮箱验证码
                 time.sleep(0.5 + self.beat_dance)
-                WebDriverWait(api, 35).until(EC.element_to_be_clickable((
-                    By.XPATH, "//button[@class='swal2-confirm swal2-styled']"
-                ))).click()
+                WebDriverWait(api, 35, poll_frequency=1, ignored_exceptions=NoSuchElementException).until(
+                    EC.element_to_be_clickable((By.XPATH, "//button[@class='swal2-confirm swal2-styled']"))
+                ).click()
 
                 # 获取邮箱验证码
                 email_code = self.armor.anti_email(api, method="code")
@@ -190,6 +190,7 @@ class TheWitcher(TheElderBlood):
         """
 
         while api.current_url == self.register_url:
+            time.sleep(0.1)
             if self._is_timeout():
                 raise TimeoutException
 
@@ -274,7 +275,7 @@ class TheWitcher(TheElderBlood):
 
 
 class LionCubOfCintra(TheWitcher):
-    def __init__(self, atomic: dict, chromedriver_path: str = None, silence: bool = None):
+    def __init__(self, atomic: dict, silence: bool = None):
         """
         # - 辛特拉的幼狮 -
         # -----------------------------------------------------------
@@ -283,7 +284,6 @@ class LionCubOfCintra(TheWitcher):
         # 阿特里和艾伯·雅拉领主。
 
         :param atomic:
-        :param chromedriver_path:
         :param silence:
         """
-        super(LionCubOfCintra, self).__init__(atomic, chromedriver_path=chromedriver_path, silence=silence)
+        super(LionCubOfCintra, self).__init__(atomic, silence=silence)

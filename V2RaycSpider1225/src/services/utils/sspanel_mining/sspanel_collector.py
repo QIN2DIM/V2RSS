@@ -4,10 +4,12 @@ import time
 
 from selenium.common.exceptions import NoSuchElementException, WebDriverException, ElementClickInterceptedException
 from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from tqdm import tqdm
+from webdriver_manager.chrome import ChromeDriverManager
 
 from services.utils.sspanel_mining.exceptions import CollectorSwitchError
 
@@ -16,7 +18,6 @@ class SSPanelHostsCollector:
     def __init__(
             self,
             path_file_txt: str,
-            chromedriver_path: str,
             silence: bool = True,
             debug: bool = False,
     ):
@@ -25,7 +26,6 @@ class SSPanelHostsCollector:
         :param path_file_txt:
         :param silence:
         :param debug:
-        :param chromedriver_path:
         """
         # 筛选 Malio 站点
         self._QUERY = "由 @editXY 修改适配。"
@@ -34,7 +34,6 @@ class SSPanelHostsCollector:
         # self._QUERY = 'inurl:staff "SSPanel V3 Mod UIM"'
 
         self.GOOGLE_SEARCH_API = f'https://www.google.com.hk/search?q="{self._QUERY}"&filter=0'
-        self.CHROMEDRIVER_PATH = chromedriver_path
         self.path_file_txt = path_file_txt
         self.debug = debug
         self.silence = silence
@@ -173,10 +172,12 @@ class SSPanelHostsCollector:
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
         try:
-            return Chrome(options=options, executable_path=self.CHROMEDRIVER_PATH)
+            _service = Service(ChromeDriverManager(log_level=0).install())
+            _api = Chrome(service=_service, options=options)
+            return _api
         except WebDriverException as e:
             if "chromedriver" in str(e):
-                print(f">>> 指定目录下缺少chromedriver {self.CHROMEDRIVER_PATH}")
+                print(f">>> 指定目录下缺少chromedriver error={e}")
                 sys.exit()
 
     def reset_page_num(self, api: Chrome):

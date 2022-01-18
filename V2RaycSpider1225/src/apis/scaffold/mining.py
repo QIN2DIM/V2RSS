@@ -12,7 +12,6 @@ from datetime import datetime
 from services.settings import (
     TIME_ZONE_CN,
     logger,
-    PATH_CHROMEDRIVER,
     DIR_CACHE_CLASSIFY,
     DIR_CACHE_MINING
 
@@ -265,7 +264,6 @@ def run_collector(env: str = "development", silence: bool = True):
     if need_to_build_collector or env == "production":
         SSPanelHostsCollector(
             path_file_txt=path_file_txt,
-            chromedriver_path=PATH_CHROMEDRIVER,
             silence=silence_,
             debug=False
         ).run()

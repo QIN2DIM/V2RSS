@@ -4,7 +4,6 @@
 # Github     : https://github.com/QIN2DIM
 # Description:
 import os
-import sys
 from os.path import join, dirname, exists
 
 # ---------------------------------------------------
@@ -12,14 +11,6 @@ from os.path import join, dirname, exists
 # ---------------------------------------------------
 # 系统根目录
 PROJECT_ROOT = dirname(dirname(__file__))
-# 驱动器目录
-DIR_DRIVERS = join(PROJECT_ROOT, "driver")
-# chromedriver 所在路径
-if "win" in sys.platform:
-    PATH_CHROMEDRIVER = join(DIR_DRIVERS, "chromedriver.exe")
-# elif "linux" in sys.app:
-else:
-    PATH_CHROMEDRIVER = join(DIR_DRIVERS, "chromedriver")
 # 文件数据库目录
 PROJECT_DATABASE = join(PROJECT_ROOT, "database")
 # 运行缓存目录
@@ -49,7 +40,7 @@ logger = InitLog.init_log(
 # 路径补全
 # ---------------------------------------------------
 for _pending in [
-    DIR_DRIVERS, PROJECT_DATABASE,
+    PROJECT_DATABASE,
     DIR_TEMP_CACHE, DIR_CACHE_IMAGE, DIR_CACHE_AUDIO,
     DIR_CACHE_MINING, DIR_CACHE_CLASSIFY,
     DIR_LOG, DIR_LOG_COLLECTOR, DIR_LOG_SYNERGY
@@ -66,7 +57,7 @@ __all__ = [
     # ------------------------------
     # SETTINGS
     # ------------------------------
-    "logger", "PATH_CHROMEDRIVER", "DIR_CACHE_IMAGE", "DIR_CACHE_AUDIO",
+    "logger", "DIR_CACHE_IMAGE", "DIR_CACHE_AUDIO",
     "DIR_CACHE_MINING", "DIR_CACHE_CLASSIFY", "DIR_LOG_COLLECTOR",
     "DIR_LOG_SYNERGY",
     # ------------------------------

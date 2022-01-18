@@ -3,7 +3,6 @@
 # Author  : QIN2DIM
 # Github  : https://github.com/QIN2DIM
 # Description: 🚀 Welcome to use V2RSS!
-
 from fire import Fire
 
 from services.scaffold import Scaffold
