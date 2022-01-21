@@ -18,5 +18,5 @@ urllib3>=1.25.11
 apscheduler>=3.8.1
 playwright>=1.17.2
 redis>=4.0.1
-SpeechRecognition
-webdriver-manager
+SpeechRecognition==3.8.1
+webdriver_manager==3.5.2
