@@ -129,12 +129,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
-/src/database
-/src/driver
-/src/config.yaml
 .idea
-/tests
-/bin
-/examples/*.png
+.log
+src/config.yaml
+src/database
+tests/
 *.session
 *.session-journal
