@@ -8,6 +8,12 @@ from services.decoupler.decoupler import DecoupleBooster, decouple
 from .actions import __entropy__, __pending__
 from .operator import devil_king_armed, LionCubOfCintra, LaraDorren
 
-__all__ = ["LionCubOfCintra", "LaraDorren", "devil_king_armed",
-           "DecoupleBooster", "decouple",
-           "__entropy__", "__pending__", ]
+__all__ = [
+    "LionCubOfCintra",
+    "LaraDorren",
+    "devil_king_armed",
+    "DecoupleBooster",
+    "decouple",
+    "__entropy__",
+    "__pending__",
+]

@@ -9,6 +9,7 @@ import random
 import time
 import warnings
 from datetime import datetime, timedelta
+from typing import Dict, Any, Optional
 
 from apscheduler.events import (
     EVENT_JOB_SUBMITTED,
@@ -26,31 +27,25 @@ from services.collector import devil_king_armed
 from services.decoupler.decoupler import decouple
 from services.middleware.subscribe_io import SubscribeManager
 from services.middleware.workers_io import EntropyHeap, MessageQueue
-from services.settings import (
-    TIME_ZONE_CN, POOL_CAP,
-    DIR_LOG_COLLECTOR, DIR_LOG_SYNERGY
-)
-from services.utils import CoroutineSpeedup, Queue, ToolBox, InitLog
+from services.settings import TIME_ZONE_CN, POOL_CAP, DIR_LOG_COLLECTOR, DIR_LOG_SYNERGY
+from services.utils import CoroutineSpeedup, Queue, ToolBox
 
 warnings.simplefilter("ignore", category=UserWarning)
 
 
 def _init_log(sink_mark: str):
     sink_mark = sink_mark.lower()
-    sink_mapping = {
-        "collector": DIR_LOG_COLLECTOR,
-        "synergy": DIR_LOG_SYNERGY,
-    }
-    log_ = InitLog().init_log(
+    sink_mapping = {"collector": DIR_LOG_COLLECTOR, "synergy": DIR_LOG_SYNERGY}
+    log_ = ToolBox.init_log(
         error=os.path.join(sink_mapping[sink_mark], "error.log"),
-        runtime=os.path.join(sink_mapping[sink_mark], "runtime.log")
+        runtime=os.path.join(sink_mapping[sink_mark], "runtime.log"),
     )
     return log_
 
 
 class CollectorScheduler(CoroutineSpeedup):
     def __init__(self, job_settings: dict = None, scheduler_name: str = None):
-        super(CollectorScheduler, self).__init__()
+        super().__init__()
 
         job_settings = {} if job_settings is None else job_settings
 
@@ -68,7 +63,7 @@ class CollectorScheduler(CoroutineSpeedup):
             "interval_collector": 120,
             "interval_decoupler": 600,
             # 任务队列源 within [remote local]
-            "source": "remote"
+            "source": "remote",
         }
         self.job_settings.update(job_settings)
         self.interval_collector = self.job_settings["interval_collector"]
@@ -91,21 +86,25 @@ class CollectorScheduler(CoroutineSpeedup):
             self._deploy_collector()
             self.scheduler.add_listener(
                 callback=self._monitor,
-                mask=(EVENT_JOB_ERROR | EVENT_JOB_SUBMITTED | EVENT_JOB_MAX_INSTANCES)
+                mask=(EVENT_JOB_ERROR | EVENT_JOB_SUBMITTED | EVENT_JOB_MAX_INSTANCES),
             )
-            self.logger.success(ToolBox.runtime_report(
-                action_name=self.scheduler_name,
-                motive="JOB",
-                message="The Collector was created successfully."
-            ))
+            self.logger.success(
+                ToolBox.runtime_report(
+                    action_name=self.scheduler_name,
+                    motive="JOB",
+                    message="The Collector was created successfully.",
+                )
+            )
 
         if available_decoupler:
             self._deploy_decoupler()
-            self.logger.success(ToolBox.runtime_report(
-                action_name=self.scheduler_name,
-                motive="JOB",
-                message="The Decoupler was created successfully."
-            ))
+            self.logger.success(
+                ToolBox.runtime_report(
+                    action_name=self.scheduler_name,
+                    motive="JOB",
+                    message="The Decoupler was created successfully.",
+                )
+            )
 
         if any((available_decoupler, available_collector)):
             self.start()
@@ -115,33 +114,29 @@ class CollectorScheduler(CoroutineSpeedup):
             self.scheduler.start()
         except KeyboardInterrupt:
             self.scheduler.shutdown()
-            self.logger.debug(ToolBox.runtime_report(
-                motive="EXITS",
-                action_name=self.scheduler_name,
-                message="Received keyboard interrupt signal."
-            ))
+            self.logger.debug(
+                ToolBox.runtime_report(
+                    motive="EXITS",
+                    action_name=self.scheduler_name,
+                    message="Received keyboard interrupt signal.",
+                )
+            )
 
     def _deploy_collector(self):
         self.scheduler.add_job(
             func=self.go,
             id=self.collector_name,
             trigger=IntervalTrigger(
-                seconds=self.interval_collector,
-                timezone="Asia/Shanghai",
-                jitter=5
+                seconds=self.interval_collector, timezone="Asia/Shanghai", jitter=5
             ),
-            max_instances=4
+            max_instances=4,
         )
         self.scheduler.add_job(
             func=self._sm.refresh,
             id=self.checker_name,
-            trigger=IntervalTrigger(
-                seconds=60,
-                timezone="Asia/Shanghai",
-                jitter=4
-            ),
+            trigger=IntervalTrigger(seconds=60, timezone="Asia/Shanghai", jitter=4),
             max_instances=20,
-            misfire_grace_time=20
+            misfire_grace_time=20,
         )
 
     def _deploy_decoupler(self):
@@ -149,8 +144,7 @@ class CollectorScheduler(CoroutineSpeedup):
             func=decouple,
             id=self.decoupler_name,
             trigger=IntervalTrigger(
-                seconds=self.interval_decoupler,
-                timezone="Asia/Shanghai"
+                seconds=self.interval_decoupler, timezone="Asia/Shanghai"
             ),
             max_instances=15,
         )
@@ -161,26 +155,24 @@ class CollectorScheduler(CoroutineSpeedup):
             "pending_jobs": self.worker.qsize(),
             "running_jobs": len(self.running_jobs),
             "message": "pending_jobs[{}] running_jobs[{}]".format(
-                self.worker.qsize(), self.running_jobs.__len__(),
+                self.worker.qsize(), self.running_jobs.__len__()
             ),
         }
 
         if not self.freeze_screen:
             pool_status = "pool_status[{}/{}]".format(
-                self._eh.__len__(),
-                "__pending__" if not self.pool_cap else self.pool_cap
+                self._eh.__len__(), "__pending__" if not self.pool_cap else self.pool_cap
             )
-            message = "{} {}".format(
-                debug_log.get("message"),
-                pool_status
+            message = "{} {}".format(debug_log.get("message"), pool_status)
+            self.logger.debug(
+                ToolBox.runtime_report(
+                    motive="HEARTBEAT",
+                    action_name=self.scheduler_name,
+                    message=message,
+                    job_id=event.job_id if event.code >= 2**9 else "__init__",
+                    event=event,
+                )
             )
-            self.logger.debug(ToolBox.runtime_report(
-                motive="HEARTBEAT",
-                action_name=self.scheduler_name,
-                message=message,
-                job_id=event.job_id if event.code >= 2 ** 9 else "__init__",
-                event=event
-            ))
 
     def _monitor(self, event):
         self._monitor_logger(event)
@@ -190,44 +182,45 @@ class CollectorScheduler(CoroutineSpeedup):
 
         # 识别并移除失活实例
         for session_id, instance in list(self.running_jobs.items()):
-            is_timeout = (
-                    instance["start-time"]
-                    + timedelta(seconds=instance["running-limit"])
-                    < datetime.now(TIME_ZONE_CN)
-            )
+            is_timeout = instance["start-time"] + timedelta(
+                seconds=instance["running-limit"]
+            ) < datetime.now(TIME_ZONE_CN)
             if not is_timeout:
                 continue
 
             try:
                 instance["service"].quit()
                 self.running_jobs.pop(session_id)
-                self.logger.error(ToolBox.runtime_report(
-                    motive="KILL",
-                    action_name=instance["name"],
-                    inactivated_instance=session_id
-                ))
+                self.logger.error(
+                    ToolBox.runtime_report(
+                        motive="KILL",
+                        action_name=instance["name"],
+                        inactivated_instance=session_id,
+                    )
+                )
             except (HTTPError, ConnectionError) as e:
-                self.logger.critical(ToolBox.runtime_report(
-                    motive="ERROR",
-                    action_name=instance["name"],
-                    by="CollectorSchedulerMonitor停用失活实例时出现未知异常",
-                    error=e
-                ))
+                self.logger.critical(
+                    ToolBox.runtime_report(
+                        motive="ERROR",
+                        action_name=instance["name"],
+                        by="CollectorSchedulerMonitor停用失活实例时出现未知异常",
+                        error=e,
+                    )
+                )
 
         # 重置定时任务
-        if (
-                len(self.running_jobs) == 0
-                and self.worker.qsize() == 0
-        ):
+        if len(self.running_jobs) == 0 and self.worker.qsize() == 0:
             self.scheduler.remove_job(job_id=self.collector_name)
             self.scheduler.remove_job(job_id=self.checker_name)
             self._deploy_collector()
 
-            self.logger.warning(ToolBox.runtime_report(
-                motive="HEARTBEAT",
-                action_name=self.scheduler_name,
-                message="The echo-loop job of collector has been reset."
-            ))
+            self.logger.warning(
+                ToolBox.runtime_report(
+                    motive="HEARTBEAT",
+                    action_name=self.scheduler_name,
+                    message="The echo-loop job of collector has been reset.",
+                )
+            )
 
     def is_healthy(self):
         if not self._eh.ping():
@@ -293,29 +286,23 @@ class CollectorScheduler(CoroutineSpeedup):
             atomic = self.worker.get_nowait()
             self.control_driver(atomic=atomic, sm=self._sm, *args, **kwargs)
 
-    def control_driver(self, atomic: dict, *args, **kwargs):
-        """
-
-        :param atomic:
-        :return:
-        """
-
-        """
-        TODO [√]参数调整
-        -------------------
-        """
+    def control_driver(self, atomic: Dict[str, Any], *args, **kwargs):
+        # ---------------------------------------------
+        # [√]参数调整
+        # ---------------------------------------------
         # 协同模式
         is_synergy = bool(atomic.get("synergy"))
 
         # 添加节拍集群节拍
         if not atomic.get("hyper_params"):
             atomic["hyper_params"] = {}
-        atomic["hyper_params"]["beat_dance"] = 0.5 * (self.max_queue_size - self.worker.qsize() + 1)
+        atomic["hyper_params"]["beat_dance"] = 0.5 * (
+            self.max_queue_size - self.worker.qsize() + 1
+        )
 
-        """
-        TODO [√]实例生产
-        -------------------
-        """
+        # ---------------------------------------------
+        # [√] 实例生产
+        # ---------------------------------------------
         cirilla = devil_king_armed(atomic, silence=True)
 
         service = cirilla.set_chrome_options()
@@ -328,14 +315,14 @@ class CollectorScheduler(CoroutineSpeedup):
                     "service": service,
                     "start-time": datetime.now(TIME_ZONE_CN),
                     "running-limit": cirilla.work_clock_max_wait,
-                    "name": cirilla.action_name
+                    "name": cirilla.action_name,
                 }
             }
         )
-        """
-        TODO [√]实例投放
-        -------------------
-        """
+
+        # ---------------------------------------------
+        # [√] 实例投放
+        # ---------------------------------------------
         try:
             cirilla.assault(service, synergy=is_synergy, sm=kwargs.get("sm"))
         # 滤除外部中断引起的一系列连接异常，这是意料之中的可控情况
@@ -359,29 +346,20 @@ class SynergyScheduler(CollectorScheduler):
         self.worker = Queue(maxsize=4)
 
     def deploy(self):
-        """
-
-        :return:
-        """
         # 添加协同任务监听器
         self.scheduler.add_job(
             func=self.sync_context,
             id="sync_remote_tasks",
-            trigger=DateTrigger(
-                timezone="Asia/Shanghai"
-            ),
+            trigger=DateTrigger(timezone="Asia/Shanghai"),
         )
 
         # 添加协同任务处理器
         self.scheduler.add_job(
             func=self.go,
             id=self.scheduler_name,
-            trigger=IntervalTrigger(
-                seconds=5,
-                timezone="Asia/Shanghai",
-            ),
+            trigger=IntervalTrigger(seconds=5, timezone="Asia/Shanghai"),
             max_instances=4,
-            misfire_grace_time=2000
+            misfire_grace_time=2000,
         )
 
     def is_overheating(self):
@@ -412,50 +390,59 @@ class SynergyScheduler(CollectorScheduler):
 
         :return:
         """
-
-        self.logger.success(ToolBox.runtime_report(
-            motive="JOB",
-            action_name=self.scheduler_name,
-            message="协同者加入聊天室！"
-        ))
+        self.logger.success(
+            ToolBox.runtime_report(
+                motive="JOB", action_name=self.scheduler_name, message="协同者加入聊天室！"
+            )
+        )
 
         for message in self._mq.listen(count=1):
-
             if not message:
                 continue
 
             message_id, synergy_context = message[0][0], message[0][-1]
             context = {}
             try:
-                context: dict = ast.literal_eval(synergy_context.get(self._mq.SYNERGY_PROTOCOL, ""))
+                context: Optional[Dict[str, Any]] = ast.literal_eval(
+                    synergy_context.get(self._mq.SYNERGY_PROTOCOL, "")
+                )
 
-                # 异常的上下文数据
-                if not context:
-                    raise ValueError
+                # 过滤异常的上下文数据
                 # 过滤不影响运行的空对象，避免无意义的CPU空转
-                if not context.get("atomic"):
+                if not context or not context.get("atomic"):
                     raise ValueError
 
-                # 检查系统负载
+                # 拒收过载任务并进入短暂的休眠期
                 if self.is_overheating():
                     self._mq.broadcast_synergy_context(context)
-                    self.logger.warning(ToolBox.runtime_report(
-                        motive="SKIP",
-                        action_name=self.scheduler_name,
-                        message="节点过热，不接收新的协同任务",
-                        sleep="60s"
-                    ))
+                    self.logger.warning(
+                        ToolBox.runtime_report(
+                            motive="SKIP",
+                            action_name=self.scheduler_name,
+                            message="节点过热，不接收新的协同任务",
+                            sleep="60s",
+                        )
+                    )
                     time.sleep(60)
                     continue
 
             except (ValueError, SyntaxError, AttributeError):
-                self.logger.warning(ToolBox.runtime_report(
-                    motive="SKIP",
-                    action_name=self.scheduler_name,
-                    message="捕获到上下文协议异常的脏数据，协同任务已跳过"
-                ))
+                self.logger.warning(
+                    ToolBox.runtime_report(
+                        motive="SKIP",
+                        action_name=self.scheduler_name,
+                        message="捕获到上下文协议异常的脏数据，协同任务已跳过",
+                    )
+                )
             except KeyboardInterrupt:
                 if context:
+                    self.logger.warning(
+                        ToolBox.runtime_report(
+                            motive="HOLD",
+                            action_name=self.scheduler_name,
+                            message="正在尝试缓存未完成的任务，也可以继续操作终止运行",
+                        )
+                    )
                     self._mq.broadcast_synergy_context(context)
             else:
                 self._adaptor(context)
@@ -463,13 +450,17 @@ class SynergyScheduler(CollectorScheduler):
                 self._mq.ack(message_id)
                 time.sleep(0.5)
 
-    def _adaptor(self, context: dict):
+    def _adaptor(self, context: Dict[str, Any]):
         atomic = context["atomic"]
         self.pending.put(atomic)
 
     def preload(self):
         mirror_entropy = []
-        while not self.worker.full() and not self.pending.empty() and self.running_jobs.__len__() < 4:
+        while (
+            not self.worker.full()
+            and not self.pending.empty()
+            and self.running_jobs.__len__() < 4
+        ):
             synergy_context = self.pending.get_nowait()
             mirror_entropy.append(synergy_context)
 

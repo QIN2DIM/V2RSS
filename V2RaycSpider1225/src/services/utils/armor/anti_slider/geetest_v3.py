@@ -13,14 +13,14 @@ from .core import SliderValidator, By, ec
 
 class GeeTest3(SliderValidator):
     def __init__(
-            self,
-            driver,
-            debug=False,
-            business_name="GeeTest_v3",
-            full_img_path=None,
-            notch_img_path=None,
+        self,
+        driver,
+        debug=False,
+        business_name="GeeTest_v3",
+        full_img_path=None,
+        notch_img_path=None,
     ):
-        super(GeeTest3, self).__init__(
+        super().__init__(
             driver=driver,
             debug=debug,
             full_img_path=full_img_path,
@@ -51,15 +51,15 @@ class GeeTest3(SliderValidator):
         bg_img = ""
         while len(bg_img) < 5000:
             get_img_js = (
-                    'return document.getElementsByClassName("'
-                    + class_name
-                    + '")[0].toDataURL("image/png");'
+                'return document.getElementsByClassName("'
+                + class_name
+                + '")[0].toDataURL("image/png");'
             )
             bg_img = self.api.execute_script(get_img_js)
             time.sleep(0.5)
         if contain_type:
             return bg_img
-        return bg_img[bg_img.find(",") + 1:]
+        return bg_img[bg_img.find(",") + 1 :]
 
     def capture_full_img(self):
         element_class_name = "geetest_canvas_fullbg geetest_fade geetest_absolute"

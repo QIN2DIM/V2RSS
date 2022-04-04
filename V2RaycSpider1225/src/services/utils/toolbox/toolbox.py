@@ -16,17 +16,9 @@ import colorama
 import pytz
 import yaml
 from cloudscraper import create_scraper
-from cloudscraper.exceptions import (
-    CloudflareChallengeError
-)
+from cloudscraper.exceptions import CloudflareChallengeError
 from loguru import logger
-from requests.exceptions import (
-    ConnectionError,
-    SSLError,
-    HTTPError,
-    ProxyError,
-    Timeout
-)
+from requests.exceptions import ConnectionError, SSLError, HTTPError, ProxyError, Timeout
 
 colorama.init(autoreset=True)
 
@@ -57,10 +49,11 @@ class ToolBox:
         return ">"
 
     @staticmethod
-    def check_sample_yaml(path_output: str, path_sample: str) -> dict:
+    def check_sample_yaml(path_output: str, path_sample: str, block: bool = None) -> dict:
         """
         检查模板文件是否存在，检查配置文件是否存在，读取系统配置返回
 
+        :param block: 当 config.yaml 不存在时阻断运行
         :param path_output: 配置生成路径（user）
         :param path_sample: 模板文件路径（built-in）
         :return:
@@ -73,10 +66,11 @@ class ToolBox:
 
             # 项目未初始化，自动拷贝模板文件
             if not os.path.exists(path_output):
-                ToolBox.echo("系统配置文件(config.yaml)缺失", 0)
                 shutil.copy(path_sample, path_output)
-                ToolBox.echo("生成配置文件，请合理配置并重启项目-->config.yaml", 1)
-                sys.exit()
+                if block is True:
+                    ToolBox.echo("系统配置文件(config.yaml)缺失", 0)
+                    ToolBox.echo("生成配置文件，请合理配置并重启项目-->config.yaml", 1)
+                    sys.exit()
 
             # 配置正常，读取配置参数
             with open(path_output, "r", encoding="utf8") as stream:
@@ -89,8 +83,11 @@ class ToolBox:
 
         # 需要到项目仓库重新拉取文件
         except FileNotFoundError:
-            ToolBox.echo("Please do not delete the `system built-in config-sample.yaml` "
-                         "Make sure it is located in the project root directory", 3)
+            ToolBox.echo(
+                "Please do not delete the `system built-in config-sample.yaml` "
+                "Make sure it is located in the project root directory",
+                3,
+            )
 
     @staticmethod
     def date_format_now(mode="log", tz="Asia/Shanghai") -> str:
@@ -134,7 +131,9 @@ class ToolBox:
         return end_date < now_date
 
     @staticmethod
-    def runtime_report(action_name: str, motive="RUN", message: str = "", **params) -> str:
+    def runtime_report(
+        action_name: str, motive="RUN", message: str = "", **params
+    ) -> str:
         flag_ = ">> {} [{}]".format(motive, action_name)
         if message != "":
             flag_ += " {}".format(message)
@@ -168,15 +167,15 @@ class ToolBox:
 
     @staticmethod
     def fake_user_agent() -> str:
-        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) " \
-                     "Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62"
+        user_agent = (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/96.0.4664.110 Safari/537.36 Edg/96.0.1054.62"
+        )
         return user_agent
 
     @staticmethod
     def handle_html(url):
-        headers = {
-            "accept-language": "zh-CN",
-        }
+        headers = {"accept-language": "zh-CN"}
 
         scraper = create_scraper()
         response = scraper.get(url, timeout=10, allow_redirects=False, headers=headers)
@@ -184,37 +183,62 @@ class ToolBox:
         return response, response.status_code
 
     @staticmethod
-    def check_html_status(url: str, action_name: str = "ToolBox", motive="HEARTBEAT", debug=True):
+    def check_html_status(
+        url: str, action_name: str = "ToolBox", motive="HEARTBEAT", debug=True
+    ):
         # 剔除 http 直连站点
         if not url.startswith("https://"):
-            ToolBox.echo(ToolBox.runtime_report(action_name, motive, url=url, message="危险通信(HTTP)"), level=0)
+            ToolBox.echo(
+                ToolBox.runtime_report(
+                    action_name, motive, url=url, message="危险通信(HTTP)"
+                ),
+                level=0,
+            )
 
         # 常规的试错连接
         try:
             response, status_code = ToolBox.handle_html(url)
             if status_code > 400 or status_code == 302:
                 message = f"请求异常(ERROR:{status_code})"
-                ToolBox.echo(ToolBox.runtime_report(action_name, motive, url=url, message=message), level=0)
+                ToolBox.echo(
+                    ToolBox.runtime_report(action_name, motive, url=url, message=message),
+                    level=0,
+                )
                 return False
             if debug:
-                ToolBox.echo(ToolBox.runtime_report(action_name, motive, url=url, message="实例正常"), level=1)
+                ToolBox.echo(
+                    ToolBox.runtime_report(action_name, motive, url=url, message="实例正常"),
+                    level=1,
+                )
             return True
         # 站点被动行为，流量无法过墙
         except ConnectionError:
-            ToolBox.echo(ToolBox.runtime_report(action_name, motive, url=url, message="流量阻断"), level=0)
+            ToolBox.echo(
+                ToolBox.runtime_report(action_name, motive, url=url, message="流量阻断"),
+                level=0,
+            )
             return False
         # 站点主动行为，拒绝国内IP访问
         except (SSLError, HTTPError, ProxyError):
-            ToolBox.echo(ToolBox.runtime_report(action_name, motive, url=url, message="代理异常"), level=0)
+            ToolBox.echo(
+                ToolBox.runtime_report(action_name, motive, url=url, message="代理异常"),
+                level=0,
+            )
             return False
         # <CloudflareDefense>被迫中断且无法跳过
         except CloudflareChallengeError:
             message = "检测失败<CloudflareDefense>被迫中断且无法跳过"
-            ToolBox.echo(ToolBox.runtime_report(action_name, motive, url=url, message=message), level=0)
+            ToolBox.echo(
+                ToolBox.runtime_report(action_name, motive, url=url, message=message),
+                level=0,
+            )
             return False
         # 站点负载紊乱或主要服务器已瘫痪
         except Timeout:
-            ToolBox.echo(ToolBox.runtime_report(action_name, motive, url=url, message="响应超时"), level=0)
+            ToolBox.echo(
+                ToolBox.runtime_report(action_name, motive, url=url, message="响应超时"),
+                level=0,
+            )
             return False
 
     @staticmethod
@@ -240,6 +264,41 @@ class ToolBox:
         finally:
             s.close()
 
+    @staticmethod
+    def init_log(**sink_path):
+        event_logger_format = (
+            "<g>{time:YYYY-MM-DD HH:mm:ss}</g> | "
+            "<lvl>{level}</lvl> - "
+            # "<c><u>{name}</u></c> | "
+            "{message}"
+        )
+        logger.remove()
+        logger.add(
+            sink=sys.stdout,
+            colorize=True,
+            level="DEBUG",
+            format=event_logger_format,
+            diagnose=False,
+        )
+        if sink_path.get("error"):
+            logger.add(
+                sink=sink_path.get("error"),
+                level="ERROR",
+                rotation="1 week",
+                encoding="utf8",
+                diagnose=False,
+            )
+        if sink_path.get("runtime"):
+            logger.add(
+                sink=sink_path.get("runtime"),
+                level="DEBUG",
+                rotation="20 MB",
+                retention="20 days",
+                encoding="utf8",
+                diagnose=False,
+            )
+        return logger
+
 
 class SubscribeParser:
     @staticmethod
@@ -253,7 +312,7 @@ class SubscribeParser:
         try:
             return json.loads(content).get("data", {}).get("subscribe_url", "")
         except json.decoder.JSONDecodeError:
-            return re.findall(r'\"subscribe_url\":\"(.*?)\"', content)[-1]
+            return re.findall(r"\"subscribe_url\":\"(.*?)\"", content)[-1]
 
     @staticmethod
     def parse_url_from_json(url: str, api_cookie: dict):
@@ -275,41 +334,3 @@ class SubscribeParser:
         if response.status_code < 400:
             data: dict = response.json()["data"]
             return data.get("subscribe_url")
-
-
-class InitLog:
-
-    @staticmethod
-    def init_log(**sink_path):
-        event_logger_format = (
-            "<g>{time:YYYY-MM-DD HH:mm:ss}</g> | "
-            "<lvl>{level}</lvl> - "
-            # "<c><u>{name}</u></c> | "
-            "{message}"
-        )
-        logger.remove()
-        logger.add(
-            sink=sys.stdout,
-            colorize=True,
-            level="DEBUG",
-            format=event_logger_format,
-            diagnose=False
-        )
-        if sink_path.get("error"):
-            logger.add(
-                sink=sink_path.get("error"),
-                level="ERROR",
-                rotation="1 week",
-                encoding="utf8",
-                diagnose=False
-            )
-        if sink_path.get("runtime"):
-            logger.add(
-                sink=sink_path.get("runtime"),
-                level="DEBUG",
-                rotation="20 MB",
-                retention="20 days",
-                encoding="utf8",
-                diagnose=False
-            )
-        return logger

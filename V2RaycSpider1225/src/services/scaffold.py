@@ -3,56 +3,49 @@
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description:
-
 from gevent import monkey
 
 monkey.patch_all()
 import os
 from services.deploy import SynergyScheduler
-from apis.scaffold import (
-    entropy,
-    runner,
-    services,
-    mining,
-    pool
-)
+from apis.scaffold import entropy, runner, services, mining, pool, install
 from services.middleware.subscribe_io import SubscribeManager
-from services.settings import (
-    logger, ROUTER_HOST, ROUTER_PORT, DETACH_SUBSCRIPTIONS
-)
-from services.utils import ToolBox, build
+from services.settings import logger, ROUTER_HOST, ROUTER_PORT, DETACH_SUBSCRIPTIONS
+from services.utils import ToolBox
 
 
 class Scaffold:
-    def __init__(self):
-        pass
 
     # ----------------
     # 基础指令
     # ----------------
     @staticmethod
-    def build(force: bool = None):
-        """
-        在 Ubuntu 白环境下拉取 chromedriver 、google-chrome 并将 chromedriver 放到规定路径下
+    def build():
+        """[DEPRECATED]"""
+        logger.info(
+            ToolBox.runtime_report(
+                motive="SKIP",
+                action_name="ScaffoldInstall",
+                message="请使用 `install` 指令初始化项目依赖，`build` 已弃用",
+            )
+        )
 
-        :param force: 若环境中已存在 google-chrome 则卸载重装最新稳定版
-        :return:
-        """
-        build(force=force)
+    @staticmethod
+    def install():
+        """拉取项目依赖"""
+        install.run()
 
     @staticmethod
     def ping():
-        """
-        测试 RedisNode 连接
-
-        :return:
-        """
+        """测试 RedisNode 连接"""
         response = SubscribeManager().ping()
-        logger.info(ToolBox.runtime_report(
-            motive="PING",
-            action_name="ScaffoldPing",
-            message="欢迎使用 - V2RSS云彩姬 - " if response else "网络连接异常"
-        ))
+        logger.info(
+            ToolBox.runtime_report(
+                motive="PING",
+                action_name="ScaffoldPing",
+                message="欢迎使用 - V2RSS云彩姬 - " if response else "网络连接异常",
+            )
+        )
 
     # ----------------
     # 订阅管理
@@ -72,7 +65,7 @@ class Scaffold:
         if decouple:
             return pool.decouple()
         if status:
-            return pool.status
+            return pool.status()
 
     # ----------------
     # 系统任务
@@ -96,17 +89,12 @@ class Scaffold:
         :return:
         """
         services.SystemCrontab(
-            collector=collector,
-            decoupler=decoupler
+            collector=collector, decoupler=decoupler
         ).service_scheduler()
 
     @staticmethod
     def synergy():
-        """
-        部署协同工作节点
-
-        :return:
-        """
+        """部署协同工作节点"""
         synergy = SynergyScheduler()
         synergy.deploy()
         synergy.start()
@@ -143,9 +131,11 @@ class Scaffold:
         if detach is not False:
             os.environ[DETACH_SUBSCRIPTIONS] = "True"
 
-        _command = "sanic services.app.server.app.app " \
-                   f"{'--host ' + _host if _host in ['127.0.0.1', '0.0.0.0'] else ''} " \
-                   f"{'-p ' + str(_p) if 1024 <= _p <= 65535 else ''}"
+        _command = (
+            "sanic services.app.server.app.app "
+            f"{'--host ' + _host if _host in ['127.0.0.1', '0.0.0.0'] else ''} "
+            f"{'-p ' + str(_p) if 1024 <= _p <= 65535 else ''}"
+        )
 
         # 假设不会被注入
         logger.info(f"{_command} | detach={bool(os.getenv(DETACH_SUBSCRIPTIONS))}")
@@ -153,10 +143,7 @@ class Scaffold:
 
     @staticmethod
     def entropy(
-            update: bool = False,
-            remote: bool = False,
-            check: bool = False,
-            cap: int = None
+        update: bool = False, remote: bool = False, check: bool = False, cap: int = None
     ):
         """
         采集队列的命令行管理工具。
@@ -218,10 +205,7 @@ class Scaffold:
     @staticmethod
     @logger.catch()
     def spawn(
-            silence: bool = True,
-            power: int = None,
-            remote: bool = False,
-            safe: bool = False,
+        silence: bool = True, power: int = None, remote: bool = False, safe: bool = False
     ):
         """
         并发执行本机所有采集器任务，每个采集器实体启动一次，并发数取决于本机硬件条件。
@@ -239,23 +223,17 @@ class Scaffold:
         :param remote:将订阅源标记为 ``远程队列``
         :return:
         """
-        runner.spawn(
-            silence=silence,
-            power=power,
-            join=False,
-            remote=remote,
-            safe=safe
-        )
+        runner.spawn(silence=silence, power=power, join=False, remote=remote, safe=safe)
 
     @staticmethod
     def mining(
-            env: str = "development",
-            silence: bool = True,
-            power: int = 16,
-            collector: bool = False,
-            classifier: bool = False,
-            source: str = "local",
-            batch: int = 1,
+        env: str = "development",
+        silence: bool = True,
+        power: int = 16,
+        collector: bool = False,
+        classifier: bool = False,
+        source: str = "local",
+        batch: int = 1,
     ):
         """
         运行 Collector 以及 Classifier 采集并过滤基层数据

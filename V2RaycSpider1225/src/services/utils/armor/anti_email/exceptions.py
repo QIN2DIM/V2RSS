@@ -7,10 +7,12 @@ from typing import Optional, Sequence
 
 
 class AntiEmailException(Exception):
-
-    def __init__(self, msg: Optional[str] = None, stacktrace: Optional[Sequence[str]] = None) -> None:
+    def __init__(
+        self, msg: Optional[str] = None, stacktrace: Optional[Sequence[str]] = None
+    ) -> None:
         self.msg = msg
         self.stacktrace = stacktrace
+        super().__init__()
 
     def __str__(self) -> str:
         exception_msg = "Message: {}\n".format(self.msg)
@@ -21,8 +23,8 @@ class AntiEmailException(Exception):
 
 
 class GetEmailTimeout(AntiEmailException):
-    pass
+    """获取临时邮箱账号超时"""
 
 
 class GetEmailCodeTimeout(AntiEmailException):
-    pass
+    """获取验证码超时"""

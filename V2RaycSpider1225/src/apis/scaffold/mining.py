@@ -8,20 +8,15 @@ import os.path
 import random
 import sys
 from datetime import datetime
+from datetime import timedelta
 
-from services.settings import (
-    TIME_ZONE_CN,
-    logger,
-    DIR_CACHE_CLASSIFY,
-    DIR_CACHE_MINING
+import requests
+from bs4 import BeautifulSoup
 
-)
+from services.settings import TIME_ZONE_CN, logger, DIR_CACHE_CLASSIFY, DIR_CACHE_MINING
 from services.utils import SSPanelHostsClassifier, SSPanelHostsCollector
 
-__all__ = [
-    "run_collector",
-    "run_classifier"
-]
+__all__ = ["run_collector", "run_classifier"]
 
 # Collector 数据集路径
 _FOCUS_SUFFIX = ".txt"
@@ -42,12 +37,12 @@ def create_env(path_file_txt: str) -> bool:
     # 若文件不存在或仅存在空白文件时返回 True
     # 若文件不存在，初始化文件
     if not os.path.exists(path_file_txt):
-        with open(path_file_txt, 'w', encoding="utf8"):
+        with open(path_file_txt, "w", encoding="utf8"):
             pass
         return True
 
     # 若文件存在但为空仍返回 True
-    with open(path_file_txt, 'r', encoding="utf8") as f:
+    with open(path_file_txt, "r", encoding="utf8") as f:
         return False if f.read() else True
 
 
@@ -99,13 +94,12 @@ def load_sspanel_hosts_remote(batch: int = 1):
     :param batch: 获取过去X天的历史数据
     :return:
     """
-    import requests
-    from datetime import datetime, timedelta
-    from bs4 import BeautifulSoup
 
     # 初始化数据集
-    url_ = "https://raw.githubusercontent.com/RobAI-Lab/sspanel-mining/main/src/database" \
-           "/sspanel_hosts/dataset_{}.txt"
+    url_ = (
+        "https://raw.githubusercontent.com/RobAI-Lab/sspanel-mining/main/src/database"
+        "/sspanel_hosts/dataset_{}.txt"
+    )
     urls = []
     today_ = datetime.now()
 
@@ -117,13 +111,15 @@ def load_sspanel_hosts_remote(batch: int = 1):
         if res.status_code == 200:
             logger.info(f"正在下载数据集 {focus_}")
             soup = BeautifulSoup(res.text, "html.parser")
-            urls += soup.text.split('\n')
+            urls += soup.text.split("\n")
 
     # 返回参数
     return list(set(urls))
 
 
-def output_cleaning_dataset(dir_output: str, docker: list, path_output: str = None) -> str:
+def output_cleaning_dataset(
+    dir_output: str, docker: list, path_output: str = None
+) -> str:
     """
     输出分类/清洗结果
 
@@ -140,7 +136,7 @@ def output_cleaning_dataset(dir_output: str, docker: list, path_output: str = No
         DIR_CACHE_CLASSIFY,
         "mining_{}".format(
             str(datetime.now(TIME_ZONE_CN)).split(".")[0].replace(":", "-")
-        )
+        ),
     )
     path_output_ = f"{path_output_template}.csv" if path_output is None else path_output
 
@@ -176,14 +172,12 @@ def load_classified_hosts(filter_: bool = True) -> list:
 
     # 默认目录下不存在分类结果
     if not classifier_outputs:
-        logger.critical("默认目录下缺少分类器的缓存文件 - "
-                        f"dir={DIR_CACHE_CLASSIFY}")
+        logger.critical("默认目录下缺少分类器的缓存文件 - " f"dir={DIR_CACHE_CLASSIFY}")
         sys.exit()
 
     # 导入最新的分类数据
     classifier_output_latest = max(classifier_outputs)
     with open(classifier_output_latest, "r", encoding="utf8") as f:
-        # element = [url, label]
         context = list(csv.reader(f))
         title_, body_ = context[0], context[1:]
         data = [dict(zip(title_, element)) for element in body_]
@@ -197,18 +191,15 @@ def load_classified_hosts(filter_: bool = True) -> list:
     filter_docker = []
     for element in data:
         url_, label_ = element["url"], element["label"]
-        if (
-                "危险通信" in label_
-                or "请求异常" in label_
-        ):
+        if "危险通信" in label_ or "请求异常" in label_:
             continue
         filter_docker.append(url_)
 
     return filter_docker
 
 
-def output_foul_dataset(unused_path_output: str = None):
-    raise ImportError
+def output_foul_dataset():
+    raise NotImplementedError
 
 
 def preview(path_output: str, docker: list = None):
@@ -236,11 +227,6 @@ def run_collector(env: str = "development", silence: bool = True):
     :param env: within [development production]
     :return:
     """
-
-    """
-    TODO [√]启动参数调整
-    -------------------
-    """
     # 实例化并运行采集器
     # 假设的应用场景中，非Windows系统强制无头启动Selenium
     silence_ = bool(silence) if "win" in sys.platform else True
@@ -263,9 +249,7 @@ def run_collector(env: str = "development", silence: bool = True):
     # 生产环境下每次运行程序都要启动采集器
     if need_to_build_collector or env == "production":
         SSPanelHostsCollector(
-            path_file_txt=path_file_txt,
-            silence=silence_,
-            debug=False
+            path_file_txt=path_file_txt, silence=silence_, debug=False
         ).run()
 
         # Collector 使用 `a` 指针方式插入新数据，此处使用 data_cleaning() 去重
@@ -284,12 +268,6 @@ def run_classifier(power: int = 16, source: str = "local", batch: int = 1):
     :param power: 采集功率
     :return:
     """
-
-    """
-    TODO [√]启动参数调整
-    -------------------
-    """
-
     # 校准分类器功率
     power = power if isinstance(power, int) else max(os.cpu_count(), 4)
     power = os.cpu_count() * 2 if os.cpu_count() >= power else power
@@ -340,10 +318,7 @@ def run_classifier(power: int = 16, source: str = "local", batch: int = 1):
     """
     # 存储分类结果
     docker = sug.offload()
-    path_output = output_cleaning_dataset(
-        dir_output=DIR_CACHE_CLASSIFY,
-        docker=docker,
-    )
+    path_output = output_cleaning_dataset(dir_output=DIR_CACHE_CLASSIFY, docker=docker)
 
     # 数据预览
     preview(path_output=path_output, docker=docker)

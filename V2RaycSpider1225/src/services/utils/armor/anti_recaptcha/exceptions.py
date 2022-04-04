@@ -7,10 +7,12 @@ from typing import Optional, Sequence
 
 
 class AntiReCaptchaException(Exception):
-
-    def __init__(self, msg: Optional[str] = None, stacktrace: Optional[Sequence[str]] = None) -> None:
+    def __init__(
+        self, msg: Optional[str] = None, stacktrace: Optional[Sequence[str]] = None
+    ) -> None:
         self.msg = msg
         self.stacktrace = stacktrace
+        super().__init__()
 
     def __str__(self) -> str:
         exception_msg = "Message: {}\n".format(self.msg)
@@ -22,14 +24,11 @@ class AntiReCaptchaException(Exception):
 
 class RiskControlSystemArmor(AntiReCaptchaException):
     """出现不可抗力的风控拦截"""
-    pass
 
 
 class AntiBreakOffWarning(AntiReCaptchaException):
     """切换到声纹验证异常时抛出，此时在激活checkbox时就已经通过了验证，无需进行声纹识别"""
-    pass
 
 
 class ElementLocationException(AntiReCaptchaException):
     """多语种问题导致的强定位方法失效"""
-    pass

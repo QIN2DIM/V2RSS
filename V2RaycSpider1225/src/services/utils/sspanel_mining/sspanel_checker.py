@@ -8,17 +8,14 @@ from urllib.parse import urlparse
 
 from cloudscraper.exceptions import CloudflareChallengeError
 from loguru import logger
-from requests.exceptions import (
-    Timeout,
-    ConnectionError, SSLError, HTTPError, ProxyError,
-)
+from requests.exceptions import Timeout, ConnectionError, SSLError, HTTPError, ProxyError
 
 from .sspanel_classifier import SSPanelHostsClassifier
 
 
 class SSPanelStaffChecker(SSPanelHostsClassifier):
     def __init__(self, docker: list = None):
-        super(SSPanelStaffChecker, self).__init__(docker=docker)
+        super().__init__(docker=docker)
 
         self.path_register = "/auth/register"
         self.path_tos = "/tos"
@@ -30,12 +27,7 @@ class SSPanelStaffChecker(SSPanelHostsClassifier):
         staff_url = url + self.path_staff
 
         response, status_code, soup = self.handle_html(staff_url)
-        logger.info(self.report(
-            message="心跳检测",
-            url=staff_url,
-            status_code=status_code
-        ))
-        # page_obj = soup.find_all("a", attrs={"href": "https://github.com/Anankke/SSPanel-Uim"})
+        logger.info(self.report(message="心跳检测", url=staff_url, status_code=status_code))
 
     def _fall_tos_page(self, url: str):
         url += self.path_tos
@@ -58,42 +50,35 @@ class SSPanelStaffChecker(SSPanelHostsClassifier):
 
         # 转发上下文评价数据
         if context.get("ok"):
-            logger.success(self.report(
-                message="实例正常",
-                url=context["url"],
-                copyright=context["copyright"]
-            ))
+            logger.success(
+                self.report(
+                    message="实例正常", url=context["url"], copyright=context["copyright"]
+                )
+            )
         else:
-            logger.error(self.report(
-                message="脚注异常",
-                url=context["url"],
-            ))
+            logger.error(self.report(message="脚注异常", url=context["url"]))
 
     def _fall_rookie(self, url: str):
         response, status_code, soup = self.handle_html(url)
         context = {
             "url": url,
-            "rookie": True if (
-                    "占位符" in soup.text
-                    or "。素质三连" in soup.text
-                    or "CXK" in soup.text
-            ) else False
+            "rookie": True
+            if ("占位符" in soup.text or "。素质三连" in soup.text or "CXK" in soup.text)
+            else False,
         }
 
         if context["rookie"]:
-            logger.error(self.report(
-                message="新手司机",
-                url=url,
-                rookie=context["rookie"]
-            ))
+            logger.error(self.report(message="新手司机", url=url, rookie=context["rookie"]))
             self.rookies.append(context)
         else:
-            logger.success(self.report(
-                message="走心好评",
-                url=url,
-                rookie=context["rookie"],
-                status_code=status_code,
-            ))
+            logger.success(
+                self.report(
+                    message="走心好评",
+                    url=url,
+                    rookie=context["rookie"],
+                    status_code=status_code,
+                )
+            )
 
     def preload(self):
         """
@@ -116,7 +101,6 @@ class SSPanelStaffChecker(SSPanelHostsClassifier):
         :return:
         """
         try:
-            # self._fall_staff_page(url)
             self._fall_rookie(url)
 
         # 站点被动行为，流量无法过墙
@@ -129,20 +113,22 @@ class SSPanelStaffChecker(SSPanelHostsClassifier):
             return False
         # 未授权站点
         except ValueError:
-            logger.critical(self.report(
-                message="危险通信",
-                context={"url": url, "label": "未授权站点"},
-                url=url
-            ))
+            logger.critical(
+                self.report(
+                    message="危险通信", context={"url": url, "label": "未授权站点"}, url=url
+                )
+            )
             return False
         # <CloudflareDefense>被迫中断且无法跳过
         except CloudflareChallengeError:
-            logger.debug(self.report(
-                message="检测失败",
-                context={"url": url, "label": "CloudflareDefenseV2"},
-                url=url,
-                error="<CloudflareDefense>被迫中断且无法跳过"
-            ))
+            logger.debug(
+                self.report(
+                    message="检测失败",
+                    context={"url": url, "label": "CloudflareDefenseV2"},
+                    url=url,
+                    error="<CloudflareDefense>被迫中断且无法跳过",
+                )
+            )
             return False
         # 站点负载紊乱或主要服务器已瘫痪
         except Timeout:
@@ -150,4 +136,6 @@ class SSPanelStaffChecker(SSPanelHostsClassifier):
             return False
 
     def killer(self):
-        logger.info(f"rookie_pre={round(len(self.rookies) * 100 / self.max_queue_size, 2)}%")
+        logger.info(
+            f"rookie_pre={round(len(self.rookies) * 100 / self.max_queue_size, 2)}%"
+        )

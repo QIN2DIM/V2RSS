@@ -14,9 +14,9 @@ from apis.scaffold.runner import booster
 from loguru import logger
 
 # The Fighter
-ATOMIC = actions.ActionFETVCloud
+ATOMIC = actions.ActionXMRthCloud
 
-POWER = 1
+POWER = 4
 
 
 @logger.catch()
@@ -24,5 +24,5 @@ def demo():
     booster(ATOMIC, silence=True, power=POWER)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     demo()

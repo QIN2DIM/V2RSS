@@ -62,12 +62,16 @@ def apis_admin_get_subs_v2(alias: str = None, detach: bool = None) -> dict:
 
     # 优先匹配 action-alias
     if alias.startswith("Action") and alias.endswith("Cloud"):
-        alias2urls = {sm.get_alias(ToolBox.reset_url(url, get_domain=True)): url for url in urls}
-        pending_urls = [alias2urls[alias], ]
+        alias2urls = {
+            sm.get_alias(ToolBox.reset_url(url, get_domain=True)): url for url in urls
+        }
+        pending_urls = [alias2urls[alias]]
     # 匹配 action-domain
     else:
         domain2urls = {ToolBox.reset_url(url, get_domain=True): url for url in urls}
-        pending_urls = [domain2urls[domain] for domain in domain2urls.keys() if alias in domain]
+        pending_urls = [
+            domain2urls[domain] for domain in domain2urls.keys() if alias in domain
+        ]
 
     # 无匹配项
     if not pending_urls:

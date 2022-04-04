@@ -24,11 +24,7 @@ STEP03: 设置本地代理
 ----------------------------------
 proxy_type within ["http", "socks5"] http==3 socks5==2
 """
-proxy = {
-    "proxy_type": 3,
-    "addr": "127.0.0.1",
-    "port": 10809
-}
+proxy = {"proxy_type": 3, "addr": "127.0.0.1", "port": 10809}
 
 """
 STEP04: 获取Bot API-TOKEN
@@ -44,14 +40,12 @@ STEP05: 完成 Telegram Bot 的历史性对话
 > human: Hello --> relay: Hey!
 > human: OjbkhElLo --> relay: Hey!
 """
-with TelegramClient('name', api_id, api_hash, proxy=proxy) as client:
-    client.send_message('me', 'Hello, myself!')
-    print(client.download_profile_photo('me'))
+with TelegramClient("name", api_id, api_hash, proxy=proxy) as client:
+    client.send_message("me", "Hello, myself!")
+    print(client.download_profile_photo("me"))
 
-
-    @client.on(events.NewMessage(pattern='(?i).*Hello'))
+    @client.on(events.NewMessage(pattern="(?i).*Hello"))
     async def handler(event):
-        await event.reply('Hey!')
-
+        await event.reply("Hey!")
 
     client.run_until_disconnected()

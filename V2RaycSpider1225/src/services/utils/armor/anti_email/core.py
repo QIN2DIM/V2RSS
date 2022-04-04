@@ -12,24 +12,22 @@ import requests
 from bs4 import BeautifulSoup
 from cloudscraper import create_scraper
 from selenium.common.exceptions import WebDriverException, NoSuchElementException
-# from undetected_chromedriver.v2 import Chrome, ChromeOptions
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.expected_conditions import (
-    presence_of_all_elements_located
+    presence_of_all_elements_located,
 )
 from selenium.webdriver.support.wait import WebDriverWait
 
 
 class EmailCodeParser:
-
     @staticmethod
     def _pattern(context, mode=1):
         if mode == 1:
             return [i for i in re.split("[：，]", context) if i.isdigit()]
         elif mode == 2:
-            return [i.strip() for i in context.split('\n') if i.strip().isdigit()]
+            return [i.strip() for i in context.split("\n") if i.strip().isdigit()]
 
     @staticmethod
     def patterns(url: str = None, email_body: str = None) -> str:
@@ -56,11 +54,17 @@ class EmailCodeParser:
 
 class EmailRelay:
     def __init__(self, url: str = None):
-        self.register_url = "https://www.linshiyouxiang.net/" if url is None else url
+        self.primary = "https://www.linshiyouxiang.net/" if url is None else url
 
-        self.pending_domains = ["@bytetutorials.net", "@iffygame.com", "@maileven.com",
-                                "@smuggroup.com", "@chapedia.net", "@worldzipcodes.net",
-                                "@chapedia.org"]
+        self.pending_domains = [
+            "@bytetutorials.net",
+            "@iffygame.com",
+            "@maileven.com",
+            "@smuggroup.com",
+            "@chapedia.net",
+            "@worldzipcodes.net",
+            "@chapedia.org",
+        ]
         self.mailbox_link = "https://www.linshiyouxiang.net/mailbox/{}"
         self.email_driver = "admin@rookie.it"
         self.email_id = "admin"
@@ -71,7 +75,9 @@ class EmailRelay:
             time.sleep(1)
             WebDriverWait(api, timeout).until(presence_of_all_elements_located)
             try:
-                activate_email: str = api.find_element(By.TAG_NAME, "input").get_attribute("data-clipboard-text")
+                activate_email: str = api.find_element(
+                    By.TAG_NAME, "input"
+                ).get_attribute("data-clipboard-text")
                 self.email_id = activate_email.split("@")[0]
             except NoSuchElementException:
                 if "Cloudflare" in api.page_source:
@@ -90,7 +96,7 @@ class EmailRelay:
         start_time = time.time()
 
         while True:
-            checker_tag: str = api.find_elements(By.XPATH, "//tbody//td[@class='text-center']")
+            checker_tag = api.find_elements(By.XPATH, "//tbody//td[@class='text-center']")
             if checker_tag.__len__() != 1:
                 return True
             if time.time() - start_time > 300:
@@ -106,7 +112,9 @@ class EmailRelay:
     @staticmethod
     def switch_to_mail(api: Chrome):
         while True:
-            details_tag = api.find_elements(By.XPATH, "//tbody//td[@class='text-center']//a")
+            details_tag = api.find_elements(
+                By.XPATH, "//tbody//td[@class='text-center']//a"
+            )
             if details_tag:
                 details_tag[0].click()
                 if "google_" in api.current_url:
@@ -127,7 +135,7 @@ class EmailRelay:
         pass
 
     def is_availability(self):
-        response = requests.get(self.register_url)
+        response = requests.get(self.primary)
         if response.status_code != 200:
             return False
         return True
@@ -143,11 +151,11 @@ def apis_get_email_context(api: Chrome, main_handle) -> dict:
 
     er = EmailRelay()
 
-    api.switch_to.new_window('tab')
+    api.switch_to.new_window("tab")
 
     collaborate_tab = api.current_window_handle
 
-    api.get(er.register_url)
+    api.get(er.primary)
 
     er.get_temp_email(api)
 
@@ -155,7 +163,7 @@ def apis_get_email_context(api: Chrome, main_handle) -> dict:
         "email": er.email_driver,
         "id": er.email_id,
         "link": er.mailbox_link.format(er.email_id),
-        "handle": collaborate_tab
+        "handle": collaborate_tab,
     }
 
     api.switch_to.window(main_handle)
@@ -163,7 +171,9 @@ def apis_get_email_context(api: Chrome, main_handle) -> dict:
     return context
 
 
-def apis_get_verification_code(api: Chrome, link: str, main_handle, collaborate_tab) -> str:
+def apis_get_verification_code(
+    api: Chrome, link: str, main_handle, collaborate_tab
+) -> str:
     """
 
     :param collaborate_tab:
@@ -191,31 +201,35 @@ def apis_get_verification_code(api: Chrome, link: str, main_handle, collaborate_
 
 class EmailRelayV2:
     def __init__(self):
-        self._home = "https://temp-mail.to/"
+        self.primary = "https://temp-mail.to/"
         self._mailbox_api = "https://temp-mail.to/a/mailbox"
 
         self._headers = {
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/97.0.4692.71 Safari/537.36 Edg/97.0.1072.62",
+            "Chrome/97.0.4692.71 Safari/537.36 Edg/97.0.1072.62"
         }
 
         self._temp_email_tab = None
 
     def _context_switch(self, api: Chrome, handle_obj=None):
         if handle_obj is None:
-            api.switch_to.new_window('tab')
+            api.switch_to.new_window("tab")
             self._temp_email_tab = api.current_window_handle
         else:
             api.switch_to.window(handle_obj)
 
     def _handle_token(self, api: Chrome):
-        api.get(self._home)
+        api.get(self.primary)
 
-        WebDriverWait(api, 10, poll_frequency=0.5, ignored_exceptions=NoSuchElementException).until(
+        WebDriverWait(
+            api, 10, poll_frequency=0.5, ignored_exceptions=NoSuchElementException
+        ).until(
             EC.element_to_be_clickable((By.XPATH, "//div[@class='cta-refresh']//a"))
         ).click()
 
-        WebDriverWait(api, 10, poll_frequency=0.5, ignored_exceptions=NoSuchElementException).until(
+        WebDriverWait(
+            api, 10, poll_frequency=0.5, ignored_exceptions=NoSuchElementException
+        ).until(
             EC.element_to_be_clickable((By.XPATH, "//input[@class='email-g']"))
         ).click()
 
@@ -249,7 +263,7 @@ class EmailRelayV2:
                 return email_body
 
     def is_availability(self) -> bool:
-        response = requests.get(self._home)
+        response = requests.get(self.primary)
         if response.status_code != 200:
             return False
         return True
@@ -272,18 +286,12 @@ class EmailRelayV2:
             "email": address,
             "id": address.split("@")[0],
             "link": "",
-            "handle": self._temp_email_tab
+            "handle": self._temp_email_tab,
         }
 
         return context
 
-    def apis_get_email_code(self, timeout=60) -> str:
-        """
-
-        :param timeout:
-        :return:
-        """
-
+    def apis_get_email_code(self, timeout: int = 60) -> str:
         start = time.time()
 
         while True:

@@ -29,5 +29,5 @@ def go():
         print(page.locator("//span[@class='counter']").all_text_contents())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     go()

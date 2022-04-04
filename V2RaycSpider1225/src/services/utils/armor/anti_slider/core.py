@@ -16,12 +16,12 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 class SliderValidator:
     def __init__(
-            self,
-            driver: Chrome,
-            debug: bool = False,
-            full_img_path: str = None,
-            notch_img_path: str = None,
-            business_name: str = "SliderValidator",
+        self,
+        driver: Chrome,
+        debug: bool = False,
+        full_img_path: str = None,
+        notch_img_path: str = None,
+        business_name: str = "SliderValidator",
     ):
         self.debug = debug
         # Selenium操作句柄
@@ -106,9 +106,7 @@ class SliderValidator:
         v = 0
         # 当算子还未抵达终点时，持续生成下一步坐标
         alpha_factor = (
-            phys_params.get("alpha_factor")
-            if phys_params.get("alpha_factor")
-            else 1.8712
+            phys_params.get("alpha_factor") if phys_params.get("alpha_factor") else 1.8712
         )
         beta_factor = (
             phys_params.get("beta_factor") if phys_params.get("beta_factor") else 1.912
@@ -178,9 +176,9 @@ class SliderValidator:
         pix2 = img2.load()[x, y]
 
         if (
-                abs(pix1[0] - pix2[0] < self.threshold)
-                and abs(pix1[1] - pix2[1] < self.threshold)
-                and abs(pix1[2] - pix2[2] < self.threshold)
+            abs(pix1[0] - pix2[0] < self.threshold)
+            and abs(pix1[1] - pix2[1] < self.threshold)
+            and abs(pix1[2] - pix2[2] < self.threshold)
         ):
             return True
         return False
@@ -207,10 +205,7 @@ class SliderValidator:
         # 标识边界线x轴坐标
         ft = ImageFont.truetype(text_font, size=text_size)
         draw.text(
-            (boundary + line_width, 10),
-            f"x = ({boundary}, )",
-            fill=(255, 0, 0),
-            font=ft,
+            (boundary + line_width, 10), f"x = ({boundary}, )", fill=(255, 0, 0), font=ft
         )
         # 显示图片
         boundary_notch.show()
@@ -234,14 +229,14 @@ class SliderValidator:
         return pending_step
 
     def drag_slider(
-            self,
-            track,
-            slider,
-            position: int,
-            boundary: int,
-            use_imitate=True,
-            is_hold=False,
-            momentum_convergence=False,
+        self,
+        track,
+        slider,
+        position: int,
+        boundary: int,
+        use_imitate=True,
+        is_hold=False,
+        momentum_convergence=False,
     ):
         """
 
@@ -271,9 +266,7 @@ class SliderValidator:
         # 震荡收敛步伐初始化
         catwalk = []
         # 参数表
-        debugger_map = {
-            "position": position,
-        }
+        debugger_map = {"position": position}
         # ====================================
         # 执行核心逻辑
         # ====================================

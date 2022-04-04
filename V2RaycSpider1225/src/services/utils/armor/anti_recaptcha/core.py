@@ -6,15 +6,13 @@
 import os
 import random
 import time
-import urllib
 from random import randint
-from time import sleep
-from urllib.request import urlretrieve
 
 import pydub
+import requests
 from selenium.common.exceptions import (
     NoSuchElementException,
-    ElementClickInterceptedException
+    ElementClickInterceptedException,
 )
 from selenium.webdriver import Chrome
 from selenium.webdriver.common.by import By
@@ -41,7 +39,9 @@ def activate_recaptcha(api: Chrome) -> str:
     api.switch_to.frame(recaptcha_iframe)
 
     # 点击并激活 recaptcha
-    WebDriverWait(api, 10, poll_frequency=0.5, ignored_exceptions=NoSuchElementException).until(
+    WebDriverWait(
+        api, 10, poll_frequency=0.5, ignored_exceptions=NoSuchElementException
+    ).until(
         EC.element_to_be_clickable((By.CLASS_NAME, "recaptcha-checkbox-border"))
     ).click()
 
@@ -49,10 +49,7 @@ def activate_recaptcha(api: Chrome) -> str:
     api.switch_to.default_content()
 
     # 切换到 main_frame 中的另一个 frame
-    for p in [
-        "recaptcha challenge expires in two minutes",
-        "reCAPTCHA 验证将于 2 分钟后过期"
-    ]:
+    for p in ["recaptcha challenge expires in two minutes", "reCAPTCHA 验证将于 2 分钟后过期"]:
         try:
             api.switch_to.frame(api.find_element(By.XPATH, f"//iframe[@title='{p}']"))
             break
@@ -61,7 +58,7 @@ def activate_recaptcha(api: Chrome) -> str:
     else:
         raise ElementLocationException(msg="出现意外的语种请求")
 
-    sleep(randint(2, 4))
+    time.sleep(randint(2, 4))
 
     # 点击切换到声纹识别界面
     # 接受错误 selenium.common.exceptions.ElementClickInterceptedException
@@ -71,7 +68,7 @@ def activate_recaptcha(api: Chrome) -> str:
     except ElementClickInterceptedException:
         raise AntiBreakOffWarning
 
-    sleep(randint(2, 4))
+    time.sleep(randint(2, 4))
 
     # 点击播放按钮
     try:
@@ -99,7 +96,11 @@ def handle_audio(audio_url: str, dir_audio_cache: str) -> str:
     path_audio_wav = os.path.join(dir_audio_cache, f"audio_{timestamp_}.wav")
 
     # 将声源文件下载到本地
-    urllib.request.urlretrieve(audio_url, path_audio_mp3)
+    response = requests.get(audio_url, stream=True)
+    with open(path_audio_mp3, "wb") as file:
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                file.write(chunk)
 
     # 转换音频格式 mp3 --> wav
     pydub.AudioSegment.from_mp3(path_audio_mp3).export(path_audio_wav, format="wav")

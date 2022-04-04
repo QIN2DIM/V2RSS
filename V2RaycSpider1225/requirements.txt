@@ -14,9 +14,9 @@ pyyaml>=6.0
 loguru>=0.5.3
 gevent>=21.8.0
 tqdm>=4.62.3
-urllib3>=1.25.11
 apscheduler>=3.8.1
 playwright>=1.17.2
 redis>=4.0.1
 SpeechRecognition==3.8.1
 webdriver_manager==3.5.2
+undetected_chromedriver==3.1.5.post4

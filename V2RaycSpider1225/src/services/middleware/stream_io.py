@@ -12,12 +12,12 @@ from services.utils import ToolBox
 
 class RedisClient:
     def __init__(
-            self,
-            host=REDIS_NODE["host"],
-            port=REDIS_NODE["port"],
-            password=REDIS_NODE["password"],
-            db=REDIS_NODE["db"],
-            **kwargs,
+        self,
+        host=REDIS_NODE["host"],
+        port=REDIS_NODE["port"],
+        password=REDIS_NODE["password"],
+        db=REDIS_NODE["db"],
+        **kwargs,
     ) -> None:
         self.db = redis.StrictRedis(
             host=host,
@@ -53,9 +53,11 @@ class RedisClient:
         try:
             return self.db.hlen(self.PREFIX_SUBSCRIBE)
         except (ConnectionResetError, ConnectionError):
-            logger.error(ToolBox.runtime_report(
-                motive="ConnectionError",
-                action_name="StreamIO",
-                message="Redis 远程主机关闭了一个现有连接，本地网络可能出现异常。",
-            ))
+            logger.error(
+                ToolBox.runtime_report(
+                    motive="ConnectionError",
+                    action_name="StreamIO",
+                    message="Redis 远程主机关闭了一个现有连接，本地网络可能出现异常。",
+                )
+            )
             return 0

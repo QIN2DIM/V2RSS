@@ -5,7 +5,7 @@
 # Description:
 import ast
 from datetime import timedelta, datetime
-from typing import List
+from typing import List, Optional, Union
 
 from redis.exceptions import ConnectionError, ResponseError
 
@@ -15,7 +15,7 @@ from services.settings import TIME_ZONE_CN, POOL_CAP
 
 class EntropyHeap(RedisClient):
     def __init__(self):
-        super(EntropyHeap, self).__init__()
+        super().__init__()
 
     def update(self, local_entropy: List[dict]):
         self.db.lpush(self.PREFIX_ENTROPY, str(local_entropy))
@@ -24,7 +24,9 @@ class EntropyHeap(RedisClient):
         try:
             response = self.db.lrange(self.PREFIX_ENTROPY, 0, 1)
             if response:
-                remote_entropy = ast.literal_eval(self.db.lrange(self.PREFIX_ENTROPY, 0, 1)[0])
+                remote_entropy = ast.literal_eval(
+                    self.db.lrange(self.PREFIX_ENTROPY, 0, 1)[0]
+                )
                 return remote_entropy
             return []
         except ConnectionError:
@@ -53,10 +55,10 @@ class EntropyHeap(RedisClient):
 
 class MessageQueue(RedisClient):
     def __init__(self):
-        super(MessageQueue, self).__init__()
+        super().__init__()
 
-        self.group = "tasks_group"
-        self.consumer = "hexo"
+        self.group_name = "tasks_group"
+        self.consumer_name = "hexo"
         self.max_queue_size = 5600
 
         self.SYNERGY_PROTOCOL = "SYNERGY"
@@ -73,28 +75,34 @@ class MessageQueue(RedisClient):
         except ResponseError:
             return False
 
-    def automated(self):
-        if not self.is_exists_group(self.group):
-            self.db.xgroup_create(self.PREFIX_STREAM, self.group, id="0", mkstream=True)
+    def automated(self) -> None:
+        if not self.is_exists_group(self.group_name):
+            self.db.xgroup_create(
+                self.PREFIX_STREAM, self.group_name, id="0", mkstream=True
+            )
 
-    def ack(self, message_id: str):
-        self.db.xack(self.PREFIX_STREAM, self.group, message_id)
+    def ack(self, message_id: str) -> None:
+        self.db.xack(self.PREFIX_STREAM, self.group_name, message_id)
 
-    def broadcast_synergy_context(self, context: dict):
+    def broadcast_synergy_context(self, context: Union[dict, str]) -> None:
         context = str(context) if isinstance(context, dict) else context
         synergy_context = {self.SYNERGY_PROTOCOL: context}
-        self.db.xadd(self.PREFIX_STREAM, synergy_context, maxlen=self.max_queue_size, approximate=True)
+        self.db.xadd(
+            name=self.PREFIX_STREAM,
+            fields=synergy_context,
+            maxlen=self.max_queue_size,
+            approximate=True,
+        )
 
-    def listen(self, count: int = None, block: int = None):
-        """
-
-        :return:
-        """
-
+    def listen(self, count: Optional[int] = None, block: Optional[int] = None):
         while True:
             try:
                 task_queue = self.db.xreadgroup(
-                    self.group, self.consumer, {self.PREFIX_STREAM: ">"}, count=count, block=block
+                    groupname=self.group_name,
+                    consumername=self.consumer_name,
+                    streams={self.PREFIX_STREAM: ">"},
+                    count=count,
+                    block=block,
                 )
             except ConnectionError:
                 yield None
@@ -105,25 +113,25 @@ class MessageQueue(RedisClient):
 
 
 class AccessControl(RedisClient):
-    def __init__(self, token: str = None):
-        super(AccessControl, self).__init__()
+    def __init__(self, token: Optional[str] = None):
+        super().__init__()
         self.PREFIX_ACCESS_USER = "v2rss:access:user"
         self.PREFIX_ACCESS_LIMIT = "v2rss:access:limit"
 
         if token:
             self.init_tracer(token)
 
-    def init_tracer(self, token: str):
+    def init_tracer(self, token: str) -> None:
         self.PREFIX_ACCESS_USER += f":{token}"
         self.PREFIX_ACCESS_LIMIT += f":{token}"
 
         # 自动注册
         self._register()
 
-    def _register(self):
+    def _register(self) -> None:
         self.db.setnx(self.PREFIX_ACCESS_USER, 0)
 
-    def update(self):
+    def update(self) -> None:
         self.db.setnx(self.PREFIX_ACCESS_LIMIT, 0)
         self.db.incr(self.PREFIX_ACCESS_LIMIT)
         self.db.incr(self.PREFIX_ACCESS_USER)
@@ -133,7 +141,7 @@ class AccessControl(RedisClient):
         self.db.setex(
             name=self.PREFIX_ACCESS_LIMIT,
             time=timedelta(seconds=_lifecycle),
-            value=str(datetime.now(TIME_ZONE_CN) + timedelta(seconds=_lifecycle))
+            value=str(datetime.now(TIME_ZONE_CN) + timedelta(seconds=_lifecycle)),
         )
 
     def is_user(self) -> bool:

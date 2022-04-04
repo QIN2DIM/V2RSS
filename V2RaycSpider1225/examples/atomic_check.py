@@ -14,7 +14,6 @@ from apis.scaffold import entropy
 
 
 class SpawnUnitTest(unittest.TestCase):
-
     def test_atomic_heartbeat(self):
         self.assertNotEqual({}, entropy.check())
 

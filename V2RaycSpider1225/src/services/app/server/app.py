@@ -14,9 +14,7 @@ from services.app.server.apis import (
     apis_admin_get_subs_v2,
     apis_admin_get_pool_status,
 )
-from services.settings import (
-    ROUTER_API, ROUTER_NAME
-)
+from services.settings import ROUTER_API, ROUTER_NAME
 
 app = Sanic(ROUTER_NAME)
 
@@ -96,11 +94,5 @@ def pool_status(request: Request) -> HTTPResponse:
     return json(apis_admin_get_pool_status())
 
 
-if __name__ == '__main__':
-    app.run(
-        host="127.0.0.1",
-        port=6501,
-        auto_reload=True,
-        access_log=False,
-        workers=1,
-    )
+if __name__ == "__main__":
+    app.run(host="127.0.0.1", port=6501, auto_reload=True, access_log=False, workers=1)

@@ -12,14 +12,14 @@ from .core import SliderValidator, By, ec, ActionChains
 
 class GeeTest2(SliderValidator):
     def __init__(
-            self,
-            driver,
-            debug=False,
-            business_name="GeeTest_v2",
-            full_img_path=None,
-            notch_img_path=None,
+        self,
+        driver,
+        debug=False,
+        business_name="GeeTest_v2",
+        full_img_path=None,
+        notch_img_path=None,
     ):
-        super(GeeTest2, self).__init__(
+        super().__init__(
             driver=driver,
             debug=debug,
             business_name=business_name,
@@ -31,9 +31,7 @@ class GeeTest2(SliderValidator):
         self.offset = 60
 
     def capture_full_img(self):
-        gt_full_img = self.api.find_element(
-            By.XPATH, "//a[contains(@class,'gt_fullbg')]"
-        )
+        gt_full_img = self.api.find_element(By.XPATH, "//a[contains(@class,'gt_fullbg')]")
         gt_full_img.screenshot(filename=self.full_img_path)
 
     def capture_notch_img(self):

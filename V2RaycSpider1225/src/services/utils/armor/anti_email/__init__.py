@@ -3,7 +3,3 @@
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description:
-
-
-if __name__ == '__main__':
-    pass

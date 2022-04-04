@@ -7,4 +7,4 @@
 from .sspanel import LionCubOfCintra
 from .v2board import LaraDorren
 
-__all__ = ['LionCubOfCintra', 'LaraDorren']
+__all__ = ["LionCubOfCintra", "LaraDorren"]

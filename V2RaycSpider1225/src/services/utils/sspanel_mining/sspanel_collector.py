@@ -2,9 +2,12 @@ import random
 import sys
 import time
 
-from selenium.common.exceptions import NoSuchElementException, WebDriverException, ElementClickInterceptedException
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    WebDriverException,
+    ElementClickInterceptedException,
+)
 from selenium.webdriver import Chrome, ChromeOptions
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -15,12 +18,7 @@ from services.utils.sspanel_mining.exceptions import CollectorSwitchError
 
 
 class SSPanelHostsCollector:
-    def __init__(
-            self,
-            path_file_txt: str,
-            silence: bool = True,
-            debug: bool = False,
-    ):
+    def __init__(self, path_file_txt: str, silence: bool = True, debug: bool = False):
         """
 
         :param path_file_txt:
@@ -30,10 +28,9 @@ class SSPanelHostsCollector:
         # 筛选 Malio 站点
         self._QUERY = "由 @editXY 修改适配。"
 
-        # 全量搜集
-        # self._QUERY = 'inurl:staff "SSPanel V3 Mod UIM"'
-
-        self.GOOGLE_SEARCH_API = f'https://www.google.com.hk/search?q="{self._QUERY}"&filter=0'
+        self.GOOGLE_SEARCH_API = (
+            f'https://www.google.com.hk/search?q="{self._QUERY}"&filter=0'
+        )
         self.path_file_txt = path_file_txt
         self.debug = debug
         self.silence = silence
@@ -111,10 +108,12 @@ class SSPanelHostsCollector:
                 # 检测到到流量拦截 主动抛出异常并采取备用方案
                 if "sorry" in api.current_url:
                     # windows调试环境中，手动解决 CAPTCHA
-                    if 'win' in sys.platform and not self.silence:
-                        input("\n--> 遭遇拦截，本开源代码未提供相应解决方案。\n"
-                              "--> 请开发者手动处理 reCAPTCHA 并于控制台输入任意键继续执行程序\n"
-                              f">>>")
+                    if "win" in sys.platform and not self.silence:
+                        input(
+                            "\n--> 遭遇拦截，本开源代码未提供相应解决方案。\n"
+                            "--> 请开发者手动处理 reCAPTCHA 并于控制台输入任意键继续执行程序\n"
+                            f">>>"
+                        )
                         continue
                     raise CollectorSwitchError
                 # 最后一页
@@ -135,7 +134,7 @@ class SSPanelHostsCollector:
         time.sleep(1)
         hosts = api.find_elements(
             By.XPATH,
-            "//div[contains(@class,'NJjxre')]//cite[@class='iUh30 qLRx3b tjvcx']"
+            "//div[contains(@class,'NJjxre')]//cite[@class='iUh30 qLRx3b tjvcx']",
         )
 
         with open(self.path_file_txt, "a", encoding="utf8") as f:
@@ -172,8 +171,7 @@ class SSPanelHostsCollector:
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
         try:
-            _service = Service(ChromeDriverManager(log_level=0).install())
-            _api = Chrome(service=_service, options=options)
+            _api = Chrome(ChromeDriverManager(log_level=0).install(), options=options)
             return _api
         except WebDriverException as e:
             if "chromedriver" in str(e):
@@ -235,11 +233,6 @@ class SSPanelHostsCollector:
                 # ==============================================================
                 # 萃取注册链接并保存
                 self._capture_host(api=api)
-                # if self.page_num == 26:
-                #     self.reset_loop_progress(api=api)
-                #     loop_progress.update(ack_num)
-                # else:
-                #     loop_progress.update(1)
                 loop_progress.update(1)
                 loop_progress.set_postfix({"status": "__collect__"})
                 # ==============================================================

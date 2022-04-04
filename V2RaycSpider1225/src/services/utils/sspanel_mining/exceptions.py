@@ -2,14 +2,13 @@ from selenium.common.exceptions import NoSuchElementException, NoSuchWindowExcep
 
 
 class StaffMiningError(Exception):
-    """
-    Base webdriver exception.
-    """
+    """Base webdriver exception."""
 
     def __init__(self, msg=None, screen=None, stacktrace=None):
         self.msg = msg
         self.screen = screen
         self.stacktrace = stacktrace
+        super().__init__()
 
     def __str__(self):
         exception_msg = f"Message: {self.msg}\n"
@@ -25,6 +24,7 @@ class CollectorSwitchError(StaffMiningError):
     """
     Thrown when the collector access is intercepted by man-machine verification.
     """
+
     pass
 
 
@@ -32,6 +32,7 @@ class CollectorNoTouchElementError(NoSuchElementException):
     """
     Thrown when the collector fails to identify the target element within the specified operating time.
     """
+
     pass
 
 
@@ -39,4 +40,5 @@ class ManuallyCloseTheCollectorError(NoSuchWindowException):
     """
     Thrown when the collector task is manually closed when the task is executed.
     """
+
     pass

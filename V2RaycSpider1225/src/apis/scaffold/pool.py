@@ -23,20 +23,24 @@ def status():
 def overdue():
     try:
         pool_len = sm.refresh()
-        logger.debug(ToolBox.runtime_report(
-            motive="OVERDUE",
-            action_name="RemotePool | SpawnRhythm",
-            message="pool_status[{}/{}]".format(pool_len, eh.get_unified_cap())
-        ))
+        logger.debug(
+            ToolBox.runtime_report(
+                motive="OVERDUE",
+                action_name="RemotePool | SpawnRhythm",
+                message="pool_status[{}/{}]".format(pool_len, eh.get_unified_cap()),
+            )
+        )
     except ConnectionError:
         pass
 
 
 @logger.catch()
 def decouple_():
-    logger.info(ToolBox.runtime_report(
-        motive="DECOUPLE",
-        action_name="ScaffoldDecoupler",
-        message="Clearing invalid subscriptions..."
-    ))
+    logger.info(
+        ToolBox.runtime_report(
+            motive="DECOUPLE",
+            action_name="ScaffoldDecoupler",
+            message="Clearing invalid subscriptions...",
+        )
+    )
     decouple(debug=True)
