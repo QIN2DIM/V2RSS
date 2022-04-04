@@ -85,7 +85,7 @@ ActionWgCloud = {
     "name": "ActionWgCloud",
     "register_url": "https://www.wiougong.space/auth/register",
     "life_cycle": 1,
-    "hyper_params": {"ssr": True, "v2ray": True, "anti_slider": True, },
+    "hyper_params": {"ssr": True, "v2ray": True, "anti_slider": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -149,7 +149,7 @@ ActionMxCloud = {
     "name": "ActionMxCloud",
     "register_url": "https://www.mxyssr.com/auth/register",
     "life_cycle": 1,
-    "hyper_params": {"v2ray": True, "anti_slider": True, },
+    "hyper_params": {"v2ray": True, "anti_slider": True},
     "email": "@gmail.com",
 }
 # =============================================
@@ -221,7 +221,7 @@ ActionJssForSSRCloud = {
     "name": "ActionJssForSSRCloud",
     "register_url": "https://www.jssr.cc/auth/register",
     "life_cycle": 2,
-    "hyper_params": {"v2ray": False, "anti_slider": True, },
+    "hyper_params": {"v2ray": False, "anti_slider": True},
     "email": "@gmail.com",
 }
 
@@ -399,7 +399,12 @@ ActionViCloud = {
 ActionLittleCloud = {
     "name": "ActionLittleCloud",
     "register_url": "https://littleq.me/auth/register",
-    "hyper_params": {"v2ray": True, "usr_email": True, "co-invite": 6, "anti_slider": True},
+    "hyper_params": {
+        "v2ray": True,
+        "usr_email": True,
+        "co-invite": 6,
+        "anti_slider": True,
+    },
     "email": "@gmail.com",
     "life_cycle": 1,
 }
@@ -623,7 +628,7 @@ ActionHeTunCloud = {
     "register_url": "https://hetun.online/#/register",
     "nest": "v2board",
     "hyper_params": {"usr_email": True, "threshold": 0},
-    "life_cycle": 3
+    "life_cycle": 3,
 }
 # =============================================
 # - intro: 玛瑙云
@@ -633,8 +638,12 @@ ActionAgateCloud = {
     "name": "ActionAgateCloud",
     "register_url": "https://manaocloud.xyz/#/register",
     "nest": "v2board",
-    "hyper_params": {"tos": True, "anti_email": True, "api": "https://api.manaocloud.xyz"},
-    "life_cycle": 24 * 3
+    "hyper_params": {
+        "tos": True,
+        "anti_email": True,
+        "api": "https://api.manaocloud.xyz",
+    },
+    "life_cycle": 24 * 3,
 }
 # =============================================
 # - intro: SNOW
@@ -655,8 +664,7 @@ ActionTiGRCloud = {
     "register_url": "https://tigr.icu/s/#/register",
     "nest": "v2board",
     "hyper_params": {"anti_email": True},
-    "life_cycle": 24 * 3
-
+    "life_cycle": 24 * 3,
 }
 # =============================================
 # - intro: 养鸡场
@@ -708,7 +716,7 @@ ActionMysticalCloud = {
     "register_url": "https://jc.005431.xyz/#/register",
     "nest": "v2board",
     "hyper_params": {"anti_email": True},
-    "life_cycle": 24 * 2
+    "life_cycle": 24 * 2,
 }
 # =============================================
 # - intro: 摆烂云
@@ -719,7 +727,7 @@ ActionBaiLanCloud = {
     "register_url": "https://ayyy.space/#/register",
     "nest": "v2board",
     "hyper_params": {"anti_recaptcha": True, "prism": True},
-    "life_cycle": 24 * 31
+    "life_cycle": 24 * 31,
 }
 __entropy__ = [
     # ------------------------------------------
@@ -728,17 +736,14 @@ __entropy__ = [
     ActionFETVCloud,  # sspanel 2D1GB 10*2GB[s]
     ActionCheapCloud,  # sspanel 7D30GB 10*2GB[s]
     ActionAaxCloud,  # sspanel 1D10G 10*0.1GB[s]
-
     # ------------------------------------------
     # 滑动验证
     # ------------------------------------------
     # ActionGoGoCloud,  # sspanel 1D10GB 10*2GB[s]
-
     # ------------------------------------------
     # 邮箱验证
     # ------------------------------------------
     ActionPorkCloud,  # sspanel 3D3GB 100*30GB[s]
-
     # ------------------------------------------
     # 需要声纹验证
     # ------------------------------------------
@@ -756,14 +761,12 @@ __pending__ = [
     ActionYesDaddyCloud,  # sspanel 1day
     ActionHuoXingCloud,  # sspanel 1day 11G=(1'+5*2')G
     ActionSDVCloud,  # sspanel N-day 5G
-
     # ------------------------------------------
     # [启动] 需要滑动验证
     # ------------------------------------------
     ActionViCloud,  # sspanel  2D 11G=(1'+5*2')G
     ActionPPCloud,  # sspanel  1D 62G=(2'+3*20')G
     ActionLittleCloud,  # sspanel  1D 40G=(10'+6*5')G
-
     # ------------------------------------------
     # [启动] 需要邮箱验证
     # ------------------------------------------
@@ -772,16 +775,13 @@ __pending__ = [
     Action7ccCloud,  # sspanel 1D5GB
     ActionAgateCloud,  # v2board 3D2G
     ActionGiraffeCloud,  # sspanel 2D3GB 10*2GB[s]
-
     # 限定注册
     ActionXFssCloud,  # v2board 7D5G
     ActionMysticalCloud,  # v2board 2D10GB
-
     # ------------------------------------------
     # 未测试主题
     # ------------------------------------------
     ActionAzIcoCloud,  # sspanel-cool 1D1G 1000*0.1GB[s]
-
 ]
 
 """
