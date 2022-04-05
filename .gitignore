@@ -131,3 +131,7 @@ dmypy.json
 
 .pyre/
 .idea
+src/database
+src/config.yaml
+docker-compose.yaml
+src/services/collector/actions.py

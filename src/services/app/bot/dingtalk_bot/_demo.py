@@ -3,7 +3,6 @@
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description:DingTalk bot | V2RCS：分发云彩姬订阅的钉钉机器人
-
 import base64
 import hashlib
 import hmac
