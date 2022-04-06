@@ -5,7 +5,7 @@
 # Description:
 from typing import Optional, List, Dict, Any
 
-from services.collector import __entropy__, __pending__
+from services.collector import __entropy__
 from services.middleware.workers_io import EntropyHeap
 from services.settings import logger, POOL_CAP
 from services.utils import CoroutineSpeedup
@@ -62,7 +62,7 @@ def check(power: Optional[int] = None) -> None:
             super().__init__(docker=docker)
             self.control_driver = utils
 
-    mirror_entropy: List[Dict[str, Any]] = __entropy__ + __pending__
+    mirror_entropy: List[Dict[str, Any]] = __entropy__
 
     power = mirror_entropy.__len__() if not isinstance(power, int) else abs(power)
 
