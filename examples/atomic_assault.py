@@ -14,7 +14,7 @@ from apis.scaffold.runner import booster
 from loguru import logger
 
 # The Fighter
-ATOMIC = actions.ActionXMRthCloud
+ATOMIC = actions.ActionHuoXingCloud
 
 POWER = 4
 

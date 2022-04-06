@@ -3,7 +3,6 @@
 # Author     : QIN2DIM
 # Github     : https://github.com/QIN2DIM
 # Description:
-
 from services.decoupler.decoupler import DecoupleBooster, decouple
 from .actions import __entropy__, __pending__
 from .operator import devil_king_armed, LionCubOfCintra, LaraDorren

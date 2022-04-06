@@ -12,7 +12,7 @@ from services.collector import actions, devil_king_armed
 from undetected_chromedriver import Chrome
 
 # The Fighter
-ATOMIC = actions.ActionGiraffeCloud
+ATOMIC = actions.ActionLillianCloud
 
 # 隐藏指纹（高级特性，牺牲敏捷性，减少被识别的几率）
 INCOGNITO = False
