@@ -28,10 +28,3 @@
 
 - 用户：详见 [云彩姬使用说明](https://blog.echosec.top/v2rss-docs/zh/docs/user/v2rss-cli/overview/)。
 - 玩家：Fork 项目，根据 [技术文档](https://blog.echosec.top/v2rss-docs/zh/docs/player/getting-started/overview/) 合理配置 `config.yaml` ，使用脚手架调试并部署服务。
-
-## 网上冲浪 🌊
-
-- :gear: [技术文档](https://blog.echosec.top/v2rss-docs/zh/docs/player/getting-started/overview/)（更新中...）
-- :small_red_triangle: [注意事项](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/注意事项.md)
-- :loudspeaker: [更新日志](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/更新日志.md)
-- :world_map: [开源计划](https://github.com/QIN2DIM/V2RayCloudSpider/blob/master/doc/subdirectory/开源计划.md)
