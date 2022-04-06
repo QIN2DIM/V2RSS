@@ -87,7 +87,36 @@ ActionLillianCloud = {
     "hyper_params": {"anti_recaptcha": True, "prism": True, "usr_email": True},
     "life_cycle": 24 * 50,
 }
-
+# =============================================
+# - intro: Ice
+# - plan: 1D1GB 5*2GB[s]
+# =============================================
+ActionIceCloud = {
+    "name": "ActionIceCloud",
+    "register_url": "https://iceyun.one/auth/register",
+    "nest": "sspanel",
+    "hyper_params": {"anti_email": True, "aff": 5},
+}
+# =============================================
+# - intro: 追风岛
+# - plan: 1D1GB 9999*2GB[s]
+# =============================================
+ActionZFDCloud = {
+    "name": "ActionZFDCloud",
+    "register_url": "https://go.zhuifengdao.com/auth/register",
+    "nest": "sspanel",
+    "hyper_params": {
+        "anti_slider": True,
+        "usr_email": True,
+        "prism": True,
+        "aff": 5,
+        "on_v2ray": {
+            "xpath": "//div[@class='buttons']//a[contains(@class,'kitsunebi')]",
+            "attr": "data-clipboard-text",
+        },
+    },
+    "life_cycle": 24 * 2,
+}
 __entropy__ = [
     # ------------------------------------------
     # Public Welfare
@@ -98,9 +127,11 @@ __entropy__ = [
     # 滑动验证
     # ------------------------------------------
     ActionSuFeiCloud,  # sspanel 2D1GB 3*2GB[s]
+    ActionZFDCloud,  # sspanel 1D1GB 9999*2GB[s]
     # ------------------------------------------
     # 邮箱验证
     # ------------------------------------------
+    ActionIceCloud,  # sspanel 1D1GB 9999*2GB[s]
     ActionLilyCloud,  # v2board  2D10GB 20*10GB[s]
     ActionGiraffeCloud,  # sspanel 2D3GB 10*2GB[s]
     ActionMaTrixCloud,  # sspanel 1D10GB 1000*2GB[s]

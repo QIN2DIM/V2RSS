@@ -50,6 +50,9 @@ class TheWitcher(TheElderBlood):
             },
             "normal": {"xpath": "", "attr": ""},
         }
+        for trigger_ in self._ABSOLUTE_INDEX.keys():
+            if self.hyper_params.get(f"on_{trigger_}"):
+                self._ABSOLUTE_INDEX[trigger_] = self.hyper_params[f"on_{trigger_}"]
 
     @staticmethod
     def get_html_handle(ctx: Chrome, url: str, timeout: Optional[int] = 45):
