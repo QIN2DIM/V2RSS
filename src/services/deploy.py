@@ -113,7 +113,7 @@ class CollectorScheduler(CoroutineSpeedup):
         try:
             self.scheduler.start()
         except KeyboardInterrupt:
-            self.scheduler.shutdown()
+            self.scheduler.shutdown(wait=False)
             self.logger.debug(
                 ToolBox.runtime_report(
                     motive="EXITS",
@@ -398,10 +398,11 @@ class SynergyScheduler(CollectorScheduler):
 
         for message in self._mq.listen(count=1):
             if not message:
+                time.sleep(1)
                 continue
+            time.sleep(0.5)
 
             message_id, synergy_context = message[0][0], message[0][-1]
-            context = {}
             try:
                 context: Optional[Dict[str, Any]] = ast.literal_eval(
                     synergy_context.get(self._mq.SYNERGY_PROTOCOL, "")
@@ -434,16 +435,6 @@ class SynergyScheduler(CollectorScheduler):
                         message="捕获到上下文协议异常的脏数据，协同任务已跳过",
                     )
                 )
-            except KeyboardInterrupt:
-                if context:
-                    self.logger.warning(
-                        ToolBox.runtime_report(
-                            motive="HOLD",
-                            action_name=self.scheduler_name,
-                            message="正在尝试缓存未完成的任务，也可以继续操作终止运行",
-                        )
-                    )
-                    self._mq.broadcast_synergy_context(context)
             else:
                 self._adaptor(context)
             finally:

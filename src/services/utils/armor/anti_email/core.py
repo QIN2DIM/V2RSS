@@ -28,6 +28,8 @@ class EmailCodeParser:
             return [i for i in re.split("[：，]", context) if i.isdigit()]
         elif mode == 2:
             return [i.strip() for i in context.split("\n") if i.strip().isdigit()]
+        elif mode == 3:
+            return [i for i in re.split("[: ，]", context) if i.isdigit()]
 
     @staticmethod
     def patterns(url: str = None, email_body: str = None) -> str:
@@ -45,7 +47,7 @@ class EmailCodeParser:
         soup = BeautifulSoup(_email_body, "html.parser")
         context = soup.text
 
-        for mode in range(1, 3):
+        for mode in range(1, 4):
             email_code = EmailCodeParser._pattern(context, mode)
             if not email_code:
                 continue

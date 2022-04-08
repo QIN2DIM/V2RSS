@@ -6,32 +6,36 @@
 from typing import Dict, Any, Optional
 
 from .exceptions import UnknownNestTypeException
-from .nest import LionCubOfCintra, LaraDorren
+from .nest import (
+    LionCubOfCintra,
+    LaraDorren,
+    LunarPrincessRani,
+    StarscourgeRadahn,
+    MohgLordOfBlood,
+    MimicTear,
+)
 
 
 def devil_king_armed(
     atomic: Dict[str, Any], silence: Optional[bool] = True, mirror: Optional[bool] = False
 ):
-    """
-    Production line for running instances
-
-    :param atomic:
-    :param silence:
-    :param mirror:
-    :return:
-    """
+    """Production line for running instances"""
     # fmt:off
-    the_tarnished = {
+    machine = {
+        "v2board": LaraDorren,
         "sspanel": LionCubOfCintra,
-        "v2board": LaraDorren
+        "material": LunarPrincessRani,
+        "cool": StarscourgeRadahn,
+        "metron": MohgLordOfBlood,
+        "super-generics": MimicTear,
     }
     # fmt:on
 
     # 剔除异常构造机器
     blood = atomic.get("nest", "")
-    if not blood or not the_tarnished.get(blood):
+    if not blood or not machine.get(blood):
         raise UnknownNestTypeException
 
     # 生产上古之血
-    cirilla = the_tarnished[blood](atomic=atomic, silence=silence)
+    cirilla = machine[blood](atomic=atomic, silence=silence)
     return cirilla if mirror is False else cirilla.assault

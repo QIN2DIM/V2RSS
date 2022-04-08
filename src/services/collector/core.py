@@ -309,10 +309,6 @@ class TheElderBlood:
     def _update_clock(self):
         self.work_clock_utils = time.time()
 
-    def waiting_to_load(self, ctx: Chrome):
-        """register --> dashboard 等待页面跳转"""
-        raise NotImplementedError
-
     def set_chrome_options(self):
         options = ChromeOptions()
 
@@ -371,6 +367,10 @@ class TheElderBlood:
         """注册账号"""
         raise NotImplementedError
 
+    def waiting_to_load(self, ctx: Chrome):
+        """register --> dashboard 等待页面跳转"""
+        raise NotImplementedError
+
     def buy_free_plan(self, ctx: Chrome):
         """购买免费套餐"""
         raise NotImplementedError
@@ -391,6 +391,16 @@ class TheElderBlood:
         :param timeout:
         :return:
         """
+        start_time = time.time()
+        while True:
+            try:
+                ctx.get(url)
+                break
+            except (TimeoutException, WebDriverException):
+                if time.time() - start_time < timeout:
+                    ctx.refresh()
+                    continue
+                raise GetPageTimeoutException
 
     def check_heartbeat(self, debug: bool = False):
         """检测实例的健康状态"""

@@ -5,6 +5,17 @@
 # Description:
 
 from .sspanel import LionCubOfCintra
+from .sspanel import LunarPrincessRani
+from .sspanel import MimicTear
+from .sspanel import MohgLordOfBlood
+from .sspanel import StarscourgeRadahn
 from .v2board import LaraDorren
 
-__all__ = ["LionCubOfCintra", "LaraDorren"]
+__all__ = [
+    "LionCubOfCintra",
+    "LaraDorren",
+    "LunarPrincessRani",
+    "StarscourgeRadahn",
+    "MohgLordOfBlood",
+    "MimicTear",
+]
