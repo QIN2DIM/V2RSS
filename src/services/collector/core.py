@@ -18,7 +18,7 @@ from requests.exceptions import (
     Timeout,
     RequestException,
 )
-from selenium.common.exceptions import WebDriverException, TimeoutException
+from selenium.common.exceptions import WebDriverException, TimeoutException,InvalidSessionIdException
 from selenium.webdriver import Chrome, ChromeOptions
 from urllib3.exceptions import MaxRetryError
 from webdriver_manager.chrome import ChromeDriverManager
@@ -631,6 +631,8 @@ class TheElderBlood:
                 ">>> https://developers.google.com/recaptcha/docs/faq#"
                 "my-computer-or-network-may-be-sending-automated-queries"
             )
+        except InvalidSessionIdException:
+            pass
         except WebDriverException as e:
             logger.exception(e)
         finally:
