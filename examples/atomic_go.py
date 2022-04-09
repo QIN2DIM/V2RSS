@@ -10,9 +10,9 @@ from loguru import logger
 
 from services.collector import actions, devil_king_armed
 
-ATOMIC = actions.ActionPurpleCloud
+ATOMIC = actions.ActionGroundhogCloud
 
-SILENCE = False
+SILENCE = True
 
 
 @logger.catch()

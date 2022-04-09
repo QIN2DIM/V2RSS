@@ -33,13 +33,13 @@ class RedisClient:
         self.PREFIX_ALIAS = "v2rss:alias"
 
         # 特征服务
-        self.PREFIX_SUBSCRIBE = "v2rayc_spider:v2ray"
-        self.PREFIX_API = "sspanel:apis:"
-        self.PREFIX_DETACH = "sspanel:detach"
-        self.PREFIX_ENTROPY = "sspanel:entropy"
-        self.PREFIX_CAPACITY = "sspanel:pool_cap"
+        self.PREFIX_SUBSCRIBE = "v2rss:subscribe:v2ray"
+        self.PREFIX_API = "v2rss:apis:"
+        self.PREFIX_DETACH = "v2rss:detach"
+        self.PREFIX_ENTROPY = "v2rss:entropy"
+        self.PREFIX_CAPACITY = "v2rss:pool_cap"
 
-        self.PREFIX_STREAM = "sspanel:synergy"
+        self.PREFIX_STREAM = "v2rss:synergy"
 
         self.INSTANCE = "V2RSS云彩姬"
 
