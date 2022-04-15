@@ -7,7 +7,7 @@
 	<a href="https://github.com/QIN2DIM/V2RayCloudSpider/releases"><img src="https://img.shields.io/github/v/release/qin2dim/v2raycloudspider?style=for-the-badge"></a>
 	<br>
 	<a href="https://github.com/QIN2DIM/V2RayCloudSpider"><img src="https://img.shields.io/github/stars/qin2dim/v2raycloudspider?style=social"></a>
-	<a href = "https://t.me/joinchat/HlB9SQJubb5VmNU5"><img src="https://img.shields.io/static/v1?style=social&logo=telegram&label=chat&message=studio" ></a>
+	<a href = "https://t.me/+-XG8gYWVx7wxMzFh"><img src="https://img.shields.io/static/v1?style=social&logo=telegram&label=chat&message=studio" ></a>
 	<br>
 	<br>
 </div>
