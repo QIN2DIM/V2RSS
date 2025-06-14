@@ -134,5 +134,48 @@ dmypy.json
 src/database
 src/config.yaml
 docker-compose.yaml
-tests/
 src/services/app/panel
+
+# Claude settings
+.claude/
+
+# Poetry
+# Do not ignore poetry.lock - it should be committed
+# poetry.lock
+
+# IDE files
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing artifacts
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+pytest_cache/
+.tox/
+.nox/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+.env
